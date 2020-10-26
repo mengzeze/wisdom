@@ -1,0 +1,12 @@
+.StateAssigned{
+ color: #409EFF;
+}
+.Stateloing{
+ color: #E6A23C;
+}
+.Stateok{
+ color:#67C23A;
+}
+.closeStateok{
+ color: #FF4D4F;
+}

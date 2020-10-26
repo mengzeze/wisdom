@@ -1,0 +1,6 @@
+<div ng-controller="relevancySelectSelectCtrl">
+    <select ng-model="property.value" ng-change="relevancySelectSelectChanged()">
+        <option   value="0" style="display: none"></option>
+        <option ng-repeat="x in property.options track by $index"  value="{{x.value}}" >{{x.name}}</option>
+    </select>
+</div>

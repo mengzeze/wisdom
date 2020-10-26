@@ -1,0 +1,186 @@
+
+
+#app .color-primary{
+  color: #0061A9;
+}
+#app .background-primary{
+  background-color:#0061A9;
+}
+#app .border-primary-hover:hover{
+  border-color: #0061A9;
+}
+
+#app .bgcolor-primary-hover:hover{
+  background-color: #0061A9;
+}
+
+#app .border-primary{
+  border-color: #0061A9;
+}
+#app .border-primary-hover:hover{
+  border-color: #0061A9;
+}
+#app .color-light3{
+  color:#4d90c3;
+}
+#app .bgcolor-light5{
+  background-color:#80b0d4;
+}
+#app .color-light5{
+  color:#80b0d4;
+}
+.head_top_qian{
+  background:#0061A9;
+}
+#app .el-aside .el-menu-item.is-active{
+  background-color: #e6eff6;
+}
+#app .fc-state-active {
+  border: 1px solid #0061a9;
+}
+
+#app .user-info-box:hover {
+  background: #66a0cb;
+}
+#app .stage-tips .past{
+  background:#0061A9;
+}
+#app .stage-tips .current-stage{
+  background:#80b0d4;
+}
+#app .stage-list a.active{
+  background:#0061A9;
+}
+#app .stage-list a.cur{
+  background:#80b0d4;
+}
+
+#app .pro-doc-operation-item:hover{
+  background: #0061A9;
+}
+#app .newremind .el-button:focus, 
+#app .newremind .el-button:hover{
+  border-color: #0061A9;
+  background: #0061A9;
+}
+
+#app #manuscriptmanage .nav_operation .operation_chunk:hover,
+#app .manu_fullsearch .operation_chunk:hover,
+#app #manuscriptmanage .btn_drop:hover,
+#app .manu_fullsearch .btn_drop:hover{
+  background: #0061A9;
+}
+
+#app .projectrole .personObj_list.is-active{
+    background-color: #e6eff6;
+}
+
+#app .stripTag {
+  border-color: #0061A9;
+}
+
+#app .icon-operate-btn:hover{
+  color: #fff;
+  background-color: #0061A9;
+}
+
+#app .operate-btn-header:hover{
+  color: #0061A9;
+}
+
+#app .equityBusiness .eqContent li p span:nth-child(3):hover{
+  color: #0061A9;
+}
+
+#app .el-breadcrumb .el-breadcrumb__item:not([aria-current=page]) .el-breadcrumb__inner:not([class~=is-link]){
+  color: #4d90c3;
+}
+#app .el-breadcrumb .el-breadcrumb__item:not([aria-current=page]) .el-breadcrumb__inner[class~=is-link]{
+  color: #0061A9;
+  font-weight: 400;
+  transition: none;
+}
+#app .el-breadcrumb .el-breadcrumb__item:not([aria-current=page]) .el-breadcrumb__inner[class~=is-link]:hover{
+  color: #4d90c3;
+}
+
+#app .el-tree .el-checkbox__input.is-disabled.is-checked .el-checkbox__inner {
+  background-color: #0061A9;
+  border-color: #0061A9;
+}
+
+/* 站内信底部按钮 */
+#app .app_msg_foot .app_btn{
+  background: #0061A9;
+  border-color: #0061A9;
+}
+
+#app .app_msg_foot .app_btn:hover{
+  background: #3381ba;
+  border-color: #3381ba;
+}
+
+#app .app_msg_foot .app_sure:hover{
+  color: #0061A9;
+  border-color: #b3d0e5;
+  background-color: #e6eff6;
+}
+
+#app .all_recov_msg .app_hint_close:hover{
+  color: #0061A9;
+}
+
+/* 索引列表中的目录点击 */
+#app #project-index-lists p:hover {
+  color: #0061A9;
+}
+/* 导航收起展开 */
+.asides .left-menu-btn .el-radio-button__inner:hover,.backaside .left-menu-btn .el-radio-button__inner:hover{
+  background-color: #0061A9;
+  color: #fff;
+}
+
+#app .project-chat .aitNameActive {
+  color: #0061A9;
+}
+#app .project-chat .aitNameActiveAll {
+  color: #0061A9;
+}
+.findall-parent .el-checkbox__input.is-disabled.is-checked .el-checkbox__inner {
+  background-color: #0061A9;
+  border-color: #0061A9;
+}
+#preview-approval .approval-content .el-checkbox__input.is-disabled.is-checked .el-checkbox__inner {
+  background-color: #0061A9;
+  border-color: #0061A9;
+  opacity: 0.4;
+}
+
+/* 智能核查 */
+/* 智能核查左侧树-高亮 */
+.tree-wraper .el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content{
+  background: #0061A9;
+  color:#fff;
+}
+/* 智能核查按钮-hover */
+@keyframes run{
+  0%{
+      box-shadow:0px 0px 0px #0061A9;
+  }
+  50%{
+      box-shadow:0px 0px 30px #0061A9;
+  }
+  100%{
+      box-shadow:0px 0px 0px #0061A9;
+  }
+}
+
+/* 智能核查 end*/
+
+
+/* 树当前选中节点高亮 */
+#app .el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content {
+  background-color: #0061A9;
+  color: #fff;
+}
+/* 树当前选中节点高亮 end*/

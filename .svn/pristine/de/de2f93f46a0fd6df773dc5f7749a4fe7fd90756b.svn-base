@@ -1,0 +1,144 @@
+<html>
+
+<head>
+    <title>预览页面</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/detail.css">
+    <!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
+    <style>
+        clearfix:after {
+            display: block;
+            content: '';
+            clear: both;
+        }
+    </style>
+</head>
+
+<body style="height: 100%;">
+    <div class="Detail clearfix">
+        <!-- 左侧目录右侧内容 -->
+        <div class="Detail_main clearfix" id="div_container">
+            <!-- 右侧 -->
+            <div class="Detail_right" style="position: relative;">
+                <!-- 定位 -->
+                <h3 class="h3">
+                    <!--<img src="./img/mag2.png" alt="" class="mag2" onclick="previewModule.doSearch()">-->
+                    <input id="seachInput" type="text" class="searchstr" oninput="previewModule.doSearch()">
+                    <span class="h3_right">
+                        关键词定位:
+                        <img src="./img/prev.png" alt="" style="margin-left: 10px;" onclick="previewModule.subLocal()">
+                        <i><em>0</em>/<strong>0</strong></i>
+                        <img src="./img/next.png" alt="" onclick="previewModule.addLocal()">
+                    </span>
+                </h3>
+                <div id="div_content" style="position: relative;" class="clearfix">
+
+                </div>
+                <!-- loadding -->
+                <div class="els_sy_loadding loading_tmw">
+                    <img src='./img/loading.gif'>
+                    <p style="margin-top: 20px;">正在加载中，请耐心等候</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 无HTML文档 -->
+    <div class="no_htmlWarn clearfix" style="display: none;">
+        <span>
+            此文档暂无解析文件,已为您自动展示原文。
+        </span>
+        <img src="./img/close.png">
+    </div>
+    <!-- 无内容 -->
+    <div class="Detail_cont" style="display: none;">
+        <!-- 无HTML文档 -->
+        <div class="no_html"></div>
+    </div>
+</body>
+<script src="../Allurl.js"></script>
+<script src="./js/jquery-3.2.1.js"></script>
+<script src="./js/clipboard.min.js"></script>
+<script src="./js/preview.js"></script>
+<script src="./js/jquery.mark.min.js"></script>
+<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+<script>
+    $(function () {
+      previewModule = window.previewModule
+        var rfsId = getUrlPara('rfsId')
+        var docId = getUrlPara('docId')
+        var token = getUrlPara('token')
+        var userId = getUrlPara('userId')
+        var param = {
+            token: token,
+            userId: userId,
+            data: {
+                rfsId: rfsId,
+                docId: docId
+            }
+        }
+        $.ajax({
+            type: 'POST',
+            url: allUrl + '/rfs/preview/info',
+            // url: 'http://shrd.f3322.org:1066/rfs/preview/info',
+            contentType: 'application/json',
+            dataType: 'json',
+            data: JSON.stringify(param),
+            success: function (res) {
+                //请求成功函数内容
+                // excel:d8b1ebba97094f94b40763be5d66a00b pptx:b7cce8cd21e04c68b4693def725cf189 doc:cdc179a3f9d8404ea671973196ac5087 pdf:f5a39347d35749cca5185112a86bc955
+                // previewModule.transStatus = res.data.transStatus;
+                // previewModule.rfsId = rfsId;
+                // previewModule.srcfileType = res.data.type;
+                if (res.code == 0) {
+                    previewModule.transStatus = res.data.transStatus;
+                    previewModule.rfsId = rfsId;
+                    previewModule.srcfileType = res.data.type;
+                    var docDownUrl = res.data.docDownUrl;
+                    var docPreviewUrl = res.data.docPreviewUrl;
+                    var srcs = allUrl;
+                    if (/^\//.test(docDownUrl.trim())) {
+                        docDownUrl = srcs + res.data.docDownUrl
+                    } else {
+                        docDownUrl = res.data.docDownUrl;
+                    }
+                    if (/^\//.test(docPreviewUrl.trim())) {
+                      docPreviewUrl = srcs + res.data.docPreviewUrl
+                    } else {
+                      docPreviewUrl = res.data.docPreviewUrl;
+                    }
+                    previewModule.docDownUrl = docDownUrl;
+                    previewModule.docPreviewUrl = docPreviewUrl;
+                    previewModule.loginUserId = userId;
+                    previewModule.docId = docId;
+
+                    previewModule.loadPreviewData();
+                    previewModule.initScript();
+                } else {
+                    $('#div_content').html(res.msg)
+                    $('#div_content').css({'text-align':'center','margin-top': '10px'})
+                }
+            },
+            error: function (jqXHR) {
+                //请求失败函数内容
+            }
+        })
+
+
+    });
+    /**
+     * 获取url的参数
+     * @param name
+     * @returns {null}
+     */
+    function getUrlPara(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) return unescape(r[2]);
+        return null;
+    }
+</script>
+
+</html>

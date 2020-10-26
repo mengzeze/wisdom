@@ -1,0 +1,3781 @@
+<template>
+  <div class="projectmessage" >
+    <div class="header-box">
+      <el-breadcrumb separator="/">
+        <el-breadcrumb-item>项目管理</el-breadcrumb-item>
+        <el-breadcrumb-item>项目信息</el-breadcrumb-item>
+      </el-breadcrumb>
+
+      <div class="flex a-center j-spaceBetween">
+        <div class="flex a-center company-wrap">
+          <i class="project-company iconfont jianzhu color-primary"></i>
+          <span class="company-name ellipsis1 ml-3">{{proMsg.name}}</span>
+        </div>
+        <div class="flex a-center header-btn-wrap">
+          <el-button @click="projectTransfer"  type="primary" v-if="canTransfer" icon="el-icon-sort">项目移交</el-button>
+          <el-button @click="projectDelete"  type="primary" v-if="$utils.checkProjectPermission('project_del')" icon="el-icon-delete">项目删除</el-button>
+          <el-button @click="handleBack"  type="primary" v-if="backFlag && $utils.checkProjectPermission('project_out')" icon="el-icon-back">项目退出</el-button>
+          <!-- <el-button @click="reportBtn" size="medium" type="primary" class="check-report-btn">
+              <i></i>
+              利益冲突核查报告</el-button> -->
+          <!-- <el-button @click="proPigeonhole"
+                     size="medium"
+                     type="primary"
+                     icon="el-icon-pigeonhole"
+                     v-if="$utils.m('paper_manage') && $utils.checkSystemPermission('project_seal') && pigeonholeFlag  && !isFromStop"
+          >项目归档</el-button> -->
+        </div>
+      </div>
+    </div>
+
+<!--      <el-row class="finance_tit">-->
+<!--          &lt;!&ndash; <span>项目信息</span> &ndash;&gt;-->
+<!--          <p class="fl"><img src="../../../../assets/image/logocompany.png" alt style="width:24px;height:24px;margin-right: 5px"/></p>-->
+<!--          <p class="project_name fl">{{proMsg.name}}</p>-->
+<!--          &lt;!&ndash;<el-button @click="projectStop" size="small" type="primary">项目终止</el-button>&ndash;&gt;-->
+<!--          <el-button @click="projectDelete"  type="primary" v-if="$utils.checkProjectPermission('project_del')" icon="el-icon-delete">项目删除</el-button>-->
+<!--          <el-button @click="projectTransfer"  type="primary" v-if="$utils.checkProjectPermission('project_transfer')" icon="el-icon-sort">项目移交</el-button>-->
+<!--          <el-button @click="handleBack"  type="primary" v-if="backFlag && $utils.checkProjectPermission('project_out')" icon="el-icon-back">项目退出</el-button>-->
+<!--          &lt;!&ndash; <el-button @click="reportBtn" size="medium" type="primary" class="check-report-btn">-->
+<!--              <i></i>-->
+<!--              利益冲突核查报告</el-button> &ndash;&gt;-->
+<!--            <el-button @click="proPigeonhole"-->
+<!--                       size="medium"-->
+<!--                       type="primary"-->
+<!--                       icon="el-icon-pigeonhole"-->
+<!--                       v-if="$utils.m('paper_manage') && $utils.checkSystemPermission('project_seal') && pigeonholeFlag  && !isFromStop"-->
+<!--                       >项目归档</el-button>-->
+<!--      </el-row>-->
+      <div class="cont_box clearFix">
+          <!--客户信息-->
+          <div v-if="$utils.m('customer_manage')" class="cont_area">
+              <div class="clearfix cont_tit">
+                  <span>客户信息</span>
+                  <el-button size="medium" type="primary" @click="handleClick" class="project_edit" v-if="msg_flag && curProIsHasCrm">编辑</el-button>
+                  <el-button size="medium" type="primary" @click="selectCrmClick" v-if="!curProIsHasCrm">选择客户</el-button>
+                  <!-- <el-button size="medium" type="primary" @click="selectCrmClick">选择客户</el-button> -->
+              </div>
+              <div class="clearfix specif_cont">
+                  <div class="clearfix specif_box">
+                      <label>客户名称：</label><div>{{customMsg.name}}</div>
+                  </div>
+                  <div class="clearfix specif_box">
+                      <label>所属行业：</label><div v-if="customMsg.industryOne.length != 0">{{customMsg.industryOne}}、{{customMsg.industryTwo}}</div>
+                  </div>
+                  <div class="clearfix specif_box">
+                      <label>客户类型：</label><div>{{customMsg.type}}</div>
+                  </div>
+                  <div class="clearfix specif_box">
+                      <label>成立时间：</label><div>{{customMsg.foundingTime}}</div>
+                  </div>
+                  <div class="clearfix specif_box">
+                      <label>法人代表：</label><div>{{customMsg.legalPerson}}</div>
+                  </div>
+                  <div class="clearfix specif_box">
+                      <label>联系电话：</label><div>{{customMsg.telephone}}</div>
+                  </div>
+                  <div class="clearfix specif_box">
+                      <label>主营业务：</label><div>{{customMsg.business}}</div>
+                  </div>
+              </div>
+          </div>
+          <!--项目信息-->
+          <div class="cont_area">
+              <div class="clearfix cont_tit">
+                  <span>项目信息</span>
+                  <el-button @click="messageEdit" size="medium" type="primary" v-if="pro_flag == false && msg_flag" class="project_edit msg_pro_edit">编辑</el-button>
+                  <el-button @click="messageSave" size="medium" type="primary" v-if="pro_flag == true">保存</el-button>
+                  <el-button @click="messageCanl" size="medium" type="primary" v-if="pro_flag == true">取消</el-button>
+              </div>
+              <div class="clearfix specif_cont">
+                  <div class="clearfix">
+                        <div class="clearfix specif_box specif_msg">
+                            <label>项目编码：</label>
+                            <div v-if="!pro_flag">{{proMsg.code}}</div>
+                            <el-input v-model="proForm.code" v-if="pro_flag" type="text" @blur="inputProjectCodeBlur" :maxlength="100" placeholder="请输入项目编码" :disabled="!hasEditCodePower"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>项目名称：</label><div v-if="pro_flag == false">{{proMsg.name}}</div>
+                            <el-input v-model="proForm.name" v-if="pro_flag == true" type="text" :maxlength="50"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>项目简称：</label><div v-if="pro_flag == false">{{proMsg.abbreviation}}</div>
+                            <el-input v-model="proForm.abbreviation" v-if="pro_flag == true" :maxlength="20"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label :class="{'requied':pro_flag}">业务类型：</label><div v-if="pro_flag == false">{{proMsg.financingName}}</div>
+                            <el-input v-model="proForm.financingName" v-if="pro_flag == true" disabled></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label :class="{'requied':pro_flag}">所属部门：</label><div v-if="pro_flag == false">{{proMsg.deptName}}</div>
+                            <el-input v-model="proForm.deptName" v-if="pro_flag == true" disabled></el-input>
+                            <el-button type="primary" @click="optDepart" class="opt_btn" v-if="pro_flag == true">选择</el-button>
+                        </div>
+                        <!-- 添加项目状态 1.2.4 -->
+                        <div class="clearfix specif_box specif_msg">
+                            <label :class="{'requied':pro_flag}">项目状态：</label><div v-if="pro_flag == false">{{proMsg.projectStatus}}</div>
+                            <el-input v-model="proForm.projectStatus" v-if="pro_flag == true" disabled></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>开始日期：</label><div v-if="pro_flag == false">{{proMsg.startTime}}</div>
+                            <el-date-picker v-model="proForm.startTime"
+                                            type="datetime"
+                                            placeholder="请选择日期"
+                                            v-if="pro_flag == true"
+                                            format="yyyy-MM-dd HH:mm:ss"
+                                            value-format="yyyy-MM-dd HH:mm:ss"
+                                            @focus="$utils.handleTimeFocus"></el-date-picker>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>结束日期：</label><div v-if="pro_flag == false">{{proMsg.endTime}}</div>
+                            <el-date-picker v-model="proForm.endTime"
+                                            type="datetime"
+                                            placeholder="请选择日期"
+                                            v-if="pro_flag == true"
+                                            format="yyyy-MM-dd HH:mm:ss"
+                                            value-format="yyyy-MM-dd HH:mm:ss"
+                                            @focus="$utils.handleTimeFocus"></el-date-picker>
+                        </div>
+                        <div class="clearfix specif_box specif_msg" style="width:100%;">
+                            <label>上市/挂牌板块：</label>
+                            <div v-if="pro_flag == false">{{proMsg.ipoMarket}}</div>
+                            <el-select clearable v-model="proForm.ipoMarket" placeholder="请选择上市/挂牌板块" collapse-tags style="margin-left: 20px;" v-if="pro_flag == true" class="single-row-input">
+                                <el-option v-for="obj in projectPlat" :key="obj.id" :label="obj.label" :value="obj.id"></el-option>
+                            </el-select>
+                        </div>
+                        <div style="width:100%;overflow:hidden;">
+                            <div class="clearfix specif_box specif_msg" style="width:30%;">
+                                <label>项目区域：</label>
+                                <div v-if="pro_flag == false">{{proMsg.itemArea}}</div>
+                                <el-select filterable clearable v-model="proForm.itemArea" placeholder="请选择项目区域" collapse-tags style="margin-left: 20px;" v-if="pro_flag == true" class="single-row-input" @change="areaChange(proForm.itemArea)">
+                                    <el-option v-for="obj in projectArea"  :key="obj.id"  :label="obj.label" :value="obj.id"></el-option>
+                                </el-select>
+                            </div>
+                            <!-- 900000 为境外 -->
+                            <div class="clearfix specif_box specif_msg" style="width:50%;" v-if="proForm.itemArea == 900000">
+                                <label :class="{'requied':pro_flag}">区域名称：</label><div v-if="pro_flag == false" class="project_describe">{{proMsg.areaName}}</div>
+                                <el-input v-model="proForm.areaName" v-if="pro_flag == true" :maxlength="30" placeholder="请输入区域名称"></el-input>
+                            </div>
+                        </div>
+                        <!-- 发行时间要大于申报时间 -->
+                        <div class="clearfix specif_box specif_msg">
+                            <label>申报时间：</label><div v-if="pro_flag == false">{{proMsg.reportTime}}</div>
+                            <!-- :disabled="!txid" -->
+                                <!-- :disabled="reportStatus == '报送中' || reportStatus == '报送成功'" -->
+                            <el-date-picker
+                                v-model="proForm.reportTime"
+                                type="date"
+                                placeholder="请选择日期"
+                                v-if="pro_flag == true"
+                                format="yyyy-MM-dd"
+                                value-format="yyyy-MM-dd"
+                                @focus="$utils.handleTimeFocus"></el-date-picker>
+                            <el-tooltip
+                                v-if="pro_flag == true"
+                                placement="top" effect="dark"
+                                class="tooltip-style">
+                                <div slot="content">项目的申报受理日期，项目信息报送以后，<br/>报送过申报时间后不可更改。</div>
+                                <i class="el-icon-warning-outline"></i>
+                            </el-tooltip>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>发行时间：</label><div v-if="pro_flag == false">{{proMsg.issueTime}}</div>
+                            <!-- :disabled="!txid" -->
+                                <!-- :disabled="reportStatus == '报送中' || reportStatus == '报送成功'" -->
+                            <el-date-picker
+                                v-model="proForm.issueTime"
+                                type="date"
+                                placeholder="请选择日期"
+                                v-if="pro_flag == true"
+                                format="yyyy-MM-dd"
+                                value-format="yyyy-MM-dd"
+                                @focus="$utils.handleTimeFocus"></el-date-picker>
+                             <el-tooltip
+                                v-if="pro_flag == true"
+                                class="tooltip-style"
+                                placement="top" effect="dark">
+                                <div slot="content">适用上市/挂牌时间的，填写上市/挂牌时间；<br/>不适用上市/挂牌时间的，填写“缴款截止日”。项目信息<br/>报送以后，报送过申报时间后不可更改</div>
+                                <i class="el-icon-warning-outline"></i>
+                            </el-tooltip>
+                        </div>
+                        <div  class="stkCode-wrapper" style="clear:both;">
+                            <div v-show="pro_flag == false" :key="index" v-for="(domain, index) in stkAndTpsDetail">
+                                <div class="stkCode-content">
+                                    <div class="clearfix specif_box specif_msg"  style="width:50%;">
+                                        <label>证券代码：</label><div class="project_describe">{{domain.stkCode}}</div>
+                                    </div>
+                                    <div class="clearfix specif_box specif_msg"  style="width:50%;">
+                                        <label>证券简称：</label><div v-if="pro_flag == false" class="project_describe">{{domain.stkSpName}}</div>
+                                    </div>
+                                    <div class="clearfix specif_box specif_msg"  style="width:50%;">
+                                        <label>交易场所：</label><div class="project_describe">{{domain.tpCode}}</div>
+                                    </div>
+                                    <div v-if="domain.tpCode == '其他'" class="clearfix specif_box specif_msg"  style="width:50%;">
+                                        <label>交易场所名称：</label><div class="project_describe">{{domain.tpName}}</div>
+                                    </div>
+                                    <!-- <div class="clearfix specif_box specif_msg"  style="width:50%;">
+                                        <label>证券代码：</label><div v-if="pro_flag == false" class="project_describe">{{domain.stkCode}}</div>
+                                        <el-input v-model="domain.stkCode" v-if="pro_flag == true"></el-input>
+                                    </div>
+                                    <div class="clearfix specif_box specif_msg"  style="width:50%;">
+                                        <label>证券简称：</label><div v-if="pro_flag == false" class="project_describe">{{domain.stkSpName}}</div>
+                                        <el-input v-model="domain.stkSpName" v-if="pro_flag == true"></el-input>
+                                    </div>
+                                    <div class="clearfix specif_box specif_msg" style="width:50%;">
+                                        <label>交易场所：</label>
+                                        <div v-if="pro_flag == false">{{domain.tpCode}}</div>
+                                        <el-select v-model="domain.tpCode" placeholder="请选择" collapse-tags style="margin-left: 20px;" v-if="pro_flag == true" class="single-row-input">
+                                            <el-option v-for="obj in tradingPlaces"  :key="obj.id"  :label="obj.label" :value="obj.id"></el-option>
+                                        </el-select>
+                                    </div>
+                                    <div class="clearfix specif_box specif_msg"  style="width:50%;" v-if="domain.tpCode == 2007">
+                                        <label class="requied">交易场所名称：</label><div v-if="pro_flag == false" class="project_describe">{{domain.tpName}}</div>
+                                        <el-input v-model="domain.tpName" v-if="pro_flag == true"></el-input>
+                                    </div> -->
+                                </div>
+                            </div> 
+                            <div v-if="pro_flag == true" class="clearfix specif_box specif_msg ml-2">
+                                <security-message :type="'projectMessage'" :stkAndTps="stkAndTps" ref="securt"></security-message>
+                            </div>
+                        </div>
+                        <div class="clearfix specif_box specif_msg" style="width:100%;">
+                            <label>项目描述：</label><div v-if="pro_flag == false" class="project_describe">{{proMsg.description}}</div>
+                            <el-input v-model="proForm.description" v-if="pro_flag == true" type="textarea" :maxlength="1000" style="width:73%;"></el-input>
+                        </div>
+                  </div>
+                  <div class="parent-project clearfix" v-if="!backFlag && !linkProjectHide">
+                      <span class="fl">关联项目：</span><div class="fl">{{proMsg.parentProject}}</div>
+                  </div>
+              </div>
+          </div>
+          <!--中介机构-->
+          <div v-if="$utils.m('customer_manage')" class="cont_area">
+              <div class="clearfix cont_tit">
+                  <span>中介机构</span>
+              </div>
+              <div class="clearfix specif_cont">
+                  <div class="clearfix specif_box" v-for="(item,key,index) in messageObj">
+                      <label>{{key}}：</label><div v-if="pro_flag == false" v-for="obj in item"><span v-if="obj.name != 0">{{obj.name}}、</span></div>
+                      <el-select v-model="valueObj[index].value" placeholder="请选择" v-show="pro_flag" multiple collapse-tags style="margin-left: 20px;width:300px;">
+                          <el-option v-for="obj in messageList[index]"  :key="obj.id"  :label="obj.name" :value="obj.id"></el-option>
+                      </el-select>
+                  </div>
+              </div>
+          </div>
+          <!--团队信息-->
+          <div class="cont_area">
+              <div class="clearfix cont_tit">
+                  <span>团队信息</span>
+                  <el-button size="medium" type="primary" @click="teamProject" class="project_edit" v-if="msg_flag">编辑</el-button>
+              </div>
+              <div class="clearfix specif_cont">
+                  <div class="clearfix specif_cont">
+                      <div v-for="(value,key) in projectMemberInfo" class="clearfix specif_box">
+                            <label>{{value.roleName}}：</label><div><span style="display: inline-block;margin-right: 10px;"  v-for="item in value.usNameList">{{item}}、</span></div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <!--发行档案,债券项目才显示该模块-->
+          <div class="cont_area record_box" v-if="isBondPro" v-loading="loading" element-loading-text="导入中">
+              <div class="clearfix cont_tit">
+                  <span>发行档案</span>
+                  <div>
+                        <el-button size="medium" type="primary" @click="editRecordBtn" v-if="!editRecord && msg_flag">编辑</el-button>
+                        <el-button size="medium" type="primary" @click="cancelEditRecord" v-if="editRecord">取消</el-button>
+                        <el-button size="medium" type="primary" @click="saveRecord"  v-if="editRecord">保存</el-button>
+                        <el-button size="medium" type="primary" @click="exportRecord" v-if="!editRecord && msg_flag">导出</el-button>
+                        <el-button size="medium" type="primary"  v-if="!editRecord && msg_flag" @click="importRecordBtn">
+                            导入
+                          <!-- <input class="add-file"
+                                @change="importRecordBtn(0)" ref="files" type="file"/>导入 -->
+                        </el-button>
+                        <el-button size="medium" type="primary" @click="downRecordMould" v-if="msg_flag">下载模板</el-button>
+                  </div>
+              </div>
+              <div class="specif_cont record_specif_cont">
+                    <div class="clearfix">
+                        <div class="clearfix specif_box specif_msg">
+                            <label>发行人联系人：</label>
+                            <div v-if="!editRecord">{{recordData.issuerContact}}</div>
+                            <el-input v-model="recordDataEdit.issuerContact" v-if="editRecord" type="text" :maxlength="50" class="single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>发行人联系方式：</label>
+                            <div v-if="!editRecord">{{recordData.issuerContactWay}}</div>
+                            <el-input v-model="recordDataEdit.issuerContactWay" v-if="editRecord" :maxlength="50" class="single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>项目组联系人：</label>
+                            <div v-if="!editRecord">{{recordData.projectGroupContact}}</div>
+                            <el-input v-model="recordDataEdit.projectGroupContact" v-if="editRecord" :maxlength="50" class="single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>项目组联系方式：</label>
+                            <div v-if="!editRecord">{{recordData.projectGroupContactWay}}</div>
+                            <el-input v-model="recordDataEdit.projectGroupContactWay" v-if="editRecord" :maxlength="50" class="single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>主体资质：</label>
+                            <div v-if="!editRecord">{{recordData.mainBodyAptitudeName}}</div>
+                            <el-select v-model="recordDataEdit.mainBodyAptitude" placeholder="请选择" collapse-tags style="margin-left: 20px;" v-if="editRecord" class="single-row-input">
+                                <el-option v-for="obj in mainNaturalList"  :key="obj.code"  :label="obj.name" :value="obj.code"></el-option>
+                            </el-select>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>债项资质：</label>
+                            <div v-if="!editRecord">{{recordData.debtAptitudeName}}</div>
+                            <el-select v-model="recordDataEdit.debtAptitude" placeholder="请选择" collapse-tags style="margin-left: 20px;" v-if="editRecord" class="single-row-input">
+                                <el-option v-for="obj in couponTtemList"  :key="obj.code"  :label="obj.name" :value="obj.code"></el-option>
+                            </el-select>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>申报规模（亿）：</label>
+                            <div v-if="!editRecord">{{recordData.declareScale}}</div>
+                            <el-input v-model="recordDataEdit.declareScale" v-if="editRecord" @blur="declareScaleBlur(recordDataEdit.declareScale, 0)" :maxlength="100" class="single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>核准规模（亿）：</label>
+                            <div v-if="!editRecord">{{recordData.checkScale}}</div>
+                            <el-input v-model="recordDataEdit.checkScale" v-if="editRecord" @blur="declareScaleBlur(recordDataEdit.checkScale, 1)" :maxlength="100" class="single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div class="label_box"><label>批文有效期：</label></div>
+                            <div v-if="!editRecord">{{recordData.approvalValidityStartTime}}</div>
+                            <el-date-picker v-if="editRecord" @change="test"
+                                            v-model="recordDataEdit.approvalValidityStartTime"
+                                            type="date"
+                                            placeholder="请选择时间"
+                                            @focus="$utils.handleTimeFocus">
+                            </el-date-picker>
+                            <span class="time-explain fl" v-if="editRecord || recordDataEdit.approvalValidityStartTime != '' && recordDataEdit.approvalValidityEndTime != ''">至</span>
+                            <el-date-picker v-if="editRecord"
+                                            @change="test2"
+                                            v-model="recordDataEdit.approvalValidityEndTime"
+                                            type="date"
+                                            placeholder="请选择时间"
+                                            @focus="$utils.handleTimeFocus">
+                            </el-date-picker>
+                            <div v-if="!editRecord">{{recordData.approvalValidityEndTime}}</div>
+                            <!-- <date-range :date-start.sync="recordDataEdit.approvalValidityStartTime" v-if="editRecord"
+                                  :date-end.sync="recordDataEdit.approvalValidityEndTime"
+                                  format="yyyy-MM-dd"></date-range> -->
+
+                            <!-- <el-input v-model="recordDataEdit.approvalValidity" v-if="editRecord" type="textarea" resize="none" :rows="3" style="width:80%"></el-input> -->
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <label :class="{'lable-fixed-w':editRecord}">批复文号：</label>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.replyNum}}</div>
+                            <el-input v-model="recordDataEdit.replyNum" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label :class="{'lable-fixed-w':editRecord}">发行方式：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.publishWay}}</div>
+                            <el-input v-model="recordDataEdit.publishWay" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label :class="{'lable-fixed-w':editRecord}">发行场地：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.publishSite}}</div>
+                            <el-input v-model="recordDataEdit.publishSite" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label :class="{'lable-fixed-w':editRecord}">债券期限：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.bondDeadline}}</div>
+                            <el-input v-model="recordDataEdit.bondDeadline" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label :class="{'lable-fixed-w':editRecord}">担保机构：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.guarantors}}</div>
+                            <el-input v-model="recordDataEdit.guarantors" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label :class="{'lable-fixed-w':editRecord}">特殊条款：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.specificItems}}</div>
+                            <el-input v-model="recordDataEdit.specificItems" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label :class="{'lable-fixed-w':editRecord}">往期债券：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.pastBond}}</div>
+                            <el-input v-model="recordDataEdit.pastBond" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label :class="{'lable-fixed-w':editRecord}">承销团成员：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.syndicateMember}}</div>
+                            <el-input v-model="recordDataEdit.syndicateMember" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label :class="{'lable-fixed-w':editRecord}">簿记室：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.bookkeepingRoom}}</div>
+                            <el-input v-model="recordDataEdit.bookkeepingRoom" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                    </div>
+                    <p class="sub_title">（启动发行后填写）</p>
+                    <div class="clearfix">
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <div><label>债券简称：</label></div>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.bondAbbreviation}}</div>
+                            <el-input v-model="recordDataEdit.bondAbbreviation" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>银行间代码：</label>
+                            <div v-if="!editRecord">{{recordData.bankCode}}</div>
+                            <el-input v-model="recordDataEdit.bankCode" v-if="editRecord" :maxlength="20" class="single-row-input" placeholder="请输入" type="number" @wheel.native.prevent="stopScrollFun($event)"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>是否分期：</label>
+                            <!-- <div v-if="!editRecord">{{recordData.instalmentFlag == 1 ? "是":"否"}}</div> -->
+                            <div v-if="!editRecord">{{recordData.instalmentFlag == 1 ? '是' : (recordData.instalmentFlag == 0 ? '否' : '')}}</div>
+                            <p v-if="editRecord">
+                                <el-radio v-model="recordDataEdit.instalmentFlag" label="1">是</el-radio>
+                                <el-radio v-model="recordDataEdit.instalmentFlag" label="0">否</el-radio>
+                            </p>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>是否多品种发行：</label>
+                            <!-- <div v-if="!editRecord">{{recordData.multispeciesFlag == 1 ? "是":"否"}}</div> -->
+                            <div v-if="!editRecord">{{recordData.multispeciesFlag == 1 ? '是' : (recordData.multispeciesFlag == 0 ? '否' : '')}}</div>
+                            <p v-if="editRecord">
+                                <el-radio v-model="recordDataEdit.multispeciesFlag" label="1">是</el-radio>
+                                <el-radio v-model="recordDataEdit.multispeciesFlag" label="0">否</el-radio>
+                            </p>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>已发行规模：</label>
+                            <div v-if="!editRecord">{{recordData.issuedScale}}</div>
+                            <el-input v-model="recordDataEdit.issuedScale" v-if="editRecord" @blur="declareScaleBlur(recordDataEdit.issuedScale, 2)" :maxlength="100" class="single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>交易所代码：</label>
+                            <div v-if="!editRecord">{{recordData.exchangeCode}}</div>
+                            <el-input v-model="recordDataEdit.exchangeCode" v-if="editRecord" :maxlength="20" class="single-row-input" placeholder="请输入" type="number" @wheel.native.prevent="stopScrollFun($event)"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>本期债券规模（亿）：</label>
+                            <div v-if="!editRecord">{{recordData.thisBondScale}}</div>
+                            <el-input v-model="recordDataEdit.thisBondScale" v-if="editRecord" @blur="declareScaleBlur(recordDataEdit.thisBondScale, 3)" :maxlength="100" class="single-row-input min-single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>质押代码：</label>
+                            <div v-if="!editRecord">{{recordData.pledgeCode}}</div>
+                            <el-input v-model="recordDataEdit.pledgeCode" v-if="editRecord" :maxlength="20" class="single-row-input" type="number" placeholder="请输入" @wheel.native.prevent="stopScrollFun($event)"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>询价利率区间（%）：</label>
+                            <div v-if="!editRecord">{{recordData.enquiryRateRegion}}</div>
+                            <!-- <el-input v-model="recordDataEdit.enquiryRateRegion" v-if="editRecord" :maxlength="100" class="single-row-input" placeholder="请输入" @blur="testNumberRange" ></el-input> -->
+                            <el-input v-model="recordDataEdit.enquiryRateRegion" v-if="editRecord" :maxlength="100" class="single-row-input min-single-row-input1" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>发行后剩余规模（亿）：</label>
+                            <div v-if="!editRecord">{{recordData.issuedRemainScale}}</div>
+                            <el-input v-model="recordDataEdit.issuedRemainScale" v-if="editRecord" @blur="declareScaleBlur(recordDataEdit.issuedRemainScale, 4)" :maxlength="100" class="single-row-input min-single-row-input" placeholder="请输入"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg">
+                            <label>最终发行利率（%）：</label>
+                            <div v-if="!editRecord">{{recordData.endPublishRate}}</div>
+                            <el-input v-model="recordDataEdit.endPublishRate" v-if="editRecord" :maxlength="100" class="single-row-input min-single-row-input1" type="number" placeholder="请输入" @wheel.native.prevent="stopScrollFun($event)"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <label>受托期限：</label>
+                            <div v-if="!editRecord">{{recordData.baileeDeadline}}</div>
+                            <el-input v-model="recordDataEdit.baileeDeadline" v-if="editRecord" :maxlength="50"  placeholder="请输入" class="single-row-input"></el-input>
+                        </div>
+                        <div class="clearfix specif_box specif_msg max_specif_box">
+                            <label>参会委员：</label>
+                            <div v-if="!editRecord" class="max_specif_box_con">{{recordData.meetingMember}}</div>
+                            <el-input v-model="recordDataEdit.meetingMember" v-if="editRecord" :maxlength="500" type="textarea" resize="none" :rows="3" style="width:80%" placeholder="请输入"></el-input>
+                        </div>
+                    </div>
+                    <div class="cont_tit clearfix">
+                        <p class="sub_title fl" style="padding-bottom:0">（时间类信息）</p>
+                        <el-button size="medium" type="primary" @click="addTimesItem" v-if="editRecord" class="add-times-btn fr">添加时间字段</el-button>
+                    </div>
+                    <div class="clearfix time-box" v-if="!editRecord">
+                        <div class="clearfix specif_box specif_msg" v-for="(item, index) in recordData.timeVariable" :key="index">
+                            <el-select v-model="item.name" :placeholder="item.name" style="margin-left: 20px;width:180px;" disabled>
+                                <el-option v-for="(obj, index) in timeVarList"  :key="index"  :label="obj.name" :value="obj.id"></el-option>
+                            </el-select>
+                            <el-date-picker v-model="item.date" type="date" placeholder="请选择时间" disabled></el-date-picker>
+                        </div>
+                    </div>
+                    <div class="clearfix time-box" v-if="editRecord">
+                        <div class="clearfix specif_box specif_msg" v-for="(item, index) in recordDataEdit.timeVariable" :key="index">
+                            <div :title="item.used ? '已被任务引用，不可编辑': ''">
+                                <el-select v-model="item.myValue" :placeholder="item.name" style="margin-left: 20px;width:180px;" @change="((val)=>{changeTimeVar(val, index)})" :disabled="item.used">
+                                    <el-option v-for="(obj, index) in timeVarList"  :key="index"  :label="obj.name" :value="obj.id" :disabled="obj.selected"></el-option>
+                                </el-select>
+                            </div>
+                            <!-- <el-date-picker v-model="item.date" type="date" placeholder="请选择时间"  @change="varSeleDate(index, item)"></el-date-picker> -->
+                            <el-date-picker v-model="item.date"
+                                            type="date"
+                                            placeholder="请选择时间"
+                                            format="yyyy-MM-dd"
+                                            value-format="yyyy-MM-dd"
+                                            @change="varSeleDate(index, item)"
+                                            @focus="$utils.handleTimeFocus"></el-date-picker>
+                            <i class="el-icon-error fl" @click="deleteTimesItem(item, index)"></i>
+                        </div>
+                    </div>
+                    <p class="sub_title">（发行成功后填写）</p>
+                    <div class="sub_title sub_title2 clearfix">
+                        <label class="fl">是否为受托管理人：</label>
+                        <!-- <div class="fl" v-if="!editRecord">{{recordData.baileeFlag == 1 ? "是":"否"}}</div> -->
+                        <div class="fl" v-if="!editRecord">{{recordData.baileeFlag == 1 ? '是' : (recordData.baileeFlag === 0 ? '否' : '')}}</div>
+                        <p class="fl" v-if="editRecord">
+                            <el-radio v-model="recordDataEdit.baileeFlag" label="1">是</el-radio>
+                            <el-radio v-model="recordDataEdit.baileeFlag" label="0">否</el-radio>
+                        </p>
+                    </div>
+              </div>
+          </div>
+
+      </div>
+        <!--项目归档（底稿归档）-->
+        <el-dialog title="归档表单" :close-on-click-modal="false" class="proPigeonhole_dialog"  @close="proPigeo" :visible.sync="proPigeonholeVisible" width="818px">
+            <div class="pigeonhole_middle">
+                <p class="p_middle_title">底稿归档</p>
+                <div class="p_middle_nav">
+                    <div class="p_middle_nav_chunk">
+                        <span class="proPigeonhole_title p_middle_nav_chunk_title_proName" title="项目名称">项目名称:</span>
+                        <div class="p_middle_nav_chunk_proName">
+                            <el-input placeholder="请输入内容" class="" :disabled="true" v-model="proPigeonholeName_input"></el-input>
+                        </div>
+                    </div>
+                    <div class="p_middle_nav_chunk">
+                        <span class="p_middle_nav_chunk_title p_middle_nav_chunk_title_proNumber">项目编码:</span>
+                        <div class="p_middle_nav_chunk_proNumber">
+                            <el-input placeholder="请输入内容" class="" :disabled="true" v-model="proPigeonholeNumber_input"></el-input>
+                        </div>
+                    </div>
+                </div>
+                <div class="p_middle_pigeonholeStage">
+                    <span class="proPigeonhole_title" title="归档阶段">归档阶段:</span>
+                    <div class="p_middle_pigeonholeStage_stage">
+                        <el-input placeholder="请输入内容" class="" :disabled="true" v-model="stage_input"></el-input>
+                    </div>
+                </div>
+                <div class="p_middle_remark" v-for="(item,idx) in remarkFromArray">
+                    <span class="proPigeonhole_title" :title="item.name">{{item.name}}:</span>
+                    <div class="p_middle_remark_content">
+                        <el-input
+                            type="textarea"
+                            :autosize="{ minRows: 7, maxRows: 14}"
+                            resize="none"
+                            :placeholder="'请输入'+item.name"
+                            maxlength="1000"
+                            v-model="item.value">
+                        </el-input>
+                    </div>
+                </div>
+                <div style="padding-top: 13px" v-show="initDocExamRoleinfo.key">
+                    <i class="bitians">*</i>发起人所属部门：
+                    <el-select size="medium" v-model="valueinfo" filterable @change="initDocExamRole()" placeholder="请选择部门">
+                        <el-option
+                        v-for="item in isMultiDeptdata.deptList"
+                        :key="item.id"
+                        :label="item.name"
+                        :value="item.id">
+                        </el-option>
+                    </el-select>
+                </div>
+                <div class="p_middle_audit">
+                    <span class="proPigeonhole_title" title="审批环节">审批环节:</span>
+                    <div class="p_middle_audit_content" >
+                        <div class="p_middle_audit_content_middle" v-show="!isMultiDeptdata.isMultiDept">
+                            <p class="p_middle_audit_content_middle_title initiate_title">
+                                <span class="p_middle_audit_content_middle_title_people">发起人:</span>
+                                <span class="initiate_people">{{$store.state.loginObject.userName}}</span>
+                            </p>
+                        </div>
+                        <div class="p_middle_audit_content_middle" v-show="!isMultiDeptdata.isMultiDept">
+                            <p class="p_middle_audit_content_middle_title">
+                                <span class="p_middle_audit_content_middle_title_people">审批人:</span>
+                                <span class="p_middle_audit_content_middle_title_annotation">（审批方式：{{approveType}}）</span>
+                            </p>
+                            <div class="p_middle_audit_content_middle_list">
+                                <el-tag
+                                    :key="idx"
+                                    v-for="(tag,idx) in approvalNameArray"
+                                    :closable="false"
+                                    :disable-transitions="false"
+                                    >
+                                    {{tag}}
+                                </el-tag>
+                            </div>
+                        </div>
+                        <div class="p_middle_audit_content_middle" v-show="!isMultiDeptdata.isMultiDept">
+                            <p class="p_middle_audit_content_middle_title">
+                                <span class="p_middle_audit_content_middle_title_people">抄送人:</span>
+                                <span class="p_middle_audit_content_middle_title_annotation">（抄送方式：审批通过后通知）</span>
+                            </p>
+                            <p class="p_middle_audit_content_middle_operation color-primary" @click="addCopyPeopleFn(1)">
+                                 <i class="iconfont webicon308"></i><span >添加抄送人</span>
+                            </p>
+                            <div class="p_middle_audit_content_middle_list">
+                                <el-tag
+                                    :key="idx"
+                                    v-for="(tag,idx) in copyNameArray"
+                                    :closable="false"
+                                    :disable-transitions="false"
+                                    >
+                                    {{tag}}
+                                </el-tag>
+                                <el-tag
+                                    :key="tag.userId"
+                                    v-for="(tag,idx) in extCopyArray"
+                                    :closable="true"
+                                    :disable-transitions="false"
+                                    @close="handleCloseFn(tag)"
+                                    >
+                                    {{tag.name}}
+                                </el-tag>
+                            </div>
+                        </div>
+                        <div class="p_middle_audit_content_remark">
+                          <span class="p_middle_audit_content_remark_title" title="申请内容">申请内容:</span>
+                          <div class="p_middle_audit_content_remark_content">
+                                  <el-input
+                                      type="textarea"
+                                      :autosize="{ minRows: 7, maxRows: 14}"
+                                      resize="none"
+                                      placeholder="请输入申请内容，最多输入200字"
+                                      maxlength="200"
+                                      v-model="remark_textarea">
+                                  </el-input>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="cancelPigeonholeFn">取 消</el-button>
+                <el-button type="primary" @click="savePigeonholeFn">提交</el-button>
+            </span>
+        </el-dialog>
+      <!--项目移交-->
+      <el-dialog title="项目移交" :close-on-click-modal="false" :visible.sync="tranVisible" width="700px">
+          <div class="step_box">
+              <div class="clearfix step_div">
+                    <el-steps :active="active" finish-status="success"  align-center>
+                        <el-step title="账号验证"></el-step>
+                        <el-step title="人员选择"></el-step>
+                        <el-step title="完成"></el-step>
+                    </el-steps>
+              </div>
+              <div class="step_cont">
+                  <div class="role_inp" v-show="sort_one">
+                      <label>当前用户：</label><span>{{user_name}}</span>
+                  </div>
+                  <div class="role_inp" v-show="sort_one" v-on:keyup.enter="tranVisibleFn">
+                      <label>登录密码：</label><el-input type="password" v-model="role_take" placeholder="请输入密码" class="inp_pass"></el-input>
+                  </div>
+                  <div v-show="sort_two">
+                    <div class="role_inp">
+                        <label>新建负责人：</label>
+                        <el-select v-model="value" placeholder="请选择负责人">
+                            <el-option  v-for="item in options"  :key="item.value"  :label="item.label"  :value="item.usName">
+                            </el-option>
+                        </el-select>
+                    </div>
+                    <div class="step-two-sele">
+                        <el-checkbox v-model="isExitProject">移交后是否退出项目组</el-checkbox>
+                        <el-checkbox v-model="isTransferTask" v-if="$utils.m('project_task')">是否将移交任务创建人</el-checkbox>
+                    </div>
+                  </div>
+                  <div  v-show="sort_three_suc" class="clearfix step_suc">
+                      <img src="../../../../assets/charge/suc.png" alt="" />
+                      <div class="suc_msg">
+                          <p class="suc_msg_success">恭喜您，信息提交成功！</p>
+                          <p>已经对{{value}}发送通知</p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <span slot="footer" class="dialog-footer">
+                <el-button size="medium" @click="tranVisible = false" v-show="cancel">取消</el-button>
+                <el-button size="medium" type="primary" @click="tranVisibleFn">{{sure}}</el-button>
+          </span>
+      </el-dialog>
+      <!--选择人员-->
+      <frame-work v-if="flag" :peodatas='peodatas'  v-on:statesbox='statesboxs'></frame-work>
+      <!--选择部门-->
+      <frame-peos v-if="flags" :clearstate="clearstate" v-on:states="stateDepart" :treestate='treestate' :tree="tree" :setDataInfo="setDataInfo"></frame-peos>
+      <!--退出项目-->
+      <el-dialog title="退出项目" :close-on-click-modal="false" :visible.sync="dialogVisible" width="30%">
+          <div v-on:keyup.enter="dialogVisibleFn">
+              <p class="hint_msg">您将退出“{{proMsg.name}}”项目！请确认登录密码后执行操作</p>
+              <div style="text-align: left;">
+                  <label style="text-align: left; width:80px;">登录密码：</label>
+                  <el-input v-model="login_pass" type="password" placeholder="请输入密码" class="inp_pass"></el-input>
+              </div>
+          </div>
+          <span slot="footer" class="dialog-footer">
+        <el-button size="medium" @click="dialogVisible = false">取 消</el-button>
+        <el-button size="medium" type="primary" @click="dialogVisibleFn">退出</el-button>
+      </span>
+      </el-dialog>
+      <!--删除提醒-->
+      <el-dialog  title="提示" :close-on-click-modal="false" :visible.sync="dialogDelete"  width="30%">
+          <span style="font-size: 16px;line-height: 30px;">是否确认删除该项目</span>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogDelete = false">取 消</el-button>
+            <el-button type="primary" @click="dialogDeleteFn">确 定</el-button>
+          </span>
+      </el-dialog>
+        <!--利益冲突核查报告列表-->
+        <el-dialog title="利益冲突核查报告列表" :close-on-click-modal="false" :visible.sync="reportListVisible" width="790px">
+            <div style="height:550px;" class="comp-list">
+                <div class="clearfix">
+                    <el-form ref="form"  label-width="100px" class="form_box clearfix list_form">
+                        <el-form-item label="项目名称：" class="fl">
+                            <el-input v-model="reportProjectName" placeholder="请输入项目名称"></el-input>
+                        </el-form-item>
+                        <el-button size="medium" icon="el-icon-refresh" class="fr" @click="resetBtn">重置</el-button>
+                        <el-button size="medium" icon="el-icon-search" class="search-btn fr" type="primary" @click="searchBtn">查询</el-button>
+                    </el-form>
+                </div>
+                <el-scrollbar style="height:100%">
+                    <el-table :data="reportListData" fit show-header  :header-cell-style="{background:'#FAFAFA',color:'#000'}"  style="width: 100%" class="pro_table">
+                        <el-table-column prop="name" label="项目名称" align="center" min-width="100">
+                            <template slot-scope="scope">
+                                <p :title="scope.row.name" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.name}}</p>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="操作" align="center" class="pro_edit_task" width="200">
+                            <template slot-scope="scope">
+                                    <el-button type="text"  @click="viewReport(scope.$index, scope.row)" class="handle-btn" title="查看报告">查看报告</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-scrollbar>
+            </div>
+            <!-- <span slot="footer" class="dialog-footer">
+                <el-button>抄送</el-button>
+                <el-button type="primary" :disabled="newProtep">导出至客户文档</el-button>
+            </span> -->
+        </el-dialog>
+        <!--利益冲突比对结果报告-->
+        <el-dialog title="利益冲突比对结果报告" :close-on-click-modal="false" :visible.sync="compResultVisible" width="600px" class="comp-result">
+            <div style="height:300px;">
+                <el-scrollbar style="height:100%">
+                    <p class="comp-result-title">经比对，荣大科技ipo项目中，发行人关联方【唐一二】与项目【深圳飞荣达公司债】存在利益冲突</p>
+                    <p class="comp-result-title">经核实，利益冲突原因为：</p>
+                    <p class="comp-result-con">经比对，客户唐一二与2017-07-05发布的黑名单姓名/证件号码比对一致，经核实，客户与黑名单比对一致的原因为：经比对，客户唐一二与2017-07-05发布的黑名单姓名/证件号码比对一致，经核实，客户与黑名单比对一致的原因为：经比对，客户唐一二与2017-07-05发布的黑名单姓名/证件号码比对一致，经核实，客户与黑名单比对一致的原因为：经比对，客户唐一二与2017-07-05发布的黑名单姓名/证件号码比对一致，经核实，客户与黑名单比对一致的原因为：经比对，客户唐一二与2017-07-05发布的黑名单姓名/证件号码比对一致，经核实，客户与黑名单比对一致的原因为：经比对，客户唐一二与2017-07-05发布的黑名单姓名/证件号码比对一致，经核实，客户与黑名单比对一致的原因为：</p>
+                </el-scrollbar>
+            </div>
+            <!-- <span slot="footer" class="dialog-footer">
+                <el-button>抄送</el-button>
+                <el-button type="primary" :disabled="newProtep">导出至客户文档</el-button>
+            </span> -->
+        </el-dialog>
+        <el-dialog title="选择客户" :close-on-click-modal="false" :visible.sync="seleCrmVisible" width="1350px" class="sele-crm-box">
+            <div class="query-box">
+                <el-form ref="search_form" :inline="true" class="form_box clearfix">
+                    <el-form-item label="客户名称：">
+                    <el-input v-model.trim="search_form.name" placeholder="请输入客户名称"></el-input>
+                    </el-form-item>
+                    <el-form-item label="客户负责人：">
+                    <el-input v-model="search_form.principal" class="fl" placeholder="请选择客户负责人" disabled="disabled" :customer="customer"></el-input>
+                    <el-button type="primary" size="small" @click="optUser(2)" class="fl" style="margin-left: 0px;height: 40px;margin-top: 0px;">选择人员</el-button>
+                    </el-form-item>
+                    <el-form-item label="客户类型：">
+                    <el-select v-model="search_form.type" placeholder="请选择客户类型" clearable>
+                        <el-option
+                        v-for="item in selectStateListType"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                        </el-option>
+                    </el-select>
+                    </el-form-item>
+                    <el-form-item label="客户状态：">
+                    <el-select v-model="search_form.status" placeholder="请选择客户状态" clearable>
+                        <el-option v-for="item in selectStateListState" :key="item.value" :label="item.label" :value="item.value"> </el-option>
+                    </el-select>
+                    </el-form-item>
+                    <el-form-item label="行业（1级）：" class="classify">
+                    <el-select name="province" v-on:change="indexSelectsearch" v-model="indexIdsearch" clearable placeholder="请选择一级行业">
+                        <el-option  :value="item.id" v-for="(item, index) in select01search" :key="index">{{item.name}}</el-option>
+                    </el-select>
+                    </el-form-item>
+                    <el-form-item label="行业（2级）：" class="classify mt10">
+                    <el-select name="city"  v-model="indexId2search" clearable placeholder="请选择二级行业">
+                        <el-option :value="k.name" v-for="k in select02search" :key="k.name">{{k.name}}</el-option>
+                    </el-select>
+                    </el-form-item>
+                    <el-form-item>
+                    <el-button  type="primary" @click="searchBtn" icon="el-icon-search">查询</el-button>
+                    <el-button  @click="resetBtn" icon="el-icon-refresh">重置</el-button>
+                    </el-form-item>
+
+                </el-form>
+                </div>
+            <div class="table_box">
+            <el-table :data="tableData" fit show-header style="width: 100%;" :header-cell-style="{background:'#FAFAFA',color:'#000'}" class="pro_table" height="480px">
+                <el-table-column prop="uid" label="客户编码" align="center" min-width="100" fixed>
+                    <template slot-scope="scope">
+                        <p :title="scope.row.uid" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.uid}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="name" label="客户名称" align="center" min-width="100" fixed>
+                    <template slot-scope="scope">
+                        <p :title="scope.row.name" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.name}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="typeName" label="客户类型" align="center" min-width="100">
+                    <template slot-scope="scope">
+                        <p :title="scope.row.typeName" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.typeName}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="statusName" label="客户状态" align="center" min-width="100">
+                    <template slot-scope="scope">
+                        <p :title="scope.row.statusName" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.statusName}}</p>
+                    </template> </el-table-column>
+                <el-table-column prop="ipoName" label="上市板块" align="center" min-width="100">
+                    <template slot-scope="scope">
+                        <p :title="scope.row.ipoName" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.ipoName}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="industryOne" label="行业（1级）" align="center" min-width="200">
+                    <template slot-scope="scope">
+                        <p :title="scope.row.industryOne" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.industryOne}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="industryTwo" label="行业（2级）" align="center" min-width="200">
+                    <template slot-scope="scope">
+                        <p :title="scope.row.industryTwo" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.industryTwo}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="principalName" label="客户负责人" align="center" min-width="100">
+                    <template slot-scope="scope">
+                        <p :title="scope.row.principalName" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.principalName}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="createByName" label="创建人" align="center" min-width="100">
+                    <template slot-scope="scope">
+                        <p :title="scope.row.createByName" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.createByName}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="createTime" label="创建时间" align="center" min-width="160">
+                    <template slot-scope="scope">
+                        <p :title="scope.row.createTime" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{scope.row.createTime}}</p>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作" align="center" min-width="100" fixed="right">
+                    <template slot-scope="scope">
+                        <el-button type="text" @click="selectCrmBtn(scope.row)" class="crm_financin">选择</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            </div>
+            <div>
+                <el-pagination background layout="total, sizes, prev, pager, next, jumper" :total="dataTotal" :pageSize="pageSize" :page-sizes="pageSizes" :current-page="currentPage" @current-change="onPageChange" @size-change="handleSizeChange">
+                </el-pagination>
+            </div>
+        </el-dialog>
+        <el-dialog  title="项目发行信息档案导入" :close-on-click-modal="false" :visible.sync="exportTipsvisible" width="730px"  class="export-details" :before-close="closeErrorList">
+            <div>
+                <p class="export-sucess-text">
+                    <i class="el-icon-circle-check"></i>
+                    文件上传成功。共{{exportTotal}}个导入项，其中{{exportTotal-exportErrorTotal}}个可成功导入。
+                </p>
+                <p class="export-error-text">发现以下{{exportErrorTotal}}个导入项不符合导入要求，将不会被导入。</p>
+                <el-table
+                :data="exportTipsTable"
+                height="370px"
+                :header-cell-style="{background:'#FAFAFA',color:'black',fontWeight:'bold'}"
+                style="width: 100%"
+                >
+                    <el-table-column prop="item" label="导入项" width="300"></el-table-column>
+                    <el-table-column prop="error" label="错误原因"></el-table-column>
+                </el-table>
+            </div>
+            <div slot="footer" class="dialog-footer">
+                <el-button style="position:relative" @click="againUpload">
+                    <input class="add-file add-file2" @change="importRecord(1)" ref="files2" type="file"/>
+                    重新上传
+                </el-button>
+                <el-button type="primary" @click="confirmExport">确定导入</el-button>
+            </div>
+        </el-dialog>
+        <el-dialog  title="提示" :close-on-click-modal="false" :visible.sync="importTips" width="422px"  class="delete_has_draft_tips">
+            <div class="delete_has_draft_tips_con">
+                <div class="clearfix">
+                    <i class="fl el-icon-warning"></i>
+                    <p class="fl delete_has_draft_tips_con_text">导入信息，将覆盖原有信息，是否导入？</p>
+                </div>
+                <div slot="footer" class="dialog-footer" style="text-align:right;">
+                    <el-button @click="importTips=false">取 消</el-button>
+                    <el-button type="primary" style="position:relative" @click="importTips = false">
+                        <input class="add-file"
+                                @change="importRecord(0)" ref="files" type="file"/>确 定
+                    </el-button>
+                </div>
+            </div>
+        </el-dialog>
+        <findall-deptuser
+            :findFlagShow.sync="findFlag"
+            v-on:findAllUser="findAllUser"
+            :findUserObj="findUserObj"
+            :findState="findState"
+            :checkState="checkState"
+        ></findall-deptuser>
+
+  </div>
+</template>
+
+<script>
+import frameWork from '@/components/select_box/frameworkpeo'
+import framePeos from '@/components/select_box/frameworkpeos'
+import findallDeptuser from "@/components/select_box/findAllDeptUserMultipleNew";
+import { setTimeout } from 'timers';
+import securityMessage from '@/components/select_box/securityMessage'
+
+export default{
+    name: 'projectmessage',
+    components:{
+        frameWork,
+        framePeos,
+        findallDeptuser,
+        securityMessage
+    },
+    data () {
+        return {
+            pro_flag:false,
+            isMultiDeptdata:{},
+            initDocExamRoleinfo:{},
+            hasEditCodePower: false,//是否有编辑项目编码的权限
+            backFlag:true,//当前登录用户是否是项目创建人
+            linkProjectHide: false,//父项目是否已隐藏
+            value:'',
+            valueObj:[
+                {value:[]},
+                {value:[]},
+                {value:[]},
+                {value:[]},
+                {value:[]},
+            ],
+            customMsg:{
+                name:'',
+                industryOne:'',
+                industryTwo:'',
+                type:'',
+                foundingTime:'',
+                legalPerson:'',
+                telephone:'',
+                business:'',
+            },
+            proMsg:{
+                code: '',
+                oldCode: '',//项目编辑修改前的值，用来判断是否有修改
+                name:'',
+                abbreviation:'',
+                financingName:'',
+                deptName:'',
+                startTime:'',
+                endTime:'',
+                description:'',
+                parentProject: '',
+                ipoMarket:'', // 上市/挂牌板块
+                itemArea:'', // 项目区域编码,
+                areaName:'', // 区域名称,
+                reportTime:'', //申报时间,
+                issueTime:'' //发行时间
+            },
+            proForm:{
+                code: '',
+                name:'',
+                abbreviation:'',
+                financingName:'',
+                deptName:'',
+                startTime:'',
+                endTime:'',
+                description:'',
+                projectStatus:'', // 项目状态
+                ipoMarket:'', // 上市/挂牌板块
+                itemArea:'', // 项目区域编码,
+                areaName:'', // 区域名称,
+                reportTime:'', //申报时间,
+                issueTime:'' //发行时间
+            },
+            finaMsg:{
+                account:'',
+                lawyer:'',
+                credit:'',
+                assets:'',
+                relation:'',
+            },
+            projectMemberInfo:[],
+            dialogVisible: false,
+            stop_pass: '',
+            take_pass: '',
+            opt_file:false,
+            fileObj:[],
+            take_remake:'',
+            perObj:[],
+            sonObj:[],
+        //    移交弹框
+            tranVisible:false,
+            options: [],
+            value: '',
+            user_name:'赵达',
+            role_take:'',
+            sort_one:true,
+            sort_one_suc:false,
+            sort_two_no:true,
+            sort_two:false,
+            sort_two_suc:false,
+            isExitProject: true,//移交项目后是否退出项目组
+            isTransferTask: true,//移交项目后是否将移交任务创建人
+            sort_three_no:true,
+            sort_three_suc:false,
+            cancel:true,
+            sure:'下一步',
+            step:1,
+            active: 1,
+        //    选择人员
+            flag:false,
+            peodatas:'',
+            token:"",
+            userId:'',
+            projectId:"",
+            optProjectId:'',
+            requestCode: {},
+            messageObj:{},
+            messageList:[],
+            //    部门
+            clearstate:'',
+            treestate:'',
+            tree:'',
+            flags:false,
+            departFormId:'',
+            login_pass:'',
+            dialogDelete:false,
+            editData:{},
+            route_id:'',
+            msg_flag:true,
+            proPigeonholeVisible: false, //控制项目归档弹框开关
+            proPigeonholeName_input: '', //归档项目名称
+            proPigeonholeNumber_input: '', //归档项目编码
+            remark_textarea: '', //归档备注
+            auditListHeight: 0, //审核人列表的高
+            copyToListHeight: 0, //抄送人列表的高
+            stageArray: [], //归档阶段数组
+            stage_input: '', //归档阶段
+            approvalNameArray: [], //审批人列表
+            approveType: '', //审批类型
+            copyNameArray: [], //抄送人列表
+            remarkFromArray: [],
+            flowChartObj: {}, //流程图数据
+            findFlag: false, //选择弹框开关
+            extCopyArray: [], //后选择抄送人数组
+            findState: {},
+            checkState: {},
+            valueinfo:'',
+            pigeonholeFlag: false,
+            isFromStop: false,//是否是从项目终止库跳转过来的
+            //利益冲突核查报告相关
+            reportListVisible: false,//是否显示利益冲突核查报告列表
+            compResultVisible: false,//是否显示利益冲突比对结果报告
+            reportListData: [],//利益冲突核查报告列表
+            reportProjectName: '',//利益冲突核查报告列表搜索条件
+            curProIsHasCrm: false,//当前项目在新建之前是否有客户信息和中介机构
+            //选择客户相关
+            seleCrmVisible: false,//选择客户弹窗
+            tableData: [],//表格数据
+            search_form:{//搜索条件
+                name: '',
+                principal: '',
+                type: '',
+                status: '',
+                indexId: '',
+                indexId2:''
+            },
+            pageSize:10,
+            pageSizes: [10,20,50,100],    //每页显示数量
+            currentPage: 1,  //当前页
+            dataTotal: 0,    //总量
+            select01: [],//获取的一级数组数据
+            select02: [],//获取的二级数组数据
+            select01search: [],//获取的一级数组数据
+            select02search: [],//获取的二级数组数据
+            indexIdsearch:'',//定义分类一的默认值
+            indexId2search:'',
+            indexNumsearch:0,//定义一级菜单的下标
+            indexNum2search:0,
+            customer:'',
+            // 客户状态
+            selectStateListState:[
+                {
+                    value: 1002,
+                    label: '初步洽谈'
+                },
+                {
+                    value: 1003,
+                    label: '达成合作'
+                },
+                {
+                    value: 1004,
+                    label: '协议签署'
+                }
+            ],
+            // 客户类型
+            selectStateListType: [
+                {
+                    value: 1006,
+                    label: '潜在客户'
+                },
+                {
+                    value: 1007,
+                    label: '已投客户'
+                }
+            ],
+            user_num:'',
+            deployObj:[//选择的人员
+                {name:''},
+            ],
+            // 发行档案相关
+            isBondPro: false,//是否为债券项目
+            editRecord: false,//是否为编辑状态
+            recordData: {
+                id: "",//主键
+                issuerLocation: '',//发行人所在地
+                issuerContact: '',//发行人联系人
+                issuerContactWay: '',//发行人联系方式
+                projectGroupContact: '',//项目组联系人
+                projectGroupContactWay: '',//项目组联系方式
+                "projectId": "",//项目id
+                "bondDeadline": "",//债券期限
+                "guarantors": "",//担保机构
+                "publishWay": "",//发行方式
+                "specificItems": "",//特殊条款
+                "pastBond": "",//往期债券
+                "syndicateMember": "",//承销团成员
+                "bookkeepingRoom": "",//薄记室
+                "checkScale": "",//核准规模
+                "mainBodyAptitude": "",//主体资质code
+                "mainBodyAptitudeName": '',//主体资质名称
+                "debtAptitude": "",//债项资质code
+                "debtAptitudeName": '',//债项资质名称
+                "replyNum": "",//批复文号
+                // "approvalValidity": "",//批文有效期
+                approvalValidityStartTime: '',//批文有效期开始时间
+                approvalValidityEndTime: '',//批文有效期结束时间
+                "publishSite": "",//发行场所
+                "declareScale": "",//申报规模
+                "bondAbbreviation": "",//债券简称
+                "bankCode": "",//银行间代码
+                "instalmentFlag": "",//是否分期0：否1：是
+                "multispeciesFlag": "",//是否多品种发行0：否1：是
+                "issuedScale": "",//已发行规模
+                "exchangeCode": "",//交易所代码
+                "thisBondScale": "",//本期债券规模
+                "pledgeCode": "",//质押代码
+                "enquiryRateRegion": "",//询价利率区间
+                "issuedRemainScale": "",//发行后剩余规模
+                "endPublishRate": "",//最终发行利率
+                "baileeDeadline": "",//受托期限
+                "meetingMember": "",//参会委员
+                "baileeFlag": "",//是否为受托管理人0：否1：是
+                "timeVarList": [],//时间列表
+                "timeVariable": []//时间变量json串
+            },
+            recordDataEdit: {
+                id: "",//主键
+                issuerLocation: '',//发行人所在地
+                issuerContact: '',//发行人联系人
+                issuerContactWay: '',//发行人联系方式
+                projectGroupContact: '',//项目组联系人
+                projectGroupContactWay: '',//项目组联系方式
+                "projectId": "",//项目id
+                "bondDeadline": "",//债券期限
+                "guarantors": "",//担保机构
+                "publishWay": "",//发行方式
+                "specificItems": "",//特殊条款
+                "pastBond": "",//往期债券
+                "syndicateMember": "",//承销团成员
+                "bookkeepingRoom": "",//薄记室
+                "checkScale": "",//核准规模
+                "mainBodyAptitude": "",//主体资质
+                "debtAptitude": "",//债项资质
+                "replyNum": "",//批复文号
+                // "approvalValidity": "",//批文有效期
+                approvalValidityStartTime: '',//批文有效期开始时间
+                approvalValidityEndTime: '',//批文有效期结束时间
+                "publishSite": "",//发行场所
+                "declareScale": "",//申报规模
+                "bondAbbreviation": "",//债券简称
+                "bankCode": "",//银行间代码
+                "instalmentFlag": "",//是否分期0：否1：是
+                "multispeciesFlag": "",//是否多品种发行0：否1：是
+                "issuedScale": "",//已发行规模
+                "exchangeCode": "",//交易所代码
+                "thisBondScale": "",//本期债券规模
+                "pledgeCode": "",//质押代码
+                "enquiryRateRegion": "",//询价利率区间
+                "issuedRemainScale": "",//发行后剩余规模
+                "endPublishRate": "",//最终发行利率
+                "baileeDeadline": "",//受托期限
+                "meetingMember": "",//参会委员
+                "baileeFlag": "",//是否为受托管理人0：否1：是
+                "timeVarList": [],//时间列表
+                "timeVariable": []//时间变量json串
+            },
+            mainNaturalList: [],//主体资质类型列表
+            couponTtemList: [],//债项资质类型列表
+            timeVarList: [],//可供选择的下拉时间变量列表
+            exportTipsvisible: false,//导入提示列表是否显示
+            exportTipsTable: [],
+            exportTotal: 0,//共导入多少项
+            exportErrorTotal: 0,//共导入多少项
+            importTips: false,//导入提示
+            selectedIdList: [],
+            loading: false,
+            findUserObj: [],
+            canTransfer: false,//是否有移交项目的权限
+            endFlag:this.$store.state.projectMsg.projectMsg.endFlag, //项目状态是否是已终止
+            setDataInfo: {},
+            stkAndTps: [{ // 证券代码等一组字段（编辑）
+                stkCode: '',
+                stkSpName:'',
+                tpCode:'',
+                tpName:''
+            }],
+            stkAndTpsDetail: [{ // 证券代码等一组字段（详情）
+                stkCode: '',
+                stkSpName:'',
+                tpCode:'',
+                tpName:''
+            }],
+            // reportStatus: '', // 是否已报送
+            projectPlat:[], // 上市挂牌数据
+            projectArea: [], // 项目区域
+            tradingPlaces:[] // 交易场所
+        }
+    },
+    mounted(){
+        // var aa = this.$utils.checkSystemPermission('project_seal')
+
+         // this.code.codeNum.ADD_FAIL;
+        this.token = this.$store.state.loginObject.userToken;
+        this.userId = this.$store.state.loginObject.userId;
+        this.projectId = this.$store.state.projectMsg.pro_id;
+        this.route_id = this.$route.query.id;
+        this.isFromStop = this.$route.query.isFromStop === true;
+        this.requestCode = this.code.codeNum;
+        this.projectPlat = this.report.reportData.projectPlat; // 上市挂牌板块
+        this.projectArea = this.report.reportData.projectArea; // 项目区域
+        this.tradingPlaces = this.report.reportData.tradingPlaces; // 交易场所
+        console.log(this.report.reportData)
+        this.canTransfer = this.$utils.checkProjectPermission('project_transfer');
+        if(this.route_id != "" && this.route_id != null && this.route_id != undefined){
+            this.pro_flag = false;
+            this.msg_flag = false;
+            this.projectId = this.route_id;
+            this.projectMsg();
+        }else{
+            this.projectMsg();
+        }
+        this.finishNoPigeonholeQueryOneFn()
+        this.mediunList();
+        this.indusytryDatasearch();
+        this.queryVariableList();
+        this.getEditCodePower();
+    },
+    beforeRouteLeave(to, from, next) {
+        to.meta.keepAlive = false;
+        next();
+    },
+    watch:{
+        proPigeonholeVisible(val){
+            if(!val){
+                this.initDocExamRoleinfo.key = false
+                this.valueinfo = ''
+            }
+        }
+    },
+    methods:{
+        //获取当前用户是否有编辑项目编码的权限
+        getEditCodePower(){
+            this.$utils.checkSystemPermissionAsync('project_code').then(res=>{
+                if(!res){
+                    this.hasEditCodePower = false;
+                } else {
+                    this.hasEditCodePower = true;
+                }
+            }, err=>{
+
+            })
+        },
+        stopScrollFun(evt) {
+            evt = evt || window.event;
+            if(evt.preventDefault) {
+                // Firefox
+                evt.preventDefault();
+                evt.stopPropagation();
+            } else {
+                // IE
+                evt.cancelBubble=true;
+                evt.returnValue = false;
+            }
+            return false;
+        },
+        closeErrorList(){
+            this.$confirm('确认关闭？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.exportTipsvisible = false;
+            }).catch(() => {
+            });
+        },
+        proPigeo(){
+            this.stage_input = ''
+        },
+        timeSeleClick(){
+            console.log('0000000000000000000000000000000000')
+        },
+        declareScaleBlur(val, item){
+            //先把非数字的都替换掉，除了数字和.
+            // 保证只有出现一个.而没有多个.
+            //必须保证第一个为数字而不是.
+            //保证.只出现一次，而不能出现两次以上
+            //保留4位小数
+            if(item == 0){
+                this.recordDataEdit.declareScale = val.replace(/[^\d.]/g,"").replace(/\.{2,}/g,".").replace(/^\./g,"").replace(".","$#$").replace(/\./g,"").replace("$#$",".").replace(/^(\-)*(\d+)\.(\d\d\d\d).*$/,'$1$2.$3');
+                //添加分隔符
+                this.recordDataEdit.declareScale = this.toThousands(this.recordDataEdit.declareScale);
+            } else if(item == 1){
+                this.recordDataEdit.checkScale = val.replace(/[^\d.]/g,"").replace(/\.{2,}/g,".").replace(/^\./g,"").replace(".","$#$").replace(/\./g,"").replace("$#$",".").replace(/^(\-)*(\d+)\.(\d\d\d\d).*$/,'$1$2.$3');
+                //添加分隔符
+                this.recordDataEdit.checkScale = this.toThousands(this.recordDataEdit.checkScale);
+            } else if(item == 2){
+                this.recordDataEdit.issuedScale = val.replace(/[^\d.]/g,"").replace(/\.{2,}/g,".").replace(/^\./g,"").replace(".","$#$").replace(/\./g,"").replace("$#$",".").replace(/^(\-)*(\d+)\.(\d\d\d\d).*$/,'$1$2.$3');
+                //添加分隔符
+                this.recordDataEdit.issuedScale = this.toThousands(this.recordDataEdit.issuedScale);
+            } else if(item == 3){
+                this.recordDataEdit.thisBondScale = val.replace(/[^\d.]/g,"").replace(/\.{2,}/g,".").replace(/^\./g,"").replace(".","$#$").replace(/\./g,"").replace("$#$",".").replace(/^(\-)*(\d+)\.(\d\d\d\d).*$/,'$1$2.$3');
+                //添加分隔符
+                this.recordDataEdit.thisBondScale = this.toThousands(this.recordDataEdit.thisBondScale);
+            }  else if(item == 4){
+                this.recordDataEdit.issuedRemainScale = val.replace(/[^\d.]/g,"").replace(/\.{2,}/g,".").replace(/^\./g,"").replace(".","$#$").replace(/\./g,"").replace("$#$",".").replace(/^(\-)*(\d+)\.(\d\d\d\d).*$/,'$1$2.$3');
+                //添加分隔符
+                this.recordDataEdit.issuedRemainScale = this.toThousands(this.recordDataEdit.issuedRemainScale);
+            }
+        },
+        toThousands(num) {
+            //若没有任何数据则直接返回
+            if(num == "" || num == null){
+                return num;
+            }else{
+                //判断是否有小数点
+                var s = num.indexOf(".");
+                if(s == -1){//是整数
+                    return (num || 0).toString().replace(/(\d)(?=(?:\d{3})+$)/g, '$1,');
+                }else{
+                    var arr = num.split(".");
+                    return (arr[0] || 0).toString().replace(/(\d)(?=(?:\d{3})+$)/g, '$1,') + "." + arr[1];
+                }
+            }
+        },
+        testNumberRange(){//验证只能输入数据和-
+            this.recordDataEdit.enquiryRateRegion = this.recordDataEdit.enquiryRateRegion.replace(/[^0-9-— ——.%]+/g,'');
+        },
+        //团队成员编辑
+        teamProject(){
+            // 项目状态判断
+            if(this.endFlag){
+               this.$store.commit('projectStatusTips');
+               return
+            }
+            var editObj = {
+                'token': this.token,
+                'userId': this.userId,
+                "projectId": this.projectId,
+                "data":{
+                    "projectId":this.projectId
+                }
+            }
+            var that=this;
+            var num = 0 ;
+            this.$post('/info/project/getProjectPerm', editObj).then((response)=> {
+                if(response.code == that.code.codeNum.SUCCESS) {
+                    for(var i=0;i<response.data.length;i++){
+                        if(response.data[i] == "project_user"){
+                            num = 1;
+                        }
+                    }
+                    if(num == 1){
+                        that.$router.push({path:'/projectmember'});
+                        // $(".asides .el-menu-item").removeClass("is-active");
+                        // $(".menu_btn").eq(1).addClass("is-active");
+                    }else{
+                        that.$message("没有该权限");
+                    }
+                }else{
+                    that.$message.error(response.msg);
+                }
+            }).catch(function(error) {
+                console.log(error);
+            });
+        },
+        //客户管理编辑
+        handleClick(){
+            // 项目状态判断
+            if(this.endFlag){
+               this.$store.commit('projectStatusTips');
+               return
+            }
+            var editObj = {
+                'token': this.token,
+                'userId': this.userId,
+                "projectId": this.projectId,
+            }
+            var that=this;
+            var num = 0 ;
+            this.$post('/sys/getUserPerm', editObj).then((response)=> {
+                if(response.code == that.code.codeNum.SUCCESS) {
+                    for(var i=0;i<response.data.length;i++){
+                        if(response.data[i] == "crm_manage"){
+                            num = 1;
+                        }
+                    }
+                    if(num == 1){
+                        var ids = 1;
+                        that.editData.crmType = 1;
+                        var customObj = {id:ids,row: JSON.stringify(that.editData)};
+                        that.$store.commit("customObj",customObj)
+                        that.$router.push({path: '/customdetails'})
+                    }else{
+                        that.$message("没有该权限");
+                    }
+                }else{
+                    that.$message.error(response.msg);
+                }
+            }).catch(function(error) {
+                console.log(error);
+            });
+        },
+        //项目信息
+        projectMsg(){
+            this.selectedIdList = [];
+            this.proMsg = {};
+            var dataObj = {
+                "token": this.token,
+                "userId": this.userId,
+                'projectId': this.projectId,
+                "data": { "id":this.projectId }
+            };
+            var that = this;
+            // http://192.168.10.181:19100
+            this.$post("/info/project/getProjectDetail",dataObj).then((response => {
+                var data =  response.data;
+                if(response.code == that.code.codeNum.SUCCESS){
+                    if(that.userId == data.createBy){
+                        that.backFlag = false;
+                    }else{
+                        that.backFlag = true;
+                    }
+                    that.linkProjectHide = data.linkProjectHide === 1 ? true : false;
+                    that.optProjectId = data.id;
+                    that.proMsg.code = data.code;
+                    that.proMsg.oldCode = data.code;
+                    that.proForm.code = data.code;
+                    that.proMsg.name = data.name;
+                    that.proPigeonholeNumber_input = data.code;
+                    that.proPigeonholeName_input = data.name;
+                    that.proMsg.abbreviation = data.abbreviation;
+                    that.proMsg.financingName = data.financingName;
+                    that.proMsg.deptName = data.deptName;
+                    that.proMsg.startTime = data.startTime;
+                    that.proMsg.endTime = data.endTime;
+                    that.proMsg.description = data.description;
+                    that.proMsg.parentProject = data.linkProjectName;
+                    that.projectMemberInfo = data.projectMemberInfo;
+                    that.messageObj = data.organInfo;
+                    that.departFormId = data.deptId;
+                    that.proMsg.projectStatus = data.projectStatus; // 项目状态
+                    that.curProIsHasCrm = data.crmId == null ? false : true;//当前项目在新建之前是否有客户信息和中介机构
+                    that.proMsg.areaName = data.areaName; // 区域名称
+                    that.proMsg.ipoMarket = data.ipoMarket && that.getProMsg(data.ipoMarket,1);  // 上市/挂牌板块（回显）
+                    that.proMsg.itemArea =  data.itemArea && that.getProMsg(data.itemArea,2); // 项目区域编码（回显）
+                    that.proForm.ipoMarket = data.ipoMarket ? data.ipoMarket : '';  // 上市/挂牌板块（编辑）
+                    that.proForm.itemArea =  data.itemArea ? data.itemArea : ''; // 项目区域编码（编辑）
+                    that.proMsg.reportTime = data.reportTime ? this.$moment(data.reportTime).format("YYYY-MM-DD") : ''; // 申报时间,
+                    that.proMsg.issueTime = data.issueTime ? this.$moment(data.issueTime).format("YYYY-MM-DD") : ''; // 发行时间
+                    that.proForm.reportTime =  data.reportTime ? this.$moment(data.reportTime).format("YYYY-MM-DD") : ''; // 申报时间,
+                    that.proForm.issueTime = data.issueTime ? this.$moment(data.issueTime).format("YYYY-MM-DD") : ''; // 发行时间
+                    if(data.stkAndTps){
+                        that.proMsg.stkAndTps =  JSON.parse(JSON.stringify(data.stkAndTps)); // 证券代码 备份数据用于编辑状态回显 下拉框数字回显对应label
+                        that.stkAndTpsDetail = data.stkAndTps
+                        that.stkAndTpsDetail.forEach(i => {
+                            i.tpCode = i.tpCode != null ? that.getProMsg(i.tpCode,3) : ''
+                        })
+                    } else {
+                        that.stkAndTpsDetail = [{
+                            stkCode: '',
+                            stkSpName:'',
+                            tpCode:'',
+                            tpName:''
+                        }]; // 证券代码数据组 
+                    }
+                    if(that.$utils.m('customer_manage') && data.crmId != null){
+                        that.interFn(data.crmId);
+                    }
+                    that.isBondPro = data.publish != null;
+                    if(data.publish != null){
+                        that.recordData = this.$utils.copyObj(data.publish) || {};
+                        that.recordDataEdit = this.$utils.copyObj(data.publish) || {};
+                        for(let k in that.recordData){
+                            if(that.recordData[k] == null && k != 'timeVarList' && k != 'timeVariable' && k!= 'bankCode' && k!= 'exchangeCode' && k!= 'pledgeCode' && k != 'endPublishRate'){
+                                that.recordData[k] = '';
+                            }
+                            if(k == 'timeVariable' && that.recordData[k] == null){
+                                that.recordData[k] = [];
+                            }
+                        }
+                        for(let k in that.recordDataEdit){
+                            if(that.recordDataEdit[k] == null && k != 'timeVarList' && k != 'timeVariable' && k!= 'bankCode' && k!= 'exchangeCode' && k!= 'pledgeCode' && k != 'endPublishRate'){
+                                that.recordDataEdit[k] = '';
+                            }
+                            if(k == 'timeVariable' && that.recordDataEdit[k] == null){
+                                that.recordDataEdit[k] = [];
+                            }
+                            if(that.recordDataEdit[k] != null && k == 'instalmentFlag' || k == 'multispeciesFlag' || k == 'baileeFlag'){
+                                that.recordDataEdit[k] = that.recordDataEdit[k] + '';
+                            }
+                        }
+                        console.log('详情',that.recordDataEdit)
+                        if(data.publish.timeVariable != null && data.publish.timeVariable != '' && data.publish.timeVariable != undefined){
+                            that.recordData.timeVariable = this.$utils.copyObj(JSON.parse(data.publish.timeVariable)) || {};
+                            that.recordDataEdit.timeVariable = this.$utils.copyObj(JSON.parse(data.publish.timeVariable)) || {};
+                        }
+                        that.recordData.approvalValidityStartTime = that.recordData.approvalValidityStartTime == null ? '' : that.recordData.approvalValidityStartTime.replace(/(\/)/g,'-');
+                        that.recordDataEdit.approvalValidityStartTime = that.recordDataEdit.approvalValidityStartTime == null ? '' : that.recordDataEdit.approvalValidityStartTime.replace(/(\/)/g,'-');
+                        that.recordData.approvalValidityEndTime = that.recordData.approvalValidityEndTime == null ? '' : that.recordData.approvalValidityEndTime.replace(/(\/)/g,'-');
+                        that.recordDataEdit.approvalValidityEndTime = that.recordDataEdit.approvalValidityEndTime == null ? '' : that.recordDataEdit.approvalValidityEndTime.replace(/(\/)/g,'-');
+                        if(that.recordDataEdit.timeVariable != undefined && that.recordDataEdit.timeVariable != null && that.recordDataEdit.timeVariable != ''){
+                            that.recordDataEdit.timeVariable.map((item, index) => {
+                                item.myValue = '';
+                                if(item.id == null || item.id == ''){
+                                    this.recordDataEdit.timeVariable[index].used = false;
+                                } else {
+                                    var data = {
+                                        "token": this.token,
+                                        "userId": this.userId,
+                                        "data": {
+                                            "id": item.id,
+                                            "projectId": this.projectId
+                                        }
+                                    }
+                                    this.$post("/info/project/judgeDeleteTimeVar",data).then((response => {
+                                        if(response.code == this.code.codeNum.SUCCESS){
+                                            this.recordDataEdit.timeVariable[index].used = false;
+                                        }else{
+                                            this.recordDataEdit.timeVariable[index].used = true;
+                                        }
+                                    })).catch(error => {
+
+                                    });
+                                }
+                            })
+                        }
+                    }
+                }else if(response.code == that.code.codeNum.SYSTEM_ERROR){
+                    that.$message(response.msg);
+                }else if(response.code == that.code.codeNum.PROJECT_NOT_EXIST){
+                    that.$message(response.msg);
+                } else if(response.code == '-2006'){
+                    that.$message.error('您没有权限查看该项目信息');
+                }
+            })).catch(error => {
+                console.log(error);
+            });
+        },
+        // 项目区域修改
+        areaChange(item){
+            if(item == '900000'){
+                this.proForm.areaName = ''
+                return
+            }
+            // 非境外areaName 值为项目区域所选值的label 境外时为手动输入值
+            this.proForm.areaName = item ? this.projectArea.find(ele => ele.id === item).label : ''
+        },
+        //客户信息
+        interFn(val){
+            var crmObj = {
+                "token": this.token,
+                "userId": this.userId,
+                "data":{
+                    "id":val
+                }
+            };
+            var that = this;
+            this.$post("/info/crm/companyCustomer",crmObj).then((response => {
+                var data =  response.data;
+                if(response.code == that.code.codeNum.SUCCESS){
+                    that.editData = data;
+                    that.customMsg.name = data.name;
+                    that.customMsg.industryOne = data.industryOne;
+                    that.customMsg.industryTwo = data.industryTwo;
+                    that.customMsg.type = data.typeName;
+                    that.customMsg.foundingTime = data.foundingTime;
+                    that.customMsg.legalPerson = data.legalPerson;
+                    that.customMsg.telephone = data.telephone;
+                    that.customMsg.business = data.business;
+                }else{
+                    that.$message(response.msg);
+                }
+            })).catch(error => {
+                console.log(error);
+            });
+        },
+        // handleReportStatus(id){ // 查看当前项目的报送状态
+        //     // let obj = {
+        //     //     data:{
+        //     //         id
+        //     //     }
+        //     // }
+        //     // http://192.168.10.146:19200
+        //     this.$post("/doc/project/reportStatus").then(response => {
+        //         if(response.code == 0){
+        //             this.reportStatus = response.data.reportStatus
+        //         }
+        //     })
+        // },
+      //项目信息  编辑
+        messageEdit(){
+            // 项目状态判断
+            if(this.endFlag){
+               this.$store.commit('projectStatusTips');
+               return
+            }
+            // 是否有交易id （是否已报送）
+            // this.reportStatus = this.handleReportStatus(this.proMsg.id);
+            this.pro_flag = true;
+            this.proForm.name = this.proMsg.name;
+            this.proForm.abbreviation = this.proMsg.abbreviation;
+            this.proForm.financingName = this.proMsg.financingName;
+            this.proForm.deptName = this.proMsg.deptName;
+            this.proForm.startTime = this.proMsg.startTime;
+            this.proForm.endTime = this.proMsg.endTime;
+            this.proForm.description = this.proMsg.description;
+            this.proForm.projectStatus = this.proMsg.projectStatus; // 项目状态
+            this.proForm.ipoMarket = this.proForm.ipoMarket + '';  // 上市/挂牌板块（回显）
+            this.proForm.itemArea =  this.proForm.itemArea + ''; // 项目区域编码（回显）
+            this.proForm.areaName = this.proMsg.areaName; // 区域名称
+            if(this.proMsg.stkAndTps){
+                this.stkAndTps = this.proMsg.stkAndTps.map(i => {
+                    return {
+                        stkCode:i.stkCode ,
+                        stkSpName:i.stkSpName,
+                        tpCode: i.tpCode != null ? i.tpCode + '' : '',
+                        tpName:i.tpName
+                    }
+                })
+            }
+            var key = Object.keys(this.messageObj);
+            for(var i=0;i<key.length;i++){
+                var keys = key[i];
+                for(var j=0;j<this.messageObj[keys].length;j++){
+                    if(this.valueObj[i].value.indexOf(this.messageObj[keys][j].id) == -1){
+                            this.valueObj[i].value.push(this.messageObj[keys][j].id);
+                    }
+                }
+            }
+                var dataObj = {"token": this.token, "userId": this.userId ,"data":{}};
+            var that = this;
+            this.$post("/info/crm/proIntermediary",dataObj).then((response => {
+                var data =  response.data;
+                if(response.code == that.code.codeNum.SUCCESS){
+                    for(var i=0;i<data.length;i++){
+                        for(var j=0;j<data[i].data.length;j++){
+                            data[i].data[j].value = data[i].data[j].id;
+                        }
+                    }
+                    for(var i=0;i<data.length;i++){
+                            if(data[i].intermediaryType == 1060){   //券商机构     2
+                                that.$set(that.messageList,1,data[i].data);
+                            }else if(data[i].intermediaryType == 1056){   //会计师         5
+                                that.$set(that.messageList,4,data[i].data);
+                            }else if(data[i].intermediaryType == 1057){    //律师       1
+                                that.$set(that.messageList,0,data[i].data);
+                            }else if(data[i].intermediaryType == 1058){     //资产评估      4
+                                that.$set(that.messageList,3,data[i].data);
+                            }else if(data[i].intermediaryType == 1059){            //信用评级      3
+                                that.$set(that.messageList,2,data[i].data);
+                            }
+                    }
+                }else{
+                    that.$message(response.msg);
+                }
+            })).catch(error => {
+                    console.log(error);
+            });
+            },
+            //部门
+            optDepart(){
+                var data={
+                    token:this.token,
+                    userId:this.userId,
+                }
+                var that=this;
+                this.$post('/sys/getOrganization', data).then((response)=> {
+                    if(response.code == that.code.codeNum.SUCCESS) {
+                        that.tree = response.data;
+                        that.setDataInfo.data = {
+                            name: that.proMsg.deptName,
+                            id: that.departFormId
+                        }
+                        console.log('333',that.proMsg.deptName,that.departFormId,that.setDataInfo.data)
+                        that.flags = true;
+                        that.treestate = {state: 1};
+                        that.clearstate = {state: 3};
+                    }
+                }).catch(function(error) {
+                    console.log(error);
+                });
+            },
+            //  部门返回值
+            stateDepart(data){
+                if(data.length > 0){
+                    this.departFormId = data[0].id;
+                    this.proForm.deptName = data[0].name;
+                }else{
+                    this.departFormId = '';
+                    this.proForm.deptName = '';
+                }
+            },
+            //项目编码失去焦点
+            inputProjectCodeBlur(){
+            //   if(this.proForm.code != ''){
+            //       var reg = /^[0-9a-zA-Z_-]+$/;
+            //       if(!reg.test(this.proForm.code)){
+            //           this.$message.warning('项目编码格式不正确');
+            //       }
+            //   }
+            },
+            messageSave(){
+                if(this.proForm.code == ''){
+                   this.$message.warning('项目编码不能为空');
+                   return;
+                }
+                if(this.proForm.name == ''){
+                   this.$message.warning('项目名称不能为空');
+                   return;
+                }
+                if(this.proForm.deptName == ''){
+                   this.$message.warning('所属项目不能为空');
+                   return;
+                }
+                if(this.proForm.itemArea == 900000 && this.proForm.areaName == ''){
+                   this.$message.warning('区域名称不能为空');
+                   return;
+                }
+                let stkAndTpsData = this.$refs.securt.stkAndTps
+                let stkData = stkAndTpsData.filter(v=> (v.stkCode || v.stkSpName || v.tpCode))
+                for(let i in stkData){
+                    if(stkData[i].tpCode == 2007 && stkData[i].tpName == ''){
+                        this.$message.warning('交易场所名称不能为空');
+                        return;
+                    }
+                }
+                // var reg = /^[0-9a-zA-Z_-]+$/;
+                // if(!reg.test(this.proForm.code)){
+                //     this.$message.warning('项目编码格式不正确');
+                //     return;
+                // }
+                if(new Date(this.proForm.endTime) < new Date(this.proForm.startTime) && this.proForm.endTime != null && this.proForm.startTime != null){
+                    this.$message.warning('结束日期不能早于开始日期');
+                    return;
+                }
+                
+                var organList = [];
+                var isCodeChange = this.proForm.code != this.proMsg.oldCode;
+                for(var i=0;i<this.valueObj.length;i++){
+                    if(this.valueObj[i].value.length != 0){
+                        for(var j=0;j<this.valueObj[i].value.length;j++){
+                            var opt = {};
+                            opt.organId = this.valueObj[i].value[j];
+                            organList.push(opt);
+                        }
+                    }
+                };
+                var dataObj = {
+                    "token":this.token,
+                    "userId": this.userId,
+                    "data": {
+                        "id": this.projectId,
+                        "code":this.proForm.code,
+                        "isCodeChange": isCodeChange,//项目编码是否有变动
+                        "name":this.proForm.name,
+                        "abbreviation":this.proForm.abbreviation,
+                        "deptId":this.departFormId,
+                        "startTime":this.proForm.startTime,
+                        "endTime":this.proForm.endTime,
+                        "description":this.proForm.description,
+                        "projectOrganList":organList,
+                        "ipoMarket": this.proForm.ipoMarket, // 上市/挂牌板块
+                        "itemArea": this.proForm.itemArea, // 项目区域编码,
+                        "areaName": this.proForm.areaName, // 区域名称,
+                        "reportTime": this.proForm.reportTime ? this.proForm.reportTime + " 00:00:00" : '', // 申报时间,
+                        "issueTime": this.proForm.issueTime ? this.proForm.issueTime + " 00:00:00" : '', // 发行时间
+                        "stkAndTps": stkData // 证券简称数据
+
+                    }
+                };
+                var that = this;
+                // http://192.168.10.181:19100
+                this.$post("/info/project/updateProjectInfo",dataObj).then((response => {
+                    if(response.code == that.code.codeNum.SUCCESS){
+                        that.pro_flag = false;
+                        that.projectMsg();
+                        setTimeout(function(){
+                            if(!that.pro_flag){
+                                $("#app .msg_pro_edit").show();
+                            }
+                        },100);
+                        let projectMsgObj = this.$store.state.projectMsg.projectMsg;
+                        projectMsgObj.name = this.proForm.name;
+                        this.$store.commit("projectMsg",projectMsgObj);
+                    }else{
+                        that.$message(response.msg);
+                    }
+                })).catch(error => {
+
+                });
+            },
+            messageCanl(){
+                this.pro_flag = false;
+                this.projectMsg();
+                var that = this;
+                setTimeout(function(){
+                    if(!that.pro_flag){
+                        $("#app .msg_pro_edit").show();
+                    }
+                },100);
+            },
+            projectDelete(){
+                // 项目状态判断
+                if(this.endFlag){
+                this.$store.commit('projectStatusTips');
+                return
+                }
+                this.$confirm('您确定要删除该项目吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.dialogDeleteFn()
+
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+        //    项目删除
+        dialogDeleteFn(){
+            var projObj = {
+                "token": this.token,
+                "userId": this.userId,
+                "data": {
+                    "id":this.projectId
+                }
+            };
+            var that = this;
+            this.$post("/info/project/delProject",projObj).then((response => {
+                var data =  response.data;
+                if(response.code == that.code.codeNum.SUCCESS){
+                    that.$message.success("项目删除成功！");
+                    that.$store.commit("projectId",0);
+                    // todo 模块化 -- 删除项目
+                    that.$utils.saveProjectId(0)
+                    // that.$utils.queryProChatNum(0)
+                    this.$store.commit("proChatIsShow", false);
+                    this.$store.commit("projectHide", false);
+                    that.$router.push({path: '/projectlist'});
+                    // $(".asides .el-menu-item").removeClass("is-active");
+                    // $(".menu_list").eq(0).addClass("is-active");
+                }else{
+                    that.$message(response.msg);
+                }
+                that.dialogDelete = false;
+            })).catch(error => {
+
+            });
+        },
+    //    项目移交
+        projectTransfer(){
+            // 项目状态判断
+            if(this.endFlag){
+               this.$store.commit('projectStatusTips');
+               return
+            }
+            this.tranVisible = true;
+            this.value= '';
+            this.user_name=this.$store.state.loginObject.userName;
+            this.role_take='';
+            this.sort_one=true;
+            this.sort_one_suc=false;
+            this.sort_two_no=true;
+            this.sort_two=false;
+            this.sort_two_suc=false;
+            this.sort_three_no=true;
+            this.sort_three_suc=false;
+            this.cancel=true,
+            this.sure='下一步';
+            this.step=1;
+            this.active = 1;
+        },
+        //新建负责人
+        addChargeFn(){
+            var dataObj = {
+                "token": this.token,
+                "userId": this.userId,
+                "data": {
+                    "projectId":this.optProjectId
+                }
+            };
+            var that = this;
+            this.$post("/info/project/getProjectMemberExclude",dataObj).then((response => {
+                var data =  response.data;
+                if(response.code == that.code.codeNum.SUCCESS){
+                    that.options = data
+                }else{
+                    that.$message(response.msg);
+                }
+            })).catch(error => {
+                console.log(error);
+            });
+        },
+        tranVisibleFn(){
+           if(this.step == 1){
+               if(this.role_take == ""){
+                   this.$message.error('密码不能为空');
+                   return;
+                }
+               var dataObj = {
+                   "token": this.token,
+                   "userId": this.userId,
+                   "data": {
+                       "password":this.role_take
+                   }
+               };
+               var that = this;
+               this.$post("/sys/checkPassword",dataObj).then((response => {
+                   var data =  response.data;
+                   if(response.code == that.code.codeNum.SUCCESS){
+                       if(data){
+                           that.step = 2;
+                           that.active = 2
+                           that.sure = "确定";
+                           that.sort_one=false;
+                           that.sort_one_suc=true;
+                           that.sort_two_no=false;
+                           that.sort_two=true;
+                           that.addChargeFn();
+                       }else{
+                           that.$message.error("密码错误");
+                       }
+                   }else{
+                       that.$message(response.msg);
+                   }
+               })).catch(error => {
+
+               });
+           }else if(this.step == 2){
+               if(this.value == ""){
+                   this.$message.error('新建负责人不能为空');
+                   return;
+               }
+               var createdUserId = "";
+               for(var i=0;i<this.options.length;i++){
+                    if(this.value == this.options[i].usName){
+                        createdUserId = this.options[i].userId
+                    }
+               };
+               let curIsTransferTask = this.$utils.m('project_task') ? this.isTransferTask : false;
+               var dataObj ={
+                   "token": this.token,
+                   "userId": this.userId,
+                   "data": {
+                       "id":this.optProjectId,
+                       "createBy":createdUserId,
+                       "isExitProject": this.isExitProject,//是否退出项目组
+                       "isTransferTask": curIsTransferTask//是否将移交任务创建人
+                   }
+               };
+               var that = this;
+               this.$post("/info/project/transferProject",dataObj).then((response => {
+                   var data =  response.data;
+                   if(response.code == that.code.codeNum.SUCCESS){
+                       that.step = 3;
+                       that.active = 3
+                       that.sure = "关闭";
+                       that.sort_two=false;
+                       that.sort_two_suc=true;
+                       that.sort_three_no=false;
+                       that.sort_three_suc=true;
+                       that.cancel=false;
+                    //    that.canTransfer = false;
+                       that.projectMsg();
+                   }else{
+                       that.$message(response.msg);
+                   }
+               })).catch(error => {
+
+               });
+           }else{
+               this.step = 1 ;
+               this.active = 1;
+               this.tranVisible = false;
+               this.projectMsg();
+           }
+        },
+        //添加人员
+        statesboxs(data){
+            var arr=[]
+            for (let i = 0; i < data.length; i++) {
+                arr.push(data[i].id)
+            }
+            var str
+            for (let i = 0; i < arr.length; i++) {
+                str+=arr[i]+','
+            }
+            var str=str.substring(9)
+        },
+    //    项目退出
+        handleBack(){
+            // 项目状态判断
+            if(this.endFlag){
+               this.$store.commit('projectStatusTips');
+               return
+            }
+            this.dialogVisible = true;
+            this.$store.commit("projectHide", false);
+        },
+        dialogVisibleFn() {
+            if (this.login_pass == "") {
+                this.$message.error("密码不能为空");
+                return;
+            }
+            var backObj = {
+                "token": this.token,
+                "userId": this.userId,
+                "data": {
+                    "projectId": this.projectId,
+                    "password": this.login_pass,
+                    "projectName":this.proMsg.name
+                }
+            };
+            var that = this;
+            this.$post("/info/project/outProject",backObj).then((response => {
+                if(response.code == that.code.codeNum.SUCCESS){
+                    that.dialogVisible = false;
+                    that.$message({
+                        type: "success",
+                        message: "退出成功!"
+                    });
+                    var obj = {};
+                    that.$store.commit("projectId",0);
+                    that.$store.commit("projectMsg",obj);
+                    // todo 模块化--退出项目
+                    that.$utils.saveProjectId(0);
+                    // that.$utils.queryProChatNum(0);
+                    this.$store.commit("proChatIsShow", false);
+                    that.$router.push({path: '/projectlist'});
+                    // $(".asides .el-menu-item").removeClass("is-active");
+                    // $(".menu_list").eq(0).addClass("is-active");
+                }else{
+                    that.$message(response.msg);
+                }
+            })).catch(error => {
+
+            });
+
+        },
+        proPigeonhole() { //项目归档弹框开启
+            this.finishNoPigeonholeQueryFn()
+        },
+        finishNoPigeonholeQueryFn() { //完成未归档查询函数
+            let data = {
+                token: this.token,
+                userId: this.userId,
+                data: {
+                    projectId: this.projectId
+                }
+
+            };
+            this.$post("/info/projectSealUp/queryIsSealFlag",data).then((res => {
+                if(this.requestCode.SUCCESS !== res.code){
+                    this.$message.error(res.msg);
+                    return;
+                }
+                this.stageArray = res.data;
+                this.stageArray.map((item,idx) => {
+                    this.stage_input += item.name + ','
+                })
+                this.queryStagePastDoc();
+            })).catch(error => {
+
+            });
+        },
+        queryStagePastDoc() { //查询阶段下的设为底稿的审批通过的文件集合
+            let stageIds = [];
+            this.stageArray.map(item=>{
+                stageIds.push(item.id)
+            })
+            let data = {
+                token: this.token,
+                userId: this.userId,
+                projectId: this.projectId,
+                data: {
+                    stageIds: stageIds.join(',')
+                }
+            };
+            this.$post("/doc/paper/findIsExistPassFile",data).then((res => {
+                if(this.requestCode.SUCCESS !== res.code){
+                    this.$message.error(res.msg);
+                    return;
+                } else if(this.requestCode.SUCCESS == res.code && (res.data == undefined || res.data.length == 0)){
+                    this.$message.error('当前无审批通过的底稿文件可归档');
+                    return;
+                }
+                this.flowChartQueryFn();
+
+            })).catch(error => {
+
+            });
+        },
+        finishNoPigeonholeQueryOneFn() {
+          let data = {
+                token: this.token,
+                userId: this.userId,
+                data: {
+                    projectId: this.projectId
+                }
+
+            };
+            this.$post("/info/projectSealUp/queryIsSealFlag",data).then((res => {
+              if(this.requestCode.SUCCESS !== res.code){
+                  this.pigeonholeFlag = false;
+                  return;
+              }
+              this.pigeonholeFlag = true;
+
+            })).catch(error => {
+
+            });
+        },
+        flowChartQueryFn() { //流程图查询函数
+            let data = {
+                token: this.token,
+                userId: this.userId,
+                data: {
+                    projId: this.projectId,
+                    procTypeId: 8, //归档
+                }
+
+            };
+            this.$post("/info/service/getProcessInfoByProjId",data).then((res => {
+                if(this.requestCode.SUCCESS !== res.code){
+                    this.$message.error(res.msg);
+                    return;
+                }
+                this.proPigeonholeVisible = true;
+                this.flowChartObj = res.data;
+                this.examineAndApproveQueryFn(res.data)
+                setTimeout(()=> {
+                    // this.auditListHeight=document.querySelector('#p_middle_audit_content_middle_list_audit').clientHeight
+                    // this.copyToListHeight=document.querySelector('#p_middle_audit_content_middle_list_copyTo').clientHeight
+                })
+            })).catch(error => {
+
+            });
+        },
+        examineAndApproveQueryFn(itemValue) { //审批环节查询函数
+            //itemValue 流程图相关信息
+            let data = {
+                token: this.token,
+                userId: this.userId,
+                pageNo: 0,
+                pageSize: 100,
+                data: {
+                    modelId: itemValue.actModelId,
+                    versionId: itemValue.procVersionNum,
+                    deploymentId: itemValue.procDeployId,
+                    approvalType: 8, //归档
+                }
+
+            };
+            this.$post("/info/audit/form_detail",data).then((res => {
+                if(this.requestCode.SUCCESS !== res.code){
+                    this.$message.error(res.msg);
+                    return;
+                }
+                this.approvalNameArray = res.data.approvalName;
+                this.approveType = res.data.approveType;
+                this.copyNameArray = res.data.copyName;
+                this.remarkFromArray = res.data.form;
+                this.isMultiDeptdata =  res.data
+                this.initDocExamRoleinfo = {...{key: res.data.isMultiDept}}
+            })).catch(error => {
+
+            });
+        },
+         initDocExamRole(itemValue = this.flowChartObj) {
+           this.$post('/info/audit/formDetailNew',{
+                pageNo: 0,
+                pageSize: 100,
+                data: {
+                    projectId: this.projectId,
+                    modelId: itemValue.actModelId,
+                    userDept:this.valueinfo,
+                    versionId: itemValue.procVersionNum,
+                    deploymentId: itemValue.procDeployId,
+                    approvalType: 9, //归档
+                }
+                }).then(res => {
+                    if(res.code != this.requestCode.SUCCESS) {
+                        this.$message.error(res.msg);
+                        return;
+                    }
+                    this.approvalNameArray = res.data.approvalName;
+                    this.approveType = res.data.approveType;
+                    this.copyNameArray = res.data.copyName;
+                    if(res.data.form != undefined){
+                        this.remarkFromArray = res.data.form;
+                    }
+                    if(this.isMultiDeptdata.isMultiDept){
+                        this.isMultiDeptdata.isMultiDept = false
+                    }
+                }).catch(err => {
+                    console.log(err)
+                })
+        },
+        savePigeonholeFn() { //提交归档函数
+            if(this.initDocExamRoleinfo.key){
+                if(this.valueinfo == ""){
+                    this.$message.error('请选择发起人所属部门')
+                     return
+                }
+            }
+            let stageIds = [], stageNames = [], userIdArray = [], fromObj = {};
+            this.stageArray.map((item,idx) => {
+                // stageIds += item.id + ','
+                // stageNames += item.name + ','
+                stageIds.push(item.id)
+                stageNames.push(item.name)
+            })
+            this.extCopyArray.map((item,idx) => {
+                userIdArray.push(item.userId)
+            })
+            this.remarkFromArray.forEach(i => {
+                fromObj = Object.assign(fromObj,{
+                    [i.id]: i.value
+                })
+            })
+            let data = {
+                projectName: this.proPigeonholeName_input,
+                sourceName: '发起审批',
+                data: {
+                    modelId: this.flowChartObj.actModelId,
+                    deploymentId: this.flowChartObj.procDeployId,
+                    procName:  this.flowChartObj.procName,
+                    versionId: this.flowChartObj.procVersionNum,
+                    financingTypeId: this.flowChartObj.finaTypeId,
+                    categoryId: 8, //归档
+                    projectName: this.proPigeonholeName_input,
+                    projectId: this.projectId,
+                    approvalType: 8, //归档
+                    userDept:this.valueinfo,
+                    extCopy: userIdArray,
+                    formData: JSON.stringify(fromObj),
+                    stageIds: stageIds.join(','),
+                    stageNames: stageNames.join(','),
+                    remarks: this.remark_textarea
+                }
+
+            };
+            this.$confirm('项目归档成功后不可恢复，请谨慎操作是否确认提交归档申请？', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              this.$post("/info/audit/start_process_instance",data).then((res => {
+                //   if(this.requestCode.SUCCESS !== res.code){
+                //       this.$message.error(res.msg);
+                //       return;
+                //   }else if(res.code = -5022){
+                //        this.$confirm(res.msg, '提示', {
+                //         confirmButtonText: '我知道了',
+                //         showCancelButton:false,
+                //         type: 'warning'
+                //         }).then(() => {
+                //         }).catch(() => {
+                //         });
+                //     return
+                //   }
+
+                if(res.code == 0){
+                  this.proPigeonholeVisible = false;
+                  this.$message.success(res.msg);
+                }else if(res.code == -5022){
+                  this.$confirm(res.msg, '提示', {
+                    confirmButtonText: '我知道了',
+                    showCancelButton:false,
+                    type: 'warning'
+                    }).then(() => {}).catch(() => { });
+                }else{
+                  this.$message.error(res.msg);
+                }
+              })).catch(error => {
+
+              });
+            }).catch(() => {
+            });
+        },
+        cancelPigeonholeFn() { //取消归档函数
+            this.extCopyArray = [];
+            this.proPigeonholeVisible = false;
+        },
+        addCopyPeopleFn(num) { //添加抄送人弹框函数
+            this.findFlag = true;
+            this.user_num = num;
+            this.findState = { state: 0 };
+            this.checkState = { state: 2 };
+        },
+        findAllUser(data) { //添加抄送人回调函数
+          if(!data || !data.length){
+            this.findFlag = false;
+            this.findState = {};
+            this.checkState = {};
+            return
+          }
+            this.deployObj = data;
+            if(this.user_num == 1){
+                let arr = data;
+                let hash = {};
+                this.extCopyArray = this.extCopyArray.concat(arr);
+                this.extCopyArray = this.extCopyArray.reduce((item, next) => {
+                    hash[next.id] ? '' : hash[next.id] = true && item.push(next);
+                    return item
+                }, []);
+
+                this.extCopyArray.map((item,idx) => {
+                    if(this.copyNameArray.indexOf(item.name) != -1) {
+                        this.extCopyArray.splice(idx, 1)
+                    }
+                })
+            }else{
+                this.search_form.principal = this.deployObj[0].name;
+                this.customer = this.deployObj[0].userId;
+                this.findFlag = false;
+                this.findState = {};
+                this.checkState = {};
+            }
+          this.findUserObj = data
+        },
+        handleCloseFn(itemValue) { //删除当前的抄送人
+            this.extCopyArray.splice(this.extCopyArray.indexOf(itemValue), 1)
+          this.findUserObj.splice(this.findUserObj.indexOf(itemValue), 1)
+        },
+        reportBtn(){
+            this.getReportList();
+            this.reportListVisible = true;
+        },
+        // 查看报告
+        viewReport(index, row){
+            this.compResultVisible = true;
+        },
+        //利益冲突核查报告列表查询
+        searchBtn(){
+
+        },
+        //利益冲突核查报告列表搜索条件重置
+        resetBtn(){
+            this.reportProjectName = '';
+        },
+        //比对报告列表
+        getReportList(){
+            // var listObj = {
+            //     "token": this.token,
+            //     "userId": this.userId,
+            //     "pageNo": this.currentPage,
+            //     "pageSize": this.pageSize,
+            //     "data": {
+
+            //     }
+            // };
+            // this.$post("/info/project/getProjectList",listObj).then((response => {
+                var data =  response.data;
+        //         if(response.code == this.success_code){
+                    this.reportListData = data.list;
+                    this.dataTotal = data.total;
+        //         }else{
+        //             this.$message(response.msg);
+        //         }
+        //     })).catch(error => {
+
+        //     });
+        },
+        //选择客户相关
+        // 查询
+        //弹出选择客户弹窗
+        selectCrmClick(){
+            var editObj = {
+                'token': this.token,
+                'userId': this.userId,
+                "projectId": this.projectId,
+            }
+            var that=this;
+            var num = 0 ;
+            this.$post('/sys/getUserPerm', editObj).then((response)=> {
+                if(response.code == that.code.codeNum.SUCCESS) {
+                    for(var i=0;i<response.data.length;i++){
+                        if(response.data[i] == "crm_manage"){
+                            num = 1;
+                        }
+                    }
+                    if(num == 1){
+                        this.seleCrmVisible = true;
+                    }else{
+                        that.$message("没有该权限");
+                    }
+                }else{
+                    that.$message.error(response.msg);
+                }
+            }).catch(function(error) {
+                console.log(error);
+            });
+        },
+        searchBtn(){
+            this.currentPage = 1;
+            this.mediunList()
+        },
+        // 重置
+        resetBtn(){
+            this.search_form = {
+                name: '',
+                principal: '',
+                type: '',
+                status: ''
+            };
+            this.customer = '',
+            this.indexIdsearch = '',
+            this.indexId2search =''
+        },
+        //分页
+        onPageChange(currentPage) {
+            this.currentPage = currentPage;
+            this.mediunList()
+        },
+        // 初始页currentPage、初始每页数据数pagesize和数据data
+        handleSizeChange(val) {
+            this.pageSize = val;
+            this.mediunList()
+        },
+        // 列表数据
+        mediunList(){
+            var data={
+                token:this.token,
+                userId:this.userId,
+                pageNo: this.currentPage,
+                pageSize: this.pageSize,
+                data: {
+                    name: this.search_form.name,
+                    principal: this.customer,
+                    type: this.search_form.type,
+                    status: this.search_form.status,
+                    industryOne: this.indexIdsearch,
+                    industryTwo: this.indexId2search
+                }
+
+            }
+            var _this=this;
+            this.$post('/info/crm/company', data).then((response)=> {
+                _this.tableData = response.data.list;
+                _this.indexId = response.data.industryOne;
+                _this.indexId2 = response.data.industryTwo;
+                _this.dataTotal = response.data.total;
+            }).catch(function(error) {
+                console.log(error);
+            });
+
+        },
+        selectCrmBtn(row){
+            this.$confirm(
+                '客户选择后将无法进行变更，是否继续？',
+                "提示",
+                {
+                    confirmButtonText: "确定",
+                    cancelButtonText: "取消",
+                    type: "warning"
+                }).then(_ => {
+                    this.selectCrm(row);
+            }).catch(_ => {
+                this.$message({
+                    type: "info",
+                    message: "已取消"
+                });
+            });
+        },
+        //选择客户，保存客户信息
+        selectCrm(row){
+            let data = {
+                token: this.token,
+                userId: this.userId,
+                projectId: this.projectId,
+                data: {
+                    "crmId": row.id
+                }
+            };
+            this.$post("/info/project/addCustomer",data).then((res => {
+                if(res.code == this.code.codeNum.SUCCESS){
+                    this.$message.success(res.msg);
+                    this.seleCrmVisible = false;
+                    this.projectMsg();
+                }else{
+                    this.$message.error(res.msg);
+                }
+            })).catch(error => {
+
+            });
+        },
+        // 搜索点击行业出现二级行业
+        indexSelectsearch(){
+            let i = 0;
+            for (i = 0;i<this.select01search.length;i++) {
+                if (this.select01search[i].id == this.indexIdsearch){
+                    this.indexNumsearch = i;
+                    this.indexIdsearch = this.select01search[i].name
+                    break
+                }
+            }
+            this.select02search = this.select01search[this.indexNumsearch].childrens;
+            this.indexId2search = '';
+        },
+        indusytryDatasearch(){
+            var datas = {
+                data:{
+
+                },
+                token:this.token,
+                userId:this.userId
+
+            }
+            var _this = this;
+             this.$post('/sys/Industry',datas).then((response)=> {
+                _this.select01search = response.data;
+                _this.indexSelectsearch();
+
+
+            }).catch(function(error) {
+                console.log(error);
+            });
+        },
+        // 选择用户
+        optUser(num){
+            this.user_num = num;
+            this.findFlag = true;
+            this.findState = {state:0};
+            this.checkState = {state:1};
+        },
+        // 项目档案相关
+        editRecordBtn(){
+            // 项目状态判断
+            if(this.endFlag){
+               this.$store.commit('projectStatusTips');
+               return
+            }
+            this.editRecord = true;
+            this.recordDataEdit.timeVariable = this.recordData.timeVariable;
+            this.recordDataEdit.instalmentFlag = this.recordData.instalmentFlag + '';//是否分期
+            this.recordDataEdit.multispeciesFlag = this.recordData.multispeciesFlag + '';//是否多品种发行
+            this.recordDataEdit.baileeFlag = this.recordData.baileeFlag + '';//是否为受托管理人
+            console.log('11111111')
+            this.projectMsg();
+            this.getMainQua(121);
+            this.getMainQua(140);
+            if(this.timeVariable != null){
+                this.timeVariable.map((item, index) => {
+                    this.timeVariable[index].selected = false;
+                    console.log('匹配',this.recordDataEdit.timeVariable)
+                    if(this.recordDataEdit.timeVariable != null && this.recordDataEdit.timeVariable != ''){
+                        this.recordDataEdit.timeVariable.map((item2, index2) => {
+                            console.log('6666666666666666666666')
+                            if(item.id === item2.id){
+                                console.log('相等',item2)
+                                this.timeVariable[index].selected = true;
+                            }
+                        })
+                    }
+                })
+            }
+        },
+        cancelEditRecord(){
+            this.editRecord = false;
+            console.log('取消',this.recordData.issuerContact)
+        },
+        test(val){
+            if(val == null){
+                this.recordDataEdit.approvalValidityStartTime = '';
+            }
+        },
+        test2(val){
+            if(val == null){
+                this.recordDataEdit.approvalValidityEndTime = '';
+            }
+        },
+        saveRecord(){//保存档案
+            if(this.recordDataEdit.bankCode != null){
+                if(this.recordDataEdit.bankCode.length > 20){
+                    this.$message.warning('银行间代码不能超出20位数字，请修改。');
+                    return;
+                }
+            }
+            if(this.recordDataEdit.exchangeCode != null){
+                if(this.recordDataEdit.exchangeCode.length > 20){
+                    this.$message.warning('交易所代码不能超出20位数字，请修改。');
+                    return;
+                }
+            }
+            if(this.recordDataEdit.pledgeCode != null){
+                if(this.recordDataEdit.pledgeCode.length > 20){
+                    this.$message.warning('质押代码不能超出20位数字，请修改。');
+                    return;
+                }
+            }
+            // 1.2-1.3
+            var reg = /^[0-9,-— ——.%]*$/;
+            var isCorrect = reg.test(this.recordDataEdit.enquiryRateRegion);
+            if(!isCorrect){
+                this.$message.warning('询价利率区间格式不正确，请修改。');
+                return;
+            }
+            var minRange = this.recordDataEdit.enquiryRateRegion.split('-')[0];//1.2
+            var maxRange = this.recordDataEdit.enquiryRateRegion.split('-')[1] || '';//1.3
+            var minRangeSpotNum = minRange.split('.').length - 1;
+            var maxRangeSpotNum = maxRange.split('.').length - 1;
+            if(minRangeSpotNum > 1 || maxRangeSpotNum > 1){
+                this.$message.warning('询价利率区间格式不正确，请修改。');
+                return;
+            }
+            var oDate1 = new Date(this.recordDataEdit.approvalValidityStartTime);
+            var oDate2 = new Date(this.recordDataEdit.approvalValidityEndTime);
+            if(this.recordDataEdit.approvalValidityStartTime != null &&  this.recordDataEdit.approvalValidityStartTime !='' && this.recordDataEdit.approvalValidityEndTime != null && this.recordDataEdit.approvalValidityEndTime != ''){
+                if (oDate1.getTime() > oDate2.getTime()) {
+                    this.$message.warning("批文有效期开始时间不能大于结束时间");
+                    return;
+                }
+            }
+            let arr = [];
+            if(this.recordDataEdit.timeVariable != null && this.recordDataEdit.timeVariable != ''){
+                this.recordDataEdit.timeVariable.map((item) => {
+                    if(item.id != null && item.id != ''){
+                        arr.push(item.id)
+                    }
+                })
+            }
+            let newArr = Array.from(new Set(arr));
+            if(arr.length > newArr.length){
+                this.$message.warning('不能存在相同的时间字段，请修改');
+                return;
+            }
+            this.recordDataEdit.approvalValidityStartTime = this.recordDataEdit.approvalValidityStartTime == '' ? '' : this.GMTToStr(this.recordDataEdit.approvalValidityStartTime);
+            this.recordDataEdit.approvalValidityEndTime = this.recordDataEdit.approvalValidityEndTime == '' ? '' : this.GMTToStr(this.recordDataEdit.approvalValidityEndTime);
+            var editList = [];
+            if(this.recordDataEdit.timeVariable != null){
+                editList = this.$utils.copyObj(this.recordDataEdit.timeVariable);
+            }
+            this.recordData.approvalValidityStartTime ==  null ? '' : this.recordData.approvalValidityStartTime.replace(/-/g, '/');
+            this.recordDataEdit.approvalValidityStartTime ==  null ? '' : this.recordDataEdit.approvalValidityStartTime.replace(/-/g, '/');
+            this.recordData.approvalValidityEndTime ==  null ? '' : this.recordData.approvalValidityEndTime.replace(/-/g, '/');
+            this.recordDataEdit.approvalValidityEndTime ==  null ? '' : this.recordDataEdit.approvalValidityEndTime.replace(/-/g, '/');
+            let timeVariable = this.recordDataEdit.timeVariable == null ? null : JSON.stringify(editList);
+            var data = {
+                "token": this.token,
+                "userId": this.userId,
+                "data": {
+                    projectId: this.projectId,
+                    issuerLocation: this.recordDataEdit.issuerLocation,//发行人所在地
+                    issuerContact: this.recordDataEdit.issuerContact,//发行人联系人
+                    issuerContactWay: this.recordDataEdit.issuerContactWay,//发行人联系方式
+                    projectGroupContact: this.recordDataEdit.projectGroupContact,//项目组联系人
+                    projectGroupContactWay: this.recordDataEdit.projectGroupContactWay,//项目组联系方式
+                    bondDeadline: this.recordDataEdit.bondDeadline,//债券期限
+                    guarantors: this.recordDataEdit.guarantors,//担保机构
+                    publishWay: this.recordDataEdit.publishWay,//发行方式
+                    specificItems: this.recordDataEdit.specificItems,//特殊条款
+                    pastBond: this.recordDataEdit.pastBond,//往期债券
+                    syndicateMember: this.recordDataEdit.syndicateMember,//承销团成员
+                    bookkeepingRoom: this.recordDataEdit.bookkeepingRoom,//薄记室
+                    "checkScale": this.recordDataEdit.checkScale,//核准规模
+                    "mainBodyAptitude": this.recordDataEdit.mainBodyAptitude,//主体资质
+                    "debtAptitude": this.recordDataEdit.debtAptitude,//债项资质
+                    "replyNum": this.recordDataEdit.replyNum,//批复文号
+                    // "approvalValidity": this.recordDataEdit.approvalValidity,//批文有效期
+                    approvalValidityStartTime: this.recordDataEdit.approvalValidityStartTime,//批文有效期开始时间
+                    approvalValidityEndTime: this.recordDataEdit.approvalValidityEndTime,//批文有效期结束时间
+                    "publishSite": this.recordDataEdit.publishSite,//发行场所
+                    "declareScale": this.recordDataEdit.declareScale,//申报规模
+                    "bondAbbreviation": this.recordDataEdit.bondAbbreviation,//债券简称
+                    "bankCode": this.recordDataEdit.bankCode,//银行间代码
+                    "instalmentFlag": this.recordDataEdit.instalmentFlag,//是否分期0：否1：是
+                    "multispeciesFlag": this.recordDataEdit.multispeciesFlag,//是否多品种发行0：否1：是
+                    "issuedScale": this.recordDataEdit.issuedScale,//已发行规模
+                    "exchangeCode": this.recordDataEdit.exchangeCode,//交易所代码
+                    "thisBondScale": this.recordDataEdit.thisBondScale,//本期债券规模
+                    "pledgeCode": this.recordDataEdit.pledgeCode,//质押代码
+                    "enquiryRateRegion": this.recordDataEdit.enquiryRateRegion,//询价利率区间
+                    "issuedRemainScale": this.recordDataEdit.issuedRemainScale,//发行后剩余规模
+                    "endPublishRate": this.recordDataEdit.endPublishRate,//最终发行利率
+                    "baileeDeadline":this.recordDataEdit.baileeDeadline,//受托期限
+                    "meetingMember": this.recordDataEdit.meetingMember,//参会委员
+                    "baileeFlag": this.recordDataEdit.baileeFlag,//是否为受托管理人0：否1：是
+                    "timeVariable": timeVariable//时间变量json串
+                }
+            }
+            this.$post("/info/project/editPublishFile",data).then((response => {
+                var data =  response.data;
+                if(response.code == this.code.codeNum.SUCCESS){
+                    this.$message.success(response.msg);
+                    this.editRecord = false;
+                    this.exportTipsvisible = false;
+                    this.projectMsg();
+                }else{
+                    this.$message.warning(response.msg);
+                }
+            })).catch(error => {
+
+            });
+        },
+        exportRecord(){//导出
+            var data = this.projectId;
+            this.$store.commit("export", {
+                url: "/info/project/exportPublishFile",
+                data: data
+            });
+        },
+        // importRecordBtn(num){
+        //     this.$confirm(
+        //        '导入信息，将覆盖原有信息，是否导入？',
+        //         "提示",
+        //         {
+        //             confirmButtonText: "确定",
+        //             cancelButtonText: "取消",
+        //             type: "warning"
+        //         }).then(_ => {
+        //             this.importRecord(num);
+        //     }).catch(_ => {
+        //         this.$message({
+        //             type: "info",
+        //             message: "已取消导入"
+        //         });
+        //     });
+        // },
+        importRecordBtn(num){
+            this.importTips = true;
+        },
+        importRecord(num) {
+            this.importTips = false;
+            this.exportTipsTable = [];
+            let formData = new FormData();
+            let inputDom;
+            if(num == 0){
+                inputDom = this.$refs.files;//input元素
+            } else {
+                inputDom = this.$refs.files2;//input元素
+            }
+            let files = inputDom.files[0]//添加的文件对象
+            formData.append("file", files);
+            formData.append("token", this.token);
+            formData.append("userId", this.userId);
+            formData.append("projectId", this.projectId);
+            let name = files.name.substring(files.name.lastIndexOf("."), files.name.length);
+            let timer = window.setTimeout(() => {
+                this.loading = true;
+            }, 60000);
+            if (name == ".xls" || name == ".xlsx" || name == ".excel") {
+                let config = {
+                    headers: { "Content-Type": "multipart/form-data" }
+                };
+                this.$post("/info/project/exportFileInfo", formData, config)
+                .then(res => {
+                    if (res.code == 0) {
+                        this.loading = false;
+                        window.clearTimeout(timer)
+                        inputDom.value = "";
+                        let errorPrompt = res.data.errorPrompt || [];
+                        this.exportTotal = res.data.countNum;
+                        this.exportErrorTotal = res.data.errorNum;
+                        if(errorPrompt.length == 0){
+                            this.exportTipsvisible = false;
+                            this.$message({
+                                message: res.msg,
+                                type: "success"
+                            });
+                            this.projectMsg();
+                        } else {
+                            // this.exportTotal = res.data.countNum;
+                            // this.exportErrorTotal = res.data.errorNum;
+                            res.data.errorPrompt.map((item) => {
+                                let obj = {};
+                                obj.item = item.split(':')[0];
+                                obj.error = item.split(':')[1];
+                                this.exportTipsTable.push(obj);
+                            })
+                            this.recordDataEdit = res.data.publishFile;
+                            // this.recordDataEdit.timeVarList = res.data.publishFile.time-variable;//导入后返回的字段和获取详情接口返回的稍有区别
+                            this.exportTipsvisible = true;
+                        }
+                    } else {
+                        this.loading = false;
+                        clearTimeout(timer)
+                        inputDom.value = "";
+                        this.$message({
+                            message: res.msg,
+                            type: "warning"
+                        });
+                    }
+                })
+                .catch(() => {});
+            } else {
+                this.loading = false;
+                clearTimeout(timer)
+                this.$message({
+                // message: "只能导入xls,xlsx,excel格式",
+                message: "文件类型不匹配",
+                type: "error"
+                });
+                inputDom.value = "";
+            }
+        },
+        againUpload(){
+            this.exportTipsvisible = false;
+        },
+        confirmExport(){//确认导入
+            let myData = this.recordDataEdit;
+            myData.projectId = this.projectId;
+            var data = {
+                "token": this.token,
+                "userId": this.userId,
+                "data": myData
+            }
+            this.$post("/info/project/coverFileInfo",data).then((response => {
+                var data =  response.data;
+                if(response.code == this.code.codeNum.SUCCESS){
+                    this.$message.success(response.msg);
+                    this.editRecord = false;
+                    this.exportTipsvisible = false;
+                    this.projectMsg();
+                }else{
+                    this.$message.warning(response.msg);
+                }
+            })).catch(error => {
+
+            });
+        },
+        downRecordMould() {//下载模板
+            this.$store.commit("export", {
+                url: "/info/project/downloadPublishFileTemplate"
+            });
+        },
+        getMainQua(parentId){//获取主体资质类型
+            var data = {
+                "token": this.token,
+                "userId": this.userId,
+                "data":{
+                    parentId: parentId //主体资质类型：121债项资质类型：140
+                }
+            };
+            this.$post("/sys/queryDataDictByParentId",data).then((response => {
+                var data =  response.data;
+                if(response.code == this.code.codeNum.SUCCESS){
+                    if(parentId == 121){
+                        this.mainNaturalList = data;
+                    } else if(parentId == 140){
+                        this.couponTtemList = data;
+                    }
+                }else{
+                    // this.$message(response.msg);
+                }
+            })).catch(error => {
+
+            });
+        },
+        queryVariableList(){//获取时间变量列表
+            var data = {
+                "token": this.token,
+                "userId": this.userId,
+                "data": {}
+            }
+            this.$post("/info/timeVar/findUsingList",data).then((response => {
+                if(response.code == this.code.codeNum.SUCCESS){
+                    this.timeVarList = response.data;
+                    // this.timeVarList.map((item, index) => {
+                    //     this.timeVarList[index].selected = false;
+                    // })
+
+                }else{
+                    // this.$message(response.msg);
+                }
+            })).catch(error => {
+
+            });
+        },
+        addTimesItem(){
+            let obj = {
+                createBy: null,
+                createName: null,
+                createTime: null,
+                date: "",
+                delFlag: null,
+                id: null,
+                name: "请选择时间变量",
+                quote: null,
+                status: null,
+                updateBy: null,
+                updateTime: null
+            }
+            console.log('旋转6666666666666',this.recordDataEdit.timeVariable)
+            this.recordDataEdit.timeVariable = this.recordDataEdit.timeVariable == null ? [] : this.recordDataEdit.timeVariable;
+            this.recordDataEdit.timeVariable.push(obj);
+        },
+        deleteTimesItem(item, index){
+            if(this.recordDataEdit.timeVariable.length == 1){
+                this.$message.warning('剩余一个时间变量项时不可删除');
+            } else {
+                if(item.id == null || item.id == ""){
+                    this.recordDataEdit.timeVariable.splice(index, 1);
+                } else {
+                    var data = {
+                        "token": this.token,
+                        "userId": this.userId,
+                        "data": {
+                            "id": item.id,
+                            "projectId": this.projectId
+                        }
+                    }
+                    this.$post("/info/project/judgeDeleteTimeVar",data).then((response => {
+                        if(response.code == this.code.codeNum.SUCCESS){
+                            this.recordDataEdit.timeVariable.splice(index, 1);
+                            this.$message({
+                                message: response.msg,
+                                type: "success"
+                            });
+                        }else{
+                            this.$message({
+                                message: response.msg,
+                                type: "warning"
+                            });
+                        }
+                    })).catch(error => {
+
+                    });
+                }
+            }
+        },
+        visibleChange(){
+        },
+        changeTimeVar(val, editIndex){
+            if(this.timeVarList != '' && this.timeVarList != null){
+                this.timeVarList.map((obj,index) => {
+                    if(obj.id == val){
+                        for(var k in this.timeVarList[index]){
+                            this.recordDataEdit.timeVariable[editIndex][k] = this.timeVarList[index][k];
+                        }
+                    }
+                })
+            }
+        },
+        // changeTimeVar(val, editIndex){
+        //     console.log('22222222222',val)
+        //     var data = {
+        //         "token": this.token,
+        //         "userId": this.userId,
+        //         "data": {
+        //             "id": val,
+        //         }
+        //     }
+        //     this.$post("/info/project/judgeDeleteTimeVar",data).then((response => {
+        //         if(response.code == this.code.codeNum.SUCCESS){
+        //             this.timeVarList.map((obj,index) => {
+        //                 if(obj.id === val){
+        //                     this.timeVarList[index].disabled = true;
+        //                     this.recordDataEdit.timeVarList[editIndex] = this.timeVarList[index];
+        //                     this.recordDataEdit.timeVarList[editIndex].date = this.recordDataEdit.timeVarList[editIndex].date;
+        //                     this.recordDataEdit.timeVarList[editIndex].disabled = true;
+        //                 }
+        //             })
+        //         }else{
+        //             this.$message({
+        //                 message: response.msg,
+        //                 type: "warning"
+        //             });
+        //         }
+        //     })).catch(error => {
+
+        //     });
+        // },
+        varSeleDate(index, item){
+            this.recordDataEdit.timeVariable[index].date = item.date;
+        },
+        GMTToStr(time) {//格林威治时间格式（GMT)与普通时间格式的互相转换
+            let date = new Date(time)
+            let Str = date.getFullYear() + '-' +
+            (date.getMonth() + 1) + '-' +
+            date.getDate();
+            return Str
+        },
+        getProMsg(value ,type){
+            if(type == 1){
+                let ipoMarket = this.projectPlat.find(item=>item.id == value);  // 上市/挂牌板块（回显）
+                return ipoMarket.label
+            } else if(type == 2){
+                let itemArea =  this.projectArea.find(item1=>item1.id == value); // 项目区域编码（回显）
+                return itemArea.label
+            } else { // 交易板块（回显）
+                let item = this.tradingPlaces.find(ii => ii.id == value)
+                return item.label
+            }
+
+        }
+    }
+}
+
+</script>
+
+<style scoped lang="scss" type="text/css">
+.ml-2{
+    margin-left: -20px;
+}
+.projectmessage{
+    display: flex;
+    flex-direction: column;
+    .el-breadcrumb{
+        line-height: 26px;
+    }
+    .finance_tit{
+        padding:10px 0 10px 10px;
+        background: #fff;
+        .project_name{
+            padding-top: 5px;
+        }
+        .el-button{
+            float:right;
+            margin-right:20px;
+            margin-bottom: 6px;
+        }
+        span{
+            float:left;
+            color:#333;
+            font-size:20px;
+            font-weight: 500;
+            line-height:32px;
+            margin-left:10px;
+            font-weight: bold;
+        }
+    }
+    .cont_box{
+        margin: 10px 0 0 0;
+        .cont_area{
+            padding:10px;
+            box-sizing:border-box;
+            background: #fff;
+            margin-bottom: 4px;
+            border-radius: 3px;
+            .cont_tit{
+                width:100%;
+                padding:0;
+                height:50px;
+                line-height:50px;
+                span{
+                    float:left;
+                    font-size:14px;
+                    font-weight:600;
+                    line-height:50px;
+                    margin-left: 20px;
+                }
+                .el-button{
+                    float:right;
+                    margin-right:10px;
+                }
+                i{
+                    float:left;
+                    color:blue;
+                    margin-left:20px;
+                    cursor:pointer;
+                }
+            }
+            .specif_cont{
+                width:100%;
+                padding:0;
+                .specif_box{
+                    float:left;
+                    min-width:30%;
+                    margin-bottom:10px;
+                    position:relative;
+                    label{
+                        float:left;
+                        line-height:30px;
+                        margin-left:20px;
+                    }
+                    div{
+                        // width: 90%;
+                        float:left;
+                        line-height:30px;
+                        margin-left:20px;
+                        text-align:left;
+                    }
+                    .max_specif_box_con{
+                        width: 90%;
+                        word-break: break-all;
+                    }
+                }
+            }
+            .parent-project{
+                text-align:left;
+                padding-left:20px;
+                margin-bottom:10px;
+                span{
+                    width: 70px;
+                    text-align:left;
+                }
+                div{
+                    margin-left:20px;
+                }
+            }
+        }
+
+    }
+    .el-dialog{
+        .step_box{
+            .step_cont{
+                width: 60%;
+                margin: 20px 20% 0 20%;
+                .role_inp{
+                    width:100%;
+                    line-height: 40px;
+                    label{
+                        display: inline-block;
+                        width:120px;
+                        text-align: right;
+                    }
+                }
+                .step_suc{
+                    width:100%;
+                    height:80px;
+                    display: flex;
+                    align-items: center;
+                    padding-left:60px;
+                    img{
+                        float: left;
+                        margin-right: 30px;
+                        vertical-align: middle;
+                        width:50px;
+                        height:50px;
+                    }
+                    .suc_msg{
+                        float: left;
+                        p{
+                            font-weight: 500;
+                            line-height: 30px;
+
+                        }
+                        .suc_msg_success{
+                            font-size: 18px;
+                        }
+                    }
+                }
+            }
+        }
+        .stop_box{
+            .el-scrollbar{
+                .stop_list{
+                    position: relative;
+                    margin-bottom:20px;
+                    .opt_file{
+                        position: absolute;
+                        left:120px;
+                        top:50px;
+                    }
+                    .audit_box{
+                        float:left;
+                        .audit_tit{
+                            color:#333;
+                        }
+                        .audit_two_tit{
+                            color:#999;
+                            line-height:30px;
+                            span{
+                                color:#666;
+                            }
+                        }
+                        .set_own{
+                            span{
+                                display: inline-block;
+                                margin-right: 10px;
+                            }
+                            .el-button{
+                                width:20px;
+                                height:20px;
+                                padding:0;
+                                text-align: center;
+                                line-height: 20px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /* 项目归档弹框 */
+    .proPigeonhole_dialog{
+        .pigeonhole_middle{
+            width: 100%;
+            .p_middle_title{
+                font-size: 16px;
+                color: #333333;
+                margin: 18px 0 0 24px;
+            }
+            .proPigeonhole_title{
+                display: inline-block;
+                color: #000000;
+                margin-left: 24px;
+                width: 66px;
+                overflow: hidden;
+            }
+            .p_middle_nav{
+                width: 100%;
+                margin: 23px 0 0 0;
+                display: flex;
+                .p_middle_nav_chunk{
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    .p_middle_nav_chunk_title{
+                        display: inline-block;
+                        color: #000000;
+                    }
+                    .p_middle_nav_chunk_title_proName{
+                        margin-left: 24px;
+                    }
+                    .p_middle_nav_chunk_title_proNumber{
+                        margin-left: 37px;
+                    }
+                    .p_middle_nav_chunk_proName{
+                        width: 330px;
+                        margin-left: 18px;
+                    }
+                    .p_middle_nav_chunk_proNumber{
+                        width: 228px;
+                        margin-left: 9px;
+                    }
+                }
+            }
+            .p_middle_pigeonholeStage{
+                margin: 23px 0 0 0;
+                display: flex;
+                align-items: center;
+                .p_middle_pigeonholeStage_stage{
+                    width: 665px;
+                    margin-left: 18px;
+                }
+            }
+            .p_middle_remark{
+                width: 100%;
+                display: flex;
+                margin-top: 14px;
+                .p_middle_remark_content{
+                    width: 670px;
+                    margin-left: 18px;
+                }
+            }
+            .p_middle_audit{
+                width: 100%;
+                display: flex;
+                margin-top: 21px;
+                .p_middle_audit_title{
+                    display: inline-block;
+                    color: #000000;
+                    margin-left: 24px;
+                }
+                .p_middle_audit_content{
+                    flex:1;
+                    display: flex;
+                    flex-direction: column;
+                    margin-left: 18px;
+                    .p_middle_audit_content_middle{
+                        display: flex;
+                        flex-direction: column;
+                        .p_middle_audit_content_middle_title{
+                          margin-top: 10px;
+                          .p_middle_audit_content_middle_title_people{
+                              color: #333333;
+                          }
+                          .p_middle_audit_content_middle_title_annotation{
+                              color: #999999;
+                          }
+                        }
+                        .initiate_title {
+                            font-family:Microsoft YaHei;
+                            display: block;
+                        .borrow_middle_chunk_content_middle_title_people {
+                            display: block;
+                        }
+                        .initiate_people {
+                                display: block;
+                                padding: 18px 0 20px 18px;
+                                font-size: 13px;
+                            }
+                        }
+                        .p_middle_audit_content_middle_title:nth-child(1) {
+                          margin-top: 0;
+                        }
+                        .p_middle_audit_content_middle_operation{
+                            width: 100px;
+                            margin-top: 10px;
+                            display: flex;
+                            align-items: center;
+                            cursor: pointer;
+                            .p_middle_audit_content_middle_operation_icon{
+                                width: 24px;
+                                height: 24px;
+                                background: url('../../../../assets/common_icon/addtask_icon.png') no-repeat;
+                                background-size: 24px 24px;
+                            }
+                            .p_middle_audit_content_middle_operation_title{
+                                color: #1462A3;
+                                margin-left: 6px;
+                            }
+                        }
+                        .p_middle_audit_content_middle_list{
+                          max-height: 216px;
+                          overflow-y: scroll;
+                          .el-tag {
+                              margin: 10px 10px 10px 0;
+                          }
+                        }
+                    }
+                    .p_middle_audit_content_remark{
+                      display: flex;
+                      .p_middle_audit_content_remark_title{
+                        display: inline-block;
+                        color: #000000;
+                        width: 66px;
+                        overflow: hidden;
+                      }
+                      .p_middle_audit_content_remark_content{
+                        width: 580px;
+                        margin-left: 18px;
+                      }
+                    }
+                }
+            }
+        }
+    }
+    // 利益冲突核查报告
+    .check-report-btn{
+        position: relative;
+        padding: 10px 16px 10px 34px;
+        i{
+            position:absolute;
+            left:16px;
+            top:9px;
+            width:12px;
+            height:14px;
+            background: url('../../../../assets/common_icon/check_report.png') no-repeat;
+            background-size: 12px 14px;
+        }
+    }
+    .comp-list{
+        .search-btn{
+            margin-right:16px;
+        }
+        .handle-btn{
+            height: 28px;
+        }
+        .el-table td{
+            padding: 6px 0;
+        }
+    }
+    .record_box.cont_area{
+        .sub_title{
+            text-align: left;
+            font-weight: 400;
+            padding-bottom: 16px;
+            padding-left: 12px;
+        }
+        .sub_title2{
+            padding-left: 18px;
+            .el-lable{
+                padding-top: 6px;
+            }
+        }
+        .specif_cont.record_specif_cont{
+            .specif_box{
+                min-width:50%;
+                // overflow: hidden;
+                // text-overflow: ellipsis;
+                // white-space: nowrap;
+            }
+            .max_specif_box{
+                .lable_box{
+                    min-width: 86px;
+                }
+                width:100%;
+                div{
+                    margin-left: 0;
+                }
+            }
+        }
+    }
+}
+//选择客户相关
+.sele-crm-box{
+    .form_box{
+        background:#fff;
+        padding-left:10px;
+        margin-bottom: 10px;
+        .el-form-item{
+            float:left;
+            margin-right:20px;
+            margin-bottom: 15px;
+            height:40px;
+            .el-input{
+                width:217px;
+            }
+            .inline-input{
+                width:217px;
+            }
+            .el-select{
+                width:217px;
+            }
+            .el-button{
+                float:left;
+                margin-left:20px;
+                margin-top:0px;
+            }
+        }
+    }
+}
+// 发行档案相关
+.record_box{
+    .add-time-item {
+        margin-left: 20px;
+        text-align: left;
+    }
+    .el-icon-error{
+        padding-top: 6px;
+        padding-left: 16px;
+        font-size: 16px;
+        color:#dcdfe6;
+        cursor: pointer;
+    }
+    .time-explain{
+        padding: 6px 6px 0 6px;
+    }
+}
+.add-file{
+    position: absolute;
+    width: 70px;
+    height: 36px;
+    top: 0;
+    left: 0;
+    opacity: 0;
+}
+.add-file.add-file2{
+    width: 98px;
+}
+.export-sucess-text{
+    font-size:16px;
+    font-weight:400;
+    color:rgba(51,51,51,1);
+    .el-icon-circle-check{
+        margin-top: 4px;
+        font-size:24px;
+        color:rgba(76,187,134,1);
+    }
+}
+.export-error-text{
+    margin-top: 10px;
+    margin-bottom: 6px;
+    font-size:14px;
+    font-weight:400;
+    color:rgba(255,68,68,1);
+}
+.delete_has_draft_tips{
+    .el-icon-warning{
+        margin-right:6px;
+        font-size: 18px;
+        color: #e6a23c;
+    }
+    .dialog-footer{
+        margin-top:16px;
+    }
+}
+.project_describe{
+    word-break: break-all;
+}
+
+.header-content{
+  padding: 0 10px 10px;
+}
+.company-wrap{
+  width: calc(100% - 400px);
+}
+.company-name{
+  width: calc(100% - 26px);
+  text-align: left;
+}
+.header-btn-wrap{
+  //width: 372px;
+}
+
+//移交项目
+.step-two-sele{
+    padding-top: 32px;
+    padding-left: 6px;
+
+    .el-checkbox{
+        font-size: 14px;
+        color: rgba(44,44,44,1);
+        font-weight: 400;
+    }
+    // .el-checkbox__input.is-checked+.el-checkbox__label{
+
+    // }
+}
+</style>
+<style lang="scss" type="text/css">
+    .el-icon-pigeonhole {
+      width:14px;
+      height:12px;
+      background: url('../../../../assets/common_icon/pigeonhole_icon.png') no-repeat;
+      background-size: 14px 12px;
+      font-family: element-icons!important;
+      speak: none;
+      font-style: normal;
+      font-weight: 400;
+      font-variant: normal;
+      text-transform: none;
+      line-height: 1;
+      vertical-align: baseline;
+      display: inline-block;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .projectmessage .el-dialog{
+        text-align: left;
+    }
+    .projectmessage .el-dialog__header{
+        border-bottom:1px solid #DDDDDD;
+        text-align: center;
+    }
+    .projectmessage .el-dialog__body label{
+            /*width: 100px;*/
+            /*text-align: right;*/
+            display: inline-block;
+    }
+    .projectmessage .el-dialog__body .label_take{
+        float: left;
+    }
+    .projectmessage .inp_pass{
+            width:330px;
+    }
+    .projectmessage .cont_tit a{
+            color:#fff;
+        }
+    .projectmessage .specif_box .el-input{
+            height:30px;
+            line-height: 30px;
+        }
+        .projectmessage .specif_box .el-input__inner{
+            height:30px;
+            line-height: 30px;
+        }
+    .projectmessage .specif_box .el-icon-date{
+        line-height: 30px;
+    }
+        .projectmessage .specif_box .el-input__icon{
+            line-height: 30px;
+        }
+        .projectmessage .specif_box .opt_btn{
+            position: absolute;
+            left:250px;
+            top:0;
+            height:30px;
+            line-height: 30px;
+            padding-top: 0;
+        }
+        .projectmessage .specif_msg .el-input{
+            width:210px;
+        }
+    .projectmessage .specif_msg .el-input__inner{
+        width:210px;
+    }
+    .projectmessage .specif_msg .el-input{
+        width:210px;
+    }
+    .projectmessage .el-dialog {
+        text-align: left;
+    }
+    .projectmessage .hint_msg {
+        font-size: 16px;
+        line-height: 24px;
+        text-align: left;
+        margin-bottom: 20px;
+    }
+    .projectmessage .inp_pass {
+        width: 230px;
+    }
+    .projectmessage .el-button  .el-icon-sort{
+        transform: rotate(90deg)
+    }
+    .projectmessage .el-step__title{
+        font-size: 14px;
+    }
+    .projectmessage .el-select__tags>span .el-tag--info:nth-child(1){
+        margin-left: 30px;
+    }
+    .projectmessage .el-select__tags .el-select__tags-text{
+        max-width: 150px;
+        display: inline-block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .projectmessage .el-select .el-tag__close.el-icon-close{
+        top:-6px;
+    }
+
+    /* 项目归档弹框 */
+    .proPigeonhole_dialog .el-dialog__body{
+        padding: 0;
+    }
+    /*利益冲突核查报告*/
+    .comp-list{
+        .form_box .el-form-item .el-input{
+            width:310px;
+            height:34px;
+            .el-input__inner{
+                height:34px;
+                line-height: 34px;
+            }
+        }
+        .el-button--medium{
+            padding:9px 20px;
+        }
+        .el-table td{
+            padding: 6px 0;
+        }
+        .el-table th.is-center,.el-table td.is-center{
+            text-align: left;
+        }
+    }
+    .comp-result{
+        text-align: left;
+        .el-dialog{
+            position:absolute;
+            right:6%;
+            top:20%;
+        }
+    }
+    .comp-result-title{
+        line-height: 24px;
+        font-size:14px;
+        font-weight:bold;
+    }
+    .comp-result-con{
+        margin-top: 16px;
+        line-height: 24px;
+        font-size:14px;
+        font-weight:400;
+    }
+.projectmessage{
+    .sele-crm-box label{
+        width: auto;
+    }
+    .sele-crm-box .el-pagination{
+        margin:20px 16px 16px 0;
+        text-align: right;
+    }
+    .crm_financin{
+        padding: 0;
+    }
+    //移交项目
+    .step-two-sele{
+        padding-top: 32px;
+        .el-checkbox__input.is-checked+.el-checkbox__label{
+            color:#606266;
+        }
+    }
+}
+// 发行档案相关
+.record_box{
+    .time-box .specif_msg .el-input{
+        width: 180px;
+    }
+    .time-box .specif_msg .el-input__inner{
+        width: 180px;
+    }
+    .add-times-btn{
+        margin-right: 20px;
+    }
+    .lable-fixed-w{
+        width: 85px;
+        text-align: left;
+    }
+    .specif_msg .single-row-input .el-input__inner{
+        width: 380px;
+    }
+    .specif_msg .single-row-input .el-input{
+        width: 380px;
+    }
+    .specif_msg .single-row-input.min-single-row-input .el-input__inner{
+        width: 324px;
+    }
+    .specif_msg .single-row-input.min-single-row-input1 .el-input__inner{
+        width: 325px;
+    }
+}
+.bitians{
+    color: red;
+    margin-left: 5px;
+    margin-right: 3px
+}
+</style>
+<style scoped lang="scss">
+// 报送---> 证券代码组组合表单样式
+.stkCode-wrapper{
+    display: inline-block;
+    width: 100%;
+}
+.stkCode-content{
+    width:60%;
+    display: flex;
+    flex-wrap: wrap;
+    text-align: left;
+    padding-top: 5px;
+    margin-right: 10px;
+}
+// 必填红色*
+.requied::before{
+    content: "*";
+    color: #f56c6c;
+    margin-left: -6px;
+}
+// 申报发行时间 hover提示
+.tooltip-style{
+    float: left;
+    line-height: 30px;
+    margin-left: 10px;
+    color: #C0C4CC;
+    font-size: 14px;
+}
+</style>

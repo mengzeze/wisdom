@@ -1,0 +1,25 @@
+.el-dialog__body{
+  padding:20px 20px;
+}
+.el-select-dropdown__item{
+  margin-bottom: 8px!important;
+}
+
+.el-breadcrumb{
+  padding-top: 0px;
+}
+/* 公共弹窗右侧无选中项时提示 */
+.el-dialog .pop_no_select_item_tips{
+  text-align: center;
+  color: #999999;
+  font-size: 14px;
+}
+.el-card.no-padding .el-card__body{
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#app .el-scrollbar__bar{
+  z-index: 999;
+  right: 1px;
+}

@@ -1,0 +1,4389 @@
+<template>
+  <div class="zhugontaiparents">
+    <div class="maindeskindex">
+      <div class="maindeskindex_contenti_headers">
+        <h3 class="headers_clearFix">
+          <span class="headers_clearFix_title">主工作台</span>
+        </h3>
+      </div>
+
+      <el-row style="margin-top:14px;">
+        <!--      项目统计-->
+        <el-col :span="12" v-if="project_statis">
+          <div class="container" id="containerbooks">
+            <div class="box_card" style="height:395px;">
+              <!-- <el-scrollbar style="height:100%"> -->
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu1.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>项目统计（进度状态）</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gostatistFn"
+                  type="text"
+                  >更多 ></el-button
+                >
+              </div>
+              <div
+                class="container_box"
+                style="padding:0px 17px;margin-top:-16px;"
+              >
+                <div class="choose-input mt-10">
+                  <el-input
+                    v-model="financingName"
+                    placeholder="请选择业务类型"
+                    class="fin_inp"
+                    disabled
+                    style="width:300px;"
+                  ></el-input>
+                  <div>
+                    <el-button
+                      @click="optType(1)"
+                      type="primary"
+                      :disabled="choseproject"
+                      >选择</el-button
+                    >
+                  </div>
+                </div>
+
+                <p
+                  style="text-align:center;position:relative;top:100px;color:#909399;padding-bottom:20px;"
+                  v-if="nodata"
+                >
+                  暂无数据
+                </p>
+                <el-col :span="24">
+                  <div
+                    id="myChart"
+                    :style="{ height: '230px' }"
+                    ref="chart"
+                  ></div>
+                </el-col>
+                <!-- <p class="nodata_row el-table__empty-block" v-if="new_messages.length == 0">暂无数据</p> -->
+              </div>
+              <!-- </el-scrollbar> -->
+            </div>
+          </div>
+        </el-col>
+        <!-- 日历表 -->
+        <el-col :span="12" v-if="calendar_watch">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <!-- <el-scrollbar style="height:100%"> -->
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu2.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>日历表</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gocalendarFn"
+                  type="text"
+                  >更多 ></el-button
+                >
+              </div>
+              <div class="container_box" style="padding:10px;margin-top:-35px;">
+                <!-- <el-date-picker
+                  size="small"
+                  v-model="selectDate"
+                  type="date"
+                  placeholder="选择日期"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+              <el-button size="small" @click="changeDate">确定</el-button>-->
+                <full-calendar
+                  :config="config"
+                  :events="events"
+                  ref="calendar"
+                  @event-selected="eventClick"
+                  @day-click="dayClick"
+                  @view-render="eventHandle"
+
+                ></full-calendar>
+              </div>
+              <!-- </el-scrollbar> -->
+            </div>
+          </div>
+        </el-col>
+        <!--      项目进度-->
+        <el-col :span="12" v-if="project_schedule">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu3.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>项目进度</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="goprolistFn"
+                  type="text"
+                  v-show="project_schedule"
+                  >更多 ></el-button
+                >
+              </div>
+              <div class="cont_box" style="padding:0px 17px">
+                <el-table
+                  style="width: 100%;height:325px"
+                  :data="tableData"
+                  height="325"
+                  :header-cell-style="{ background: '#FAFAFA', color: '#000' }"
+                >
+                  <!-- width="90" -->
+                  <el-table-column prop="code" label="项目编号" min-width="60%">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.code" class="ellipsis1">
+                        {{ scope.row.code }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <!-- width="120" -->
+                  <el-table-column prop="name" label="项目名称" min-width="70%">
+                    <template slot-scope="scope">
+                      <!-- style="padding:0px 0px;line-height:22px;" -->
+                      <el-button
+                        @click="clickprodetail(scope.$index, scope.row)"
+                        type="text"
+                        class="ellipsis1"
+                        :title="scope.row.name"
+                        >{{ scope.row.name }}</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                  <!-- width="90" -->
+                  <el-table-column
+                    prop="projectStatus"
+                    label="项目状态"
+                    min-width="60%"
+                  >
+                    <template slot-scope="scope">
+                      <p :title="scope.row.projectStatus" class="ellipsis1">
+                        {{ scope.row.projectStatus }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <!-- width="80" -->
+                  <el-table-column
+                    prop="picNames"
+                    label="负责人"
+                    min-width="60%"
+                  >
+                    <template slot-scope="scope">
+                      <p :title="scope.row.picNames" class="ellipsis1">
+                        {{ scope.row.picNames }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="currentImplementStageName"
+                    label="当前阶段"
+                    min-width="60%"
+                  >
+                    <template slot-scope="scope">
+                      <p
+                        :title="scope.row.currentImplementStageName"
+                        class="ellipsis1"
+                      >
+                        {{ scope.row.currentImplementStageName }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    label="整体完成度"
+                    v-if="$utils.m('project_task')"
+                    min-width="60%"
+                  >
+                    <template slot-scope="scope">
+                      <el-progress
+                        :percentage="scope.row.progress"
+                      ></el-progress>
+                    </template>
+                    <!-- <el-progress :percentage="percentage"></el-progress> -->
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <!-- 待办事项 -->
+        <el-col :span="12" v-if="commission_incident">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu4.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>待办事项</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gobacklogmattFn"
+                  type="text"
+                  v-show="commission_incident"
+                  >更多 ></el-button
+                >
+              </div>
+
+              <div style="padding:0px 17px;">
+                <el-table
+                  style="width: 100%;"
+                  :data="backlogmatterData"
+                  :height="325"
+                  :header-cell-style="{ background: '#FAFAFA', color: '#000' }"
+                >
+                  <el-table-column label="事项名称">
+                    <template slot-scope="scope">
+                      <!-- style="padding:0;width:100%;line-height:22px;" -->
+                      <el-button
+                        @click="matterDetail(scope.row, 1)"
+                        type="text"
+                        class="ellipsis1"
+                        :title="scope.row.itemName"
+                        >{{ scope.row.itemName }}</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="事项类型" width="100">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.itemTypeName" class="ellipsis1">
+                        {{ scope.row.itemTypeName }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="所属项目">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.projectName" class="ellipsis1">
+                        {{ scope.row.projectName }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="截止时间">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.endDate" class="ellipsis1">
+                        {{ scope.row.endDate }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                </el-table>
+
+                <!-- <el-row
+                  v-for="(item,index) in backlogmatterData"
+                  :key="index"
+                  class="tb_rows"
+                >
+                  <el-col :span="16" class="col_title" style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;float:left;" :title="item.itemName">{{item.itemName}}</el-col>
+                  <el-col :span="8" style="text-align:center;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;float:right;" :title="item.endDate">{{item.endDate | filtertime}}</el-col>
+                </el-row>
+                <p
+                  class="nodata_row el-table__empty-block"
+                  v-if="backlogmatterData.length == 0"
+                >暂无数据</p> -->
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <!-- 我的审批 -->
+        <el-col :span="12" v-if="approvel">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu5.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>审批</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gomeetFn('/myapproval')"
+                  type="text"
+                  v-show="approvel"
+                  >更多 ></el-button
+                >
+              </div>
+              <div class="cont_box" style="padding:0px 17px">
+                <el-table
+                  style="width: 100%;"
+                  :data="Toxaminelist"
+                  max-height="325"
+                  :header-cell-style="{ background: '#FAFAFA', color: '#000' }"
+                >
+                  <el-table-column prop="categoryName" label="审批" width="180">
+                    <template slot-scope="scope">
+                      <!-- <p :title="scope.row.categoryName"
+                         class="ellipsis1">{{scope.row.categoryName}}</p> -->
+                      <!-- style="padding:0;width:100%;line-height:22px;" -->
+                      <el-button
+                        @click="approvalDetail(scope.row, 2)"
+                        type="text"
+                        class="ellipsis1"
+                        :title="scope.row.categoryName"
+                        >{{ scope.row.categoryName }}</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="projectName" label="所属项目">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.projectName" class="ellipsis1">
+                        {{ scope.row.projectName }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="createDate"
+                    label="提交时间"
+                    width="160"
+                  >
+                    <template slot-scope="scope">
+                      <p :title="scope.row.createDate" class="ellipsis1">
+                        {{ scope.row.createDate }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <!-- 最新消息 -->
+        <el-col :span="12" v-if="news_message">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div
+                class="clearfix el-card__header"
+                style="border-bottom:1px solid #eee!important"
+              >
+                <i>
+                  <img
+                    src="../../../assets/image/zhu6.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>最新消息</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gomeetFn('/messagecenter')"
+                  type="text"
+                  v-show="news_message"
+                  >更多 ></el-button
+                >
+              </div>
+              <div style="height:325px">
+                <el-scrollbar style="height:100%;overflow-x:hidden">
+                  <div
+                    class="container_box"
+                    style="padding:0px 17px;padding-bottom:2px"
+                  >
+                    <!-- <el-row class="tbheader_row">
+                  <el-col :span="18">消息内容</el-col>
+                  <el-col :span="6">消息时间</el-col>
+                </el-row> -->
+                    <el-row
+                      v-for="(item, index) in new_messages"
+                      :key="index"
+                      class="tb_rows"
+                    >
+                      <el-col
+                        :span="18"
+                        class="col_title ellipsis1"
+                        :title="item.contexts"
+                        >{{ item.contexts }}</el-col
+                      >
+                      <el-col
+                        :span="6"
+                        class="ellipsis1"
+                        style="text-align:right"
+                        :title="item.send_times"
+                        >{{ item.send_times }}</el-col
+                      >
+                    </el-row>
+                    <p
+                      class="nodata_row el-table__empty-block"
+                      v-if="new_messages.length == 0"
+                    >
+                      暂无数据
+                    </p>
+                  </div>
+                </el-scrollbar>
+              </div>
+            </div>
+          </div>
+        </el-col>
+
+        <!-- 项目任务 -->
+        <el-col :span="12" v-if="$utils.m('project_task') && my_task">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu7.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>我的任务</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gomeetFn('/maindeskmytask')"
+                  type="text"
+                  v-show="my_task"
+                  >更多 ></el-button
+                >
+              </div>
+              <div
+                class="container_box"
+                style="padding:0px 17px;padding-bottom:2px"
+              >
+                <el-table
+                  style="width: 100%;"
+                  :data="mytaskData"
+                  max-height="325"
+                  :header-cell-style="{ background: '#FAFAFA', color: '#000' }"
+                >
+                  <el-table-column prop="names" label="任务名称" width="180">
+                    <template slot-scope="scope">
+                      <!-- style="padding:0;width:100%;line-height:22px;" -->
+                      <el-button
+                        @click="taskDetail(scope.row)"
+                        type="text"
+                        class="ellipsis1"
+                        :title="scope.row.name"
+                        >{{ scope.row.name }}</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="projectNames" label="所属项目">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.projectName" class="ellipsis1">
+                        {{ scope.row.projectName }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="endTime" label="截止时间" width="160">
+                    <template slot-scope="scope">
+                      <p
+                        :title="scope.row.endTime | filtertime"
+                        class="ellipsis1"
+                      >
+                        {{ scope.row.endTime | filtertime }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <!-- 我的日志 -->
+        <el-col :span="12" v-if="my_log">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div
+                class="clearfix el-card__header"
+                style="border-bottom:1px solid #ebeef5!important"
+              >
+                <i>
+                  <img
+                    src="../../../assets/image/zhu8.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>我的日志</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gomeetFn('/mydiary')"
+                  type="text"
+                  v-show="my_log"
+                  >更多 ></el-button
+                >
+              </div>
+              <div style="height:325px">
+                <el-scrollbar style="height:100%;overflow-x:hidden">
+                  <div class="ri_box" style="padding-bottom:2px">
+                    <div
+                      v-for="(item, index) in newmessages"
+                      :key="index"
+                      style="border-bottom:1px solid #ebeef5"
+                    >
+                      <el-row
+                        class="tb_rowsw"
+                        style="border-bottom:0px!important;height:40px;line-height:40px;"
+                      >
+                        <el-col :span="12" class="ellipsis1 tit_l">
+                          <div class="img_box">
+                            <img
+                              :src="
+                                item.userImg == null
+                                  ? require('@/assets/user_img/projectLogUser.png')
+                                  : getImgUrl(item.userImg)
+                              "
+                              alt=""
+                            />
+                          </div>
+                          <div
+                            style="padding-left:10px"
+                            :title="`${item.createName}的项目日志`"
+                            class="ellipsis1"
+                          >
+                            {{ item.createName }}的项目日志
+                          </div>
+                        </el-col>
+                        <el-col
+                          :span="12"
+                          style="text-align:right;padding-right:18px"
+                        >
+                          <div
+                            class="tb_rowsw_proName ellipsis1"
+                            v-if="!!item.projectName"
+                            :title="item.projectName"
+                          >
+                            项目：{{ item.projectName }}
+                          </div>
+                        </el-col>
+                      </el-row>
+                      <el-row
+                        class="tb_rowsw"
+                        style="border-bottom:0px!important;height:16px;line-height:16px;"
+                      >
+                        <el-col
+                          :span="24"
+                          class="ellipsis1 time_box"
+                          :title="item.createTime"
+                          >{{ item.typeName }}：{{ item.createTime }}
+                        </el-col>
+                      </el-row>
+                      <el-row
+                        class="tb_rowsw"
+                        style="border-bottom:0px!important;height:30px;line-height:30px;"
+                      >
+                        <el-col
+                          :span="24"
+                          style="display:flex;justify-content:space-between"
+                        >
+                          <div
+                            :title="item.content"
+                            class="ellipsis1 content_box"
+                          >
+                            内容：{{ item.content }}
+                          </div>
+                          <div>
+                            <el-button
+                              type="text"
+                              @click="logDetail(item, index + 1)"
+                              class="view_more"
+                              >查看全文</el-button
+                            >
+                          </div>
+                        </el-col>
+                      </el-row>
+                    </div>
+                    <p
+                      class="nodata_row el-table__empty-block"
+                      v-if="newmessages.length == 0"
+                    >
+                      暂无数据
+                    </p>
+                  </div>
+                </el-scrollbar>
+              </div>
+            </div>
+          </div>
+        </el-col>
+
+        <!--      项目会议-->
+        <el-col :span="12" v-if="$utils.m('project_meeting') && meeting">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu9.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>会议</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gomeetFn('/mymeeting')"
+                  type="text"
+                  v-show="meeting"
+                  >更多 ></el-button
+                >
+              </div>
+              <div class="cont_box" style="padding:0px 17px">
+                <el-table
+                  style="width: 100%;"
+                  :data="meetData"
+                  height="325"
+                  :header-cell-style="{ background: '#FAFAFA', color: '#000' }"
+                >
+                  <el-table-column prop="name" label="会议名称" width="180">
+                    <template slot-scope="scope">
+                      <!-- style="padding:0;width:100%;line-height:22px;" -->
+                      <el-button
+                        @click="meetingDetail(scope.row)"
+                        type="text"
+                        class="ellipsis1"
+                        :title="scope.row.name"
+                        >{{ scope.row.name }}</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="projectName" label="所属项目">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.projectName" class="ellipsis1">
+                        {{ scope.row.projectName }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="startTime"
+                    label="会议时间"
+                    width="160"
+                  >
+                    <template slot-scope="scope">
+                      <p
+                        :title="scope.row.startTime | filtertime"
+                        class="ellipsis1"
+                      >
+                        {{ scope.row.startTime | filtertime }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </div>
+        </el-col>
+        <!-- 投票 -->
+        <el-col :span="12" v-if="$utils.m('project_vote') && vote">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu10.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>投票</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gomeetFn('/myvote')"
+                  type="text"
+                  v-show="vote"
+                  >更多 ></el-button
+                >
+              </div>
+
+              <div class="cont_box" style="padding:0px 17px">
+                <el-table
+                  :data="cvoteData"
+                  height="325"
+                  style="width: 100%;"
+                  :header-cell-style="{ background: '#FAFAFA', color: '#000' }"
+                >
+                  <el-table-column prop="name" label="投票名称" width="180">
+                    <template slot-scope="scope">
+                      <!-- style="padding:0;width:100%" -->
+                      <el-button
+                        @click="voteDetail(scope.row)"
+                        type="text"
+                        class="ellipsis1"
+                        :title="scope.row.name"
+                        >{{ scope.row.name }}</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="projName" label="所属项目">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.projName" class="ellipsis1">
+                        {{ scope.row.projName }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="startTime"
+                    label="截止时间"
+                    width="160"
+                  >
+                    <template slot-scope="scope">
+                      <p
+                        :title="scope.row.endTime | filtertime"
+                        class="ellipsis1"
+                      >
+                        {{ scope.row.endTime | filtertime }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </div>
+        </el-col>
+
+        <!--      客户管理-->
+        <el-col :span="12" v-if="$utils.m('customer_manage') && my_client">
+          <div class="container">
+            <div class="box_card" style="height:395px;">
+              <div class="clearfix el-card__header">
+                <i>
+                  <img
+                    src="../../../assets/image/zhu11.png"
+                    alt
+                    class="imgzhustyle"
+                  />
+                </i>
+                <span>客户</span>
+                <el-button
+                  style="float: right; padding: 3px 0;text-align:right"
+                  @click="gomyclient"
+                  type="text"
+                  v-show="my_client"
+                  >更多 ></el-button
+                >
+              </div>
+              <div class="cont_box" style="padding:0px 17px">
+                <el-table
+                  :data="myclientData"
+                  style="fwidth: 100%;"
+                  height="325"
+                  :header-cell-style="{ background: '#FAFAFA', color: '#000' }"
+                >
+                  <el-table-column prop="name" label="客户名称" width="180">
+                    <template slot-scope="scope">
+                      <!-- style="padding:0;width:100%;line-height:22px;" -->
+                      <el-button
+                        @click="clientDetail(scope.row)"
+                        type="text"
+                        class="ellipsis1"
+                        :title="scope.row.name"
+                        >{{ scope.row.name }}</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="typeName" label="客户类型">
+                    <template slot-scope="scope">
+                      <p :title="scope.row.typeName" class="ellipsis1">
+                        {{ scope.row.typeName }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="createTime"
+                    label="创建时间"
+                    width="160"
+                  >
+                    <template slot-scope="scope">
+                      <p :title="scope.row.createTime" class="ellipsis1">
+                        {{ scope.row.createTime }}
+                      </p>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <project-type
+        v-if="typeFlag"
+        :typeObj="typeObj"
+        :state="state"
+        v-on:typeProject="typeProject"
+        :optState="optState"
+      ></project-type>
+      <!-- 我的日程的详情 -->
+      <!-- <el-dialog title="我的日程" :visible.sync="isdetail" width="660px;" class="clearFix addcander">
+      <span>
+        <el-form ref="formedit" :model="formedit" label-width="80px">
+          <el-form-item label="日程名称">
+            <el-input v-model="formedit.name" disabled></el-input>
+          </el-form-item>
+          <el-form-item label="时间">
+            <el-col :span="11">
+              <el-date-picker
+                type="datetime"
+                placeholder="开始日期"
+                v-model="formedit.date1"
+                style="width:95%;"
+                format="yyyy-MM-dd HH:mm:ss"
+                value-format="yyyy-MM-dd HH:mm:ss"
+                disabled
+              ></el-date-picker>
+            </el-col>
+            <el-col :span="11">
+              <el-date-picker
+                type="datetime"
+                placeholder="结束日期"
+                v-model="formedit.date2"
+                style="width: 95%;"
+                format="yyyy-MM-dd HH:mm:ss"
+                value-format="yyyy-MM-dd HH:mm:ss"
+                disabled
+              ></el-date-picker>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="内容">
+            <el-input type="textarea" v-model="formedit.desc" disabled></el-input>
+          </el-form-item>
+        </el-form>
+      </span> -->
+      <!-- <span slot="footer" class="dialog-footer">
+            <el-button @click="isedit = true" :disabled="disabledsedit">编 辑</el-button>
+            <el-button type="primary" @click="deletecalendar" :disabled="disabledsedit">删 除</el-button>
+      </span>-->
+      <!-- </el-dialog> -->
+      <el-dialog
+        title="新建日程"
+        :visible.sync="isAdd"
+        width="660px"
+        class="addcander"
+        :close-on-click-modal="false"
+        :before-close="handleClose"
+      >
+        <span>
+          <el-form ref="form" :model="form" label-width="80px">
+            <!-- <el-form-item label="" :rules="[{required:true}]"> -->
+            <!-- <el-input v-model="form.name" style="width:400px;"></el-input> -->
+            <el-input
+              v-model="form.name"
+              style="width:100%;margin-bottom:18px;"
+              type="textarea"
+              placeholder="请输入日程名称"
+              :maxlength="200"
+            ></el-input>
+            <!-- </el-form-item> -->
+            <el-form-item label="所属项目" :rules="[{ required: true }]">
+              <el-col :span="24">
+                <select-lazy
+                  v-model="form.projectId"
+                  filterable
+                  placeholder="请选择"
+                  @change="handleSelect"
+                  :list="orijectOptions"
+                ></select-lazy>
+                <!-- <el-select v-model="form.progress"
+                           placeholder="请选择"
+                           filterable
+                           @change="handleSelect"
+                           style="z-inidex:-1;width:88%;">
+                  <el-option v-for="item in orijectOptions"
+                             :key="item.value"
+                             :label="item.label"
+                             :value="item.value">
+                  </el-option>
+                </el-select> -->
+                <!-- <el-autocomplete
+                        v-model="form.progress"
+                        :fetch-suggestions="querySearchAsync"
+                        @select="handleSelect"
+                        placeholder="请选择项目名称" style="width:88%" :editable="false">
+                    </el-autocomplete> -->
+              </el-col>
+            </el-form-item>
+            <el-form-item label="人员" :rules="[{ required: true }]">
+              <!-- <img src="../../../assets/image/addtask.png" style="width:24px;height:24px;"> -->
+              <!-- <span>待添加</span> -->
+              <el-col :span="24">
+                <el-input
+                  v-model="form.principal"
+                  class="fl"
+                  placeholder="请选择人员"
+                  disabled="disabled"
+                  :principalCust="principalCust"
+                  style="width:317px;"
+                ></el-input>
+                <el-button
+                  type="primary"
+                  size="small"
+                  @click="optUser(1)"
+                  class="fl"
+                  style="height:40px;"
+                  >选择人员</el-button
+                >
+              </el-col>
+            </el-form-item>
+            <el-form-item label="时间" :rules="[{ required: true }]">
+              <el-col :span="11">
+                <el-date-picker
+                  @focus="$utils.handleTimeFocus"
+                  type="datetime"
+                  placeholder="开始日期"
+                  v-model="form.date1"
+                  style="width:94%;"
+                  format="yyyy-MM-dd HH:mm"
+                  value-format="yyyy-MM-dd HH:mm"
+                ></el-date-picker>
+              </el-col>
+              <el-col :span="11">
+                <el-date-picker
+                  @focus="$utils.handleTimeFocus"
+                  type="datetime"
+                  placeholder="结束日期"
+                  v-model="form.date2"
+                  style="width: 94%;"
+                  format="yyyy-MM-dd HH:mm"
+                  value-format="yyyy-MM-dd HH:mm"
+                  default-time="23:59:59"
+                ></el-date-picker>
+              </el-col>
+              <el-col :span="2">
+                <el-checkbox
+                  v-model="checked"
+                  @change="changeCheckbos"
+                  style="margin-left:-7px;"
+                  >全天</el-checkbox
+                >
+              </el-col>
+            </el-form-item>
+            <el-form-item label="提醒" :rules="[{ required: true }]">
+              <el-col :span="11">
+                <el-select
+                  v-model="form.region"
+                  placeholder="请选择"
+                  style="width:232px;"
+                >
+                  <el-option
+                    v-for="item in regionData"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="11" style="margin-left:-2px;">
+                <el-select
+                  v-model="letter"
+                  multiple
+                  placeholder="站内信"
+                  v-if="!drg"
+                  style="width:235px;"
+                >
+                  <el-option
+                    v-for="item in letterData"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  >
+                  </el-option>
+                </el-select>
+              </el-col>
+            </el-form-item>
+            <el-form-item label="重复" :rules="[{ required: true }]">
+              <el-col :span="12" style="width:100%;">
+                <el-select
+                  v-model="form.repeat"
+                  placeholder="请选择"
+                  style="width:89%"
+                >
+                  <el-option
+                    v-for="item in repeatData"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  ></el-option>
+                </el-select>
+              </el-col>
+            </el-form-item>
+            <el-form-item label="内容" :rules="[{ required: true }]">
+              <el-col :span="12" style="width:100%;">
+                <el-input
+                  type="textarea"
+                  style="width:89%;margin-bottom:18px;"
+                  v-model="form.desc"
+                  :maxlength="500"
+                ></el-input>
+              </el-col>
+            </el-form-item>
+            <el-form-item label="抄送人">
+              <el-col :span="12" class="elcol12">
+                <el-tag
+                  v-for="(item, index) in defaultcopy"
+                  :key="'info2-' + index"
+                  class="userbtn"
+                >
+                  {{ item.name }}
+                </el-tag>
+                <el-tag
+                  v-for="(item, index) in deployObjcopy"
+                  :key="index"
+                  class="userbtn"
+                  @close="handle_Close(index, 0)"
+                  :closable="!chack_bule"
+                >
+                  {{ item.name }}
+                </el-tag>
+                <span v-if="deployObjcopy.length > 0">&nbsp;&nbsp;</span>
+                <el-button
+                  type="text"
+                  class="color-primary"
+                  @click="optUserserch(1)"
+                >
+                  <i class="iconfont webicon308"></i><span>添加抄送人</span>
+                </el-button>
+              </el-col>
+            </el-form-item>
+            <el-form-item>
+              <el-col :span="12">
+                <span class="el-upload__tip" style="color:#f56c6c"
+                  >默认通过站内信通知发送给对方，点击x删除</span
+                >
+              </el-col>
+            </el-form-item>
+          </el-form>
+        </span>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="closemediumDialog">取 消</el-button>
+          <el-button type="primary" @click="addSchedule">确 定</el-button>
+        </span>
+      </el-dialog>
+      <el-dialog
+        title="我的日程"
+        :close-on-click-modal="false"
+        :visible.sync="isdetail"
+        width="660px"
+        class="clearFix addcander"
+      >
+        <span>
+          <el-form ref="formedit" :model="formedit" label-width="80px">
+            <el-form-item label="日程名称">
+              <el-input
+                v-model="formedit.name"
+                disabled
+                type="textarea"
+                style="width:94%"
+              ></el-input>
+            </el-form-item>
+            <el-form-item label="所属项目" :rules="[{ required: true }]">
+              <el-col :span="24">
+                <select-lazy
+                  v-model="formedit.progress"
+                  disabled
+                  placeholder="请选择"
+                  :list="orijectOptions"
+                ></select-lazy>
+                <!-- <el-select v-model="formedit.progress"
+                           disabled
+                           placeholder="请选择"
+                           filterable
+                           @change="handleSelectedit"
+                           style="z-inidex:-1;width:94%;">
+                  <el-option v-for="item in orijectOptions"
+                             :key="item.value"
+                             :label="item.label"
+                             :value="item.value">
+                  </el-option>
+                </el-select> -->
+              </el-col>
+            </el-form-item>
+            <el-form-item label="时间">
+              <el-col :span="11">
+                <el-date-picker
+                  @focus="$utils.handleTimeFocus"
+                  type="datetime"
+                  placeholder="开始日期"
+                  v-model="formedit.date1"
+                  style="width:100%;"
+                  format="yyyy-MM-dd HH:mm"
+                  value-format="yyyy-MM-dd HH:mm"
+                  disabled
+                ></el-date-picker>
+              </el-col>
+              <el-col :span="11">
+                <el-date-picker
+                  @focus="$utils.handleTimeFocus"
+                  type="datetime"
+                  placeholder="结束日期"
+                  v-model="formedit.date2"
+                  style="width: 100%;margin-left:11px;"
+                  format="yyyy-MM-dd HH:mm"
+                  value-format="yyyy-MM-dd HH:mm"
+                  disabled
+                ></el-date-picker>
+              </el-col>
+            </el-form-item>
+            <el-form-item label="内容">
+              <el-input
+                type="textarea"
+                v-model="formedit.desc"
+                disabled
+                style="width:94%"
+              ></el-input>
+            </el-form-item>
+          </el-form>
+        </span>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="isedit = true" :disabled="disabledsedit"
+            >编 辑</el-button
+          >
+          <el-button
+            type="primary"
+            @click="deletecalendar"
+            :disabled="disabledsedit"
+            >删 除</el-button
+          >
+        </span>
+      </el-dialog>
+      <el-dialog
+        title="修改日程"
+        :close-on-click-modal="false"
+        :visible.sync="isedit"
+        width="660px"
+        class="addcander"
+      >
+        <span>
+          <el-form ref="formedit" :model="formedit" label-width="80px">
+            <!-- <el-form-item label="日程名称" :rules="[{required:true}]"> -->
+            <el-input
+              v-model="formeditCopy.name"
+              style="width:100%;margin-bottom:18px;"
+              type="textarea"
+              placeholder="请输入日程名称"
+              :maxlength="200"
+            ></el-input>
+            <!-- </el-form-item> -->
+            <el-form-item label="所属项目" :rules="[{ required: true }]">
+              <el-col :span="24">
+                <select-lazy
+                  v-model="formeditCopy.projectId"
+                  filterable
+                  placeholder="请选择"
+                  @change="handleSelectedit"
+                  :list="orijectOptions"
+                ></select-lazy>
+                <!-- <el-select v-model="formedit.progress"
+                           placeholder="请选择"
+                           filterable
+                           @change="handleSelectedit"
+                           style="z-inidex:-1;width:88%;">
+                  <el-option v-for="item in orijectOptions"
+                             :key="item.value"
+                             :label="item.label"
+                             :value="item.value">
+                  </el-option>
+                </el-select> -->
+                <!-- <el-autocomplete
+                        v-model="formedit.progress"
+                        :fetch-suggestions="querySearchAsync"
+                        @select="handleSelect"
+                        placeholder="请输入项目名称" style="；width:88%">
+                    </el-autocomplete> -->
+              </el-col>
+            </el-form-item>
+            <el-form-item label="人员" :rules="[{ required: true }]">
+              <!-- <img src="../../../assets/image/addtask.png" style="width:24px;height:24px;"> -->
+              <!-- <span>待添加</span> -->
+              <el-input
+                v-model="formeditCopy.principal"
+                class="fl"
+                placeholder="请选择人员"
+                disabled="disabled"
+                :customer="customer"
+                style="width:317px;"
+              ></el-input>
+              <el-button
+                type="primary"
+                size="small"
+                @click="optUser(2)"
+                class="fl"
+                style="height:40px;"
+                >选择人员</el-button
+              >
+            </el-form-item>
+            <el-form-item label="时间" :rules="[{ required: true }]">
+              <el-col :span="11">
+                <el-date-picker
+                  @focus="$utils.handleTimeFocus"
+                  type="datetime"
+                  placeholder="开始日期"
+                  v-model="formeditCopy.date1"
+                  style="width:94%;"
+                  format="yyyy-MM-dd HH:mm"
+                  value-format="yyyy-MM-dd HH:mm"
+                ></el-date-picker>
+              </el-col>
+              <el-col :span="11">
+                <el-date-picker
+                  @focus="$utils.handleTimeFocus"
+                  type="datetime"
+                  placeholder="结束日期"
+                  v-model="formeditCopy.date2"
+                  style="width: 94%;"
+                  format="yyyy-MM-dd HH:mm"
+                  value-format="yyyy-MM-dd HH:mm"
+                  default-time="23:59:59"
+                  @change="quantianshifouchose"
+                >
+                </el-date-picker>
+              </el-col>
+              <el-col :span="2">
+                <el-checkbox
+                  v-model="checked"
+                  @change="changeCheckbosedit"
+                  style="margin-left:-7px;"
+                  >全天</el-checkbox
+                >
+              </el-col>
+            </el-form-item>
+            <el-form-item label="提醒" :rules="[{ required: true }]">
+              <el-col :span="11">
+                <el-select
+                  v-model="formeditCopy.region"
+                  placeholder="请选择"
+                  style="width:232px;"
+                >
+                  <el-option
+                    v-for="item in regionData"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  ></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="11" style="margin-left:-2px;">
+                <el-select
+                  v-model="formeditCopy.letter"
+                  multiple
+                  placeholder="站内信"
+                  style="width:235px;"
+                  v-if="formeditCopy.region !== 0"
+                >
+                  <el-option
+                    v-for="item in letterData"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  ></el-option>
+                </el-select>
+              </el-col>
+            </el-form-item>
+            <el-form-item label="重复" :rules="[{ required: true }]">
+              <el-col :span="12" style="width:100%;">
+                <el-select
+                  v-model="formeditCopy.repeat"
+                  placeholder="请选择"
+                  style="width:89%"
+                >
+                  <el-option
+                    v-for="item in repeatData"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  ></el-option>
+                </el-select>
+              </el-col>
+            </el-form-item>
+            <el-form-item label="内容" :rules="[{ required: true }]">
+              <el-col :span="12" style="width:100%;">
+                <el-input
+                  type="textarea"
+                  v-model="formeditCopy.desc"
+                  style="width:89%;margin-bottom:18px;"
+                  :maxlength="500"
+                ></el-input>
+              </el-col>
+            </el-form-item>
+            <el-form-item label="抄送人">
+              <el-col :span="12" class="ovchack">
+                <el-tag
+                  v-for="(item, index) in editdefaultCopy"
+                  :key="'info2-' + index"
+                  class="userbtn"
+                >
+                  {{ item.name }}
+                </el-tag>
+                <el-tag
+                  v-for="(item, index) in editccCopy"
+                  :key="index"
+                  class="userbtn"
+                  @close="handle_Close(index, 0)"
+                  :closable="!chack_bule"
+                >
+                  {{ item.name }}
+                </el-tag>
+                <span v-if="editdefaultCopy.length > 0">&nbsp;&nbsp;</span>
+                <span v-if="editccCopy.length > 0">&nbsp;&nbsp;</span>
+                <el-button type="text" @click="optUserserch(2)">
+                  <i class="iconfont webicon308"></i><span>添加抄送人</span>
+                  <!-- <span class="addimg" type="text"></span>&nbsp;<span style="position: relative;top: -4px;color:#0061A9;">
+                                <img src="../../../assets/image/addtask.png" alt="" class="shekterAdd" style="width: 15px;height: 15px;position: relative;top: 2px;">
+                                添加抄送人
+                            </span> -->
+                </el-button>
+              </el-col>
+            </el-form-item>
+            <el-form-item>
+              <el-col :span="12">
+                <span class="el-upload__tip" style="color:#f56c6c"
+                  >默认通过站内信通知发送给对方，点击x删除</span
+                >
+              </el-col>
+            </el-form-item>
+          </el-form>
+        </span>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="cancelcander">取 消</el-button>
+          <el-button type="primary" @click="editSchedule">确 定</el-button>
+        </span>
+      </el-dialog>
+      <fintall-deptuser
+        :findFlagShow.sync="findFlag"
+        v-on:findAllUser="findAllUser"
+        :findUserObj="user_num == 1 ? findUserObj : findUserObj2"
+        :findState="findState"
+        :checkState="checkState"
+      ></fintall-deptuser>
+      <fintall-deptuserserch
+        :findFlagShow.sync="findFlagserch"
+        v-on:findAllUser="findAllUserserch"
+        :findUserObj="
+          this.userNums == 1 ? findUserObjSearch : findUserObjSearch1
+        "
+        :findState="findStateserch"
+        :checkState="checkStateserch"
+      >
+      </fintall-deptuserserch>
+      <!-- 任务详情页 -->
+      <tasks-detail
+        :flagdetail="flagdetail"
+        :status="tasksStatus"
+        :flagdetaildatas="flagdetaildatas"
+        :ids="flagdetailIds"
+        :is-task-user="isTaskUser"
+        :is-task-edit="isTaskEdit"
+        @gxbox="tasksClose"
+      ></tasks-detail>
+      <!-- 会议详情和编辑 -->
+      <meeting-details
+        v-if="meetingDetaVisible"
+        :meetingDetaVisible.sync="meetingDetaVisible"
+        :handleType="1"
+        :handleMeeting="handleMeeting"
+        @sendValueToParent="meetingDetaVisible = false"
+      >
+      </meeting-details>
+      <!-- 投票新增、详情、编辑 -->
+      <vote-details
+        v-if="voteDetaVisible"
+        :voteDetaVisible.sync="voteDetaVisible"
+        :handleType="1"
+        :title="'投票详情'"
+        :handleVote="voteData"
+        @sendValueToParent="voteDetaVisible = false"
+        @editSucess="voteCallback"
+      >
+      </vote-details>
+      <!-- 审批详情 -->
+      <approval-details
+        :itemState="approvalData"
+        :nameinfo="'主工作台'"
+        @updatas="approvalCallback"
+      >
+      </approval-details>
+    </div>
+  </div>
+</template>
+<script>
+import { months } from "moment";
+import { type } from "os";
+const moment = require("moment");
+import { FullCalendar } from "vue-full-calendar";
+import 'vue-full-calendar/node_modules/fullcalendar/dist/fullcalendar.css'
+import projectType from "@/components/dialogcommon/projecttype";
+import fintallDeptuser from "@/components/select_box/findAllDeptUserMultipleNew";
+import fintallDeptuserserch from "@/components/select_box/findAllDeptUserMultipleNew";
+import tasksDetail from "@/pages/front/projecttasks/tasks/tasksDetail.vue";
+import meetingDetails from "@/components/file/meetingDetails";
+import voteDetails from "@/components/file/voteDetails";
+import approvalDetails from "@/pages/front/Lotus/apppen.vue";
+import axios from "axios";
+
+export default {
+  data() {
+    return {
+      client: window.client,
+      myclientData: [],
+      nodata: false,
+      mychartdata: true,
+      aaaechars: true,
+      //
+      typeFlag: false,
+      typeObj: [],
+      optState: "",
+      state: 1,
+      financingName: "",
+      tupeNum: 1,
+      financingId: "",
+      token: "",
+      userId: "",
+      success_code: "",
+      new_messages: [],
+      //待办事项
+      backlogmatterData: [],
+      percentage: 0,
+      tableData: [],
+      // 我的任务
+      mytaskData: [],
+      //日志
+      newmessages: [],
+      // 会议数据
+      meetData: [],
+      // 投票
+      cvoteData: [],
+      //我审核
+      Toxaminelist: [],
+      //日程表插件
+      isAdd: false,
+      selectDate: "", //日期选择器选中的月份
+      currentdate: "",
+      curenttoday: "",
+      currentendtoday: "",
+      config: {
+        firstDay: "1", //以周日为每周的第一天
+        // weekends: true,//是否在日历中显示周末
+        locale: "zh-cn", //语言
+        defaultView: "month", //默认按月显示
+        height: "auto", //高度
+        fixedWeekCount: false, //是否固定显示六周
+        // weekMode:"liquid",//周数不定，每周的高度可变，整个日历高度不变
+        allDaySlot: false,
+        // allDay:true,
+        header: {
+          //表头信息
+          left: "",
+          center: "prev,title,next",
+          right: ""
+        },
+        editable: false,
+        eventLimit: true,
+        eventLimitText: "更多",
+        views: {
+          agenda: {
+            eventLimit: 3 // adjust to 6 only for agendaWeek/agendaDay
+          }
+        }
+      },
+      events: [],
+      newItem: {},
+      editItem: {},
+      //第一天的日期
+      firstData: "",
+      //最后一天的日期
+      lastdate: "",
+      initObj: {}, //  初始化配置
+
+      isdetail: false,
+      //无权限的操作
+      project_statis: false, //项目统计
+      calendar_watch: false, //日程
+      project_schedule: false, //项目进度
+      commission_incident: false, //待办事项
+      approvel: false, //审核
+      news_message: false, //最新消息
+      my_task: false, //我的任务
+      my_log: false, // 我的日志
+      meeting: false, //会议
+      vote: false, //投票
+      my_client: false, //我的客户
+
+      choseproject: true,
+      // 全天的日期
+      currentstarttime: "",
+      currentendtime: "",
+      remindstyle: false,
+      remindstyleedit: false,
+      findFlag: false,
+      findState: {},
+      checkState: {},
+      disabledsedit: false,
+      isAdd: false, //新增日程弹框
+      isedit: false, //编辑日程弹框
+      isdetail: false, //日程详情
+      checked: false,
+      allifshow: true,
+      eventsId: "", // 日程的id
+      calendarEvents: "", //点击单个日程的事件
+      newItem: {},
+      editItem: {},
+      form: {
+        projectId: "",
+        name: "",
+        progress: "",
+        principal: "",
+        date1: "",
+        date2: "",
+        region: 0,
+        repeat: "",
+        desc: "",
+        userIds: []
+      },
+      formedit: {
+        projectId: "",
+        name: "",
+        progress: "",
+        principal: "",
+        date1: "",
+        date2: "",
+        region: "",
+        repeat: "",
+        desc: "",
+        letter: [],
+        userIds: []
+      },
+      letter: [],
+      projectData: [],
+      regionData: [
+        {
+          value: 0,
+          label: "不提醒"
+        },
+        {
+          value: 1,
+          label: "提前15分钟"
+        },
+        {
+          value: 2,
+          label: "提前1小时"
+        },
+        {
+          value: 3,
+          label: "提前3小时"
+        },
+        {
+          value: 4,
+          label: "提前1天"
+        }
+      ],
+      letterData: [
+        {
+          value: 0,
+          label: "站内信"
+        }
+        // {
+        //     value:1,
+        //     label:'邮件'
+        // },
+        // {
+        //     value:2,
+        //     label:'短信'
+        // },
+      ],
+      repeatData: [
+        {
+          value: 1,
+          label: "不重复"
+        },
+        {
+          value: 2,
+          label: "每天"
+        },
+        {
+          value: 3,
+          label: "每周"
+        },
+        {
+          value: 4,
+          label: "每年"
+        },
+        {
+          value: 5,
+          label: "工作日"
+        }
+      ],
+      currentdate: [],
+      // 查询的开始日期和结束日期
+      liststarttime: "",
+      listendtime: "",
+      dateType: "month",
+      orijectOptions: [],
+      projectids: "",
+      projectnames: "",
+      alldaymowei: "",
+      principalCust: "",
+      customer: "",
+      persoArray: [],
+      canderArray: [],
+      newProjectDialogTimer: null,
+      defaultcopy: [],
+      deployObjcopy: [], //添加抄送人员
+      chosefindFlag: false,
+      chosefindState: {},
+      chosecheckState: {},
+      findFlagserch: false,
+      formeditdefaultcopy: [],
+      editdefaultCopy: [], //编辑的时候的默认回显去重
+      editccCopy: [], //编辑的时候添加的抄送人的去重
+      chack_bule: false,
+      ccObj: [],
+      editalldecopyme: [], //修改的到时候的默认值
+      findUserObj: [],
+      findUserObj2: [],
+      findUserObjSearch: [],
+      findUserObjSearch1: [],
+      deployObjcopymoren: [],
+      user_num: "",
+      userNums: "",
+      Moment: "",
+      flagdetail: false, // 任务详情弹框显示
+      tasksStatus: "", // 任务详情status
+      flagdetaildatas: {}, // 任务详情数据
+      flagdetailIds: null, // 任务详情数据
+      meetingDetaVisible: false, // 会议详情弹框显示
+      handleMeeting: {}, // 会议详情数据
+      voteDetaVisible: false, // 投票详情弹框
+      voteData: {}, // 投票详情数据
+      approvalData: [], // 审批详情数据
+      findStateserch: {},
+      checkStateserch: {},
+      formeditCopy: {},
+      isTaskUser: true, // 当前用户对某个项目是否有编辑权限
+      isTaskEdit: true
+    };
+  },
+  computed: {
+    drg: function() {
+      var srr = false;
+      if (this.form.region > 0) {
+        //console.log(this.form.region)
+        srr = false;
+        this.letter = [0];
+        //this.remindstyle = true;
+      } else {
+        srr = true;
+        this.letter = [];
+      }
+      return srr;
+    }
+  },
+  components: {
+    FullCalendar,
+    projectType,
+    fintallDeptuser,
+    fintallDeptuserserch,
+    tasksDetail,
+    meetingDetails,
+    voteDetails,
+    approvalDetails
+  },
+  mounted() {
+    //获取当前月的第一天
+    this.firstDates = this.getCurrentMonthFirst();
+    //获取当前月份的最后一天
+    this.lastDates = this.getCurrentMonthLast();
+    // this.listcalendar();
+    this.getPromptType();
+  },
+  watch: {
+    isedit(state, preState) {
+      if (state) {
+        this.formeditCopy = this.$utils.copyObj(this.formedit);
+        this.checked = this.calendarEvents.isDay == 1;
+        this.editccCopy = this.calendarEvents.scheduleUserlist.slice();
+      } else {
+        this.editccCopy.splice(0);
+      }
+    },
+    isdetail(state, preState) {
+      if (!state) {
+        this.editdefaultCopy.splice(0);
+      }
+    }
+  },
+  methods: {
+    // 月份的点击事件
+    eventHandle (data){
+      this.firstDates = this.toDate(data.intervalStart._i, 'start')
+      this.lastDates = this.toDate(data.intervalEnd._i, 'end')
+      this.listcalendar();
+    },
+    toDate(number, type) {
+        let dateTime = new Date(number);
+        let date = type === 'end' ? (new Date(dateTime.setDate(dateTime.getDate() - 1))) : dateTime
+        let Y = date.getFullYear() + '-';
+        let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+        let D = date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
+        let s = type === 'end' ? (" " + "00" + ":" + "00" + ":" + "00") : (" " + "23" + ":" + "59" + ":" + "59")
+        return (Y + M + D + s);
+    },
+    // 日程获取提醒方式
+    getPromptType() {
+      this.$post("/sys/getNoticeWayConfig")
+        .then(res => {
+          if (this.code.codeNum.SUCCESS == res.code) {
+            console.log(res.data.email);
+            if (res.data.email == 1) {
+              this.letterData.push({
+                value: 1,
+                label: "邮件"
+              });
+            }
+            if (res.data.sms == 1) {
+              this.letterData.push({
+                value: 2,
+                label: "短信"
+              });
+            }
+            return;
+          }
+          this.$message.error("通知方式获取失败");
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    // 投票编辑回调
+    voteCallback() {
+      this.mycvote();
+      this.backlogmattelist();
+    },
+    // 审批后回调
+    approvalCallback() {
+      this.Toxamine();
+      this.backlogmattelist();
+    },
+    // 头像路径拼接
+    getImgUrl(imgNum) {
+      return this.$utils.getDownloadUrl(imgNum);
+    },
+    // 待办事项
+    matterDetail(item, origin) {
+      console.log(item);
+      const obj = {
+        会议: this.meetingDetail,
+        任务: this.taskDetail,
+        审批: this.approvalDetail,
+        投票: this.voteDetail,
+        日程: this.eventClick
+      };
+      if (item.itemTypeName == "审批") {
+        console.log(12);
+        origin === 1 && (item.approvalVo.source = "主工作台-待办事项-审批记录");
+      }
+      obj[item.itemTypeName](
+        item.itemTypeName == "审批" ? item.approvalVo : item
+      );
+    },
+    // 审批详情
+    approvalDetail(item, type) {
+      console.log(item);
+      type === 2 && (item.source = "主工作台-审批-审批记录");
+      this.approvalData = [0, item, 0];
+    },
+    // 任务详情弹框关闭回调
+    tasksClose(val) {
+      this.getmytaskData();
+      this.backlogmattelist();
+      this.flagdetail = false;
+    },
+    // 任务详情
+    taskDetail(item) {
+      axios.all([this.queryIsTaskUser(item), this.queryIsTaskEdit(item)]).then(
+        axios.spread((res1, res2) => {
+          this.isTaskUser = res1.data;
+          this.isTaskEdit = res2.data;
+          this.tasksStatus = item.status;
+          this.$post("/info/task/getTaskDetailsByid", {
+            data: { id: item.id }
+          })
+            .then(res => {
+              if (res.code != this.success_code) {
+                this.$message.error(res.msg);
+                return;
+              }
+              const data = res.data;
+              this.flagdetaildatas = data;
+              this.flagdetailIds = {
+                implementStageId: data.implementStageId,
+                parentId: item.id
+              };
+              this.flagdetail = true;
+            })
+            .catch(err => {
+              console.log(err);
+            });
+        })
+      );
+    },
+    // 查询对当前编辑的任务是否有权限
+    async queryIsTaskUser(item) {
+      var data = {
+        userId: this.userId,
+        projectId: this.$store.state.projectMsg.projectMsg.id,
+        data: {
+          id: item.id // 任务id
+        }
+      };
+      console.log("查询权限2");
+      return await this.$post("/info/task/isTaskUser", data)
+        .then(res => {
+          if (this.code.codeNum.SUCCESS == res.code) {
+            return res;
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    // 查询对当前编辑的任务是否是创建人和是否有分配权限
+    async queryIsTaskEdit(item) {
+      var data = {
+        userId: this.userId,
+        projectId: this.$store.state.projectMsg.projectMsg.id,
+        data: {
+          id: item.id // 任务id
+        }
+      };
+      return await this.$post("/info/task/isTaskEdit", data)
+        .then(res => {
+          if (this.code.codeNum.SUCCESS == res.code) {
+            return res;
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    // 日志跳转
+    logDetail(item, index) {
+      this.$router.push({
+        path: "/mydiary",
+        query: {
+          id: item.id,
+          isPosition: true,
+          pageNo: Math.ceil(index / 10)
+        }
+      });
+    },
+    // 投票详情
+    voteDetail(item) {
+      this.voteData = item;
+      this.voteDetaVisible = true;
+    },
+    // 会议详情
+    meetingDetail(item) {
+      this.handleMeeting = item;
+      this.meetingDetaVisible = true;
+    },
+    // 客户跳转详情
+    clientDetail(item) {
+      const typeObj = {
+        融资客户: 1,
+        自然人: 2,
+        中介机构: 3
+      };
+      let clientTypeId = typeObj[item.typeName];
+      this.$post("/info/crm/getCrmInfo", {
+        data: {
+          type: clientTypeId,
+          id: item.id
+        }
+      })
+        .then(res => {
+          if (res.code != this.success_code) {
+            this.$message.error(res.msg);
+            return;
+          }
+          const data = res.data;
+          this.$store.commit("customObj", {
+            id: clientTypeId,
+            row: JSON.stringify(data)
+          });
+          this.$router.push({ path: "/customdetails" });
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    //抄送人的选择人员
+    findAllUserserch(data) {
+      console.log(
+        data,
+        "2566",
+        this.userNums,
+        this.deployObjcopy,
+        this.editccCopy
+      );
+      if (!data || !data.length) {
+        this.findFlagserch = false;
+        this.findStateserch = {};
+        this.checkStateserch = {};
+        if (this.userNums == 1) {
+          this.deployObjcopy = [];
+        }
+        if (this.userNums == 2) {
+          this.editccCopy = [];
+        }
+        return;
+      }
+      //  返回的数据分为默认的和其他的选择的，
+      let defaultArr = [];
+      let copyData = [];
+      data.forEach(v => {
+        if (v.originData || v.defaultUser == 1) {
+          defaultArr.push(v);
+        } else {
+          copyData.push(v);
+        }
+      });
+      //defaultcopy
+      console.log(defaultArr, copyData, 665455, this.userNums);
+      if (this.userNums == 1) {
+        this.defaultcopy = defaultArr;
+        this.deployObjcopy = copyData;
+        if (this.deployObjcopy !== "") {
+          this.deployObjcopy = Array.from(new Set(this.deployObjcopy));
+          this.findFlagserch = false;
+          this.findStateserch = {};
+          this.checkStateserch = {};
+          var chgArr = [];
+          for (var i = 0; i < this.deployObjcopy.length; i++) {
+            var flag = true;
+            for (var j = 0; j < chgArr.length; j++) {
+              if (this.deployObjcopy[i].userId == chgArr[j].userId) {
+                flag = false;
+              }
+            }
+            if (flag) {
+              chgArr.push(this.deployObjcopy[i]);
+            }
+          }
+          this.deployObjcopy = chgArr;
+          //this.chack_bule = false
+        }
+        console.log(this.defaultcopy, 0, this.deployObjcopy);
+        this.findUserObjSearch = this.defaultcopy.concat(this.deployObjcopy);
+      } else {
+        console.log(this.editdefaultCopy, this.editccCopy, 2222);
+        this.editdefaultCopy = defaultArr;
+        this.ccObj = copyData;
+        if (this.ccObj !== "") {
+          this.ccObj = Array.from(new Set(this.ccObj));
+          this.findFlagserch = false;
+          this.findStateserch = {};
+          this.checkStateserch = {};
+          var chgArr = [];
+          for (var i = 0; i < this.ccObj.length; i++) {
+            var flag = true;
+            for (var j = 0; j < chgArr.length; j++) {
+              if (this.ccObj[i].userId == chgArr[j].userId) {
+                flag = false;
+              }
+            }
+            if (flag) {
+              chgArr.push(this.ccObj[i]);
+            }
+          }
+          this.ccObj = chgArr;
+          this.editccCopy = this.ccObj;
+          console.log(this.ccObj);
+        }
+        console.log(this.editccCopy, this.editdefaultCopy);
+        this.findUserObjSearch1 = this.editdefaultCopy.concat(this.editccCopy);
+      }
+    },
+    // 选择多个用户
+    optUserserch(num) {
+      this.userNums = num;
+      this.findFlagserch = true;
+      this.findStateserch = { state: 0 };
+      this.checkStateserch = { state: 2 };
+      //  1--deployObjcopy, 2--editccCopy
+      console.log(num);
+      if (this.userNums == 1) {
+        this.findUserObjSearch = [...this.deployObjcopy, ...this.defaultcopy];
+        this.findUserObjSearch.forEach(v => {
+          v.label = v.name;
+          v.uniqueKey = "user" + v.userId;
+        });
+        console.log(
+          this.findUserObjSearch,
+          this.defaultcopy,
+          this.deployObjcopy
+        );
+      } else {
+        let findUserObjSearchA = [...this.editdefaultCopy, ...this.editccCopy];
+        findUserObjSearchA.forEach(v => {
+          v.label = v.name;
+          v.uniqueKey = "user" + v.userId;
+        });
+        this.findUserObjSearch1 = findUserObjSearchA;
+        console.log(
+          this.findUserObjSearch1,
+          this.editdefaultCopy,
+          this.editccCopy
+        );
+      }
+      // if (!this.editccCopy.length && num != 1) {
+      //     this.findUserObjSearch = []
+      //     return
+      //   }
+      //   if (!this.deployObjcopy.length) {
+      //     this.findUserObjSearch = []
+      //   }
+    },
+    // 选择用户
+    choseoptUser() {
+      this.chosefindFlag = true;
+      this.chosefindState = { state: 0 };
+      this.chosecheckState = { state: 2 };
+    },
+    //日程设置抄送人的选择人员
+    chosefindAllUser(data) {
+      console.log(data);
+      this.deployObjchose = data;
+    },
+    handle_Close(num, ind) {
+      console.log(num);
+      if (ind == 0) {
+        this.deployObjcopy.splice(num, 1);
+        this.ccObj.splice(num, 1);
+        this.editccCopy.splice(num, 1);
+      } else {
+        this.ccObj.splice(num, 1);
+      }
+    },
+    //点击关闭
+    handleClose(done) {
+      //console.log(this.msgObj.name)
+      var _this = this;
+      this.$confirm("确认关闭？")
+        .then(_ => {
+          this.closemediumDialog();
+        })
+        .catch(_ => {});
+    },
+    // 选择用户
+    optUser(num) {
+      console.log(
+        num,
+        22,
+        this.deployObj,
+        this.findUserObj2,
+        this.form.principal
+      );
+      this.user_num = num;
+      this.findFlag = true;
+      this.findState = { state: 0 };
+      this.checkState = { state: 2 };
+      if (this.user_num == 1) {
+        if (!this.form.principal) {
+          this.findUserObj = [];
+          return;
+        }
+        this.findUserObj = this.$utils.cloneDeepArray(this.deployObj);
+      }
+      if (this.user_num == 2) {
+        this.findUserObj2 = this.$utils.cloneDeepArray(this.deployObj);
+      }
+    },
+    findAllUser(data) {
+      if (!data || !data.length) {
+        this.findFlag = false;
+        this.findState = {};
+        this.checkState = {};
+        if (this.user_num == 1) {
+          this.form.principal = "";
+          this.deployObj = [];
+        }
+        if (this.user_num == 2) {
+          this.formeditCopy.principal = "";
+          this.deployObj = [];
+          this.findUserObj2 = [];
+        }
+        return;
+      }
+      // console.log(data)
+      this.deployObj = data;
+      this.deployObj.forEach(v => {
+        v.uniqueKey = "user" + v.id;
+      });
+      this.persoArray = [];
+      if (this.user_num == 1) {
+        var string = "";
+        for (var i = 0; i < this.deployObj.length; i++) {
+          //console.log(this.deployObj[i].id)
+          var objname = {};
+          objname.name = this.deployObj[i].name;
+          this.canderArray.push(objname);
+          //console.log(this.canderArray);
+          this.persoArray.push(this.deployObj[i].id);
+          //console.log(this.persoArray)
+          string = string + data[i].name + "、";
+        }
+        this.form.principal = string;
+        this.findFlag = false;
+        this.findState = {};
+        this.checkState = {};
+        // console.log(this.form.principal);
+        this.findUserObj = this.deployObj;
+      } else {
+        var string = "";
+        for (var i = 0; i < this.deployObj.length; i++) {
+          // console.log(this.deployObj[i].id)
+          var objname = {};
+          //objname.id = this.deployObj[i].id;
+          objname.name = this.deployObj[i].name;
+          this.canderArray.push(objname);
+          // console.log(this.canderArray);
+          this.persoArray.push(this.deployObj[i].id);
+
+          // console.log(this.persoArray)
+          string = string + data[i].name + "、";
+        }
+        this.formeditCopy.principal = string;
+        this.findFlag = false;
+        this.findState = {};
+        this.checkState = {};
+        //console.log(this.formeditCopy.principal );
+        this.findUserObj2 = this.deployObj;
+      }
+    },
+    //  初始化角色配置数据
+    initCheckFn() {
+      var _this = this;
+      var data = {
+        token: this.token,
+        userId: this.userId
+      };
+      this.$post("/sys/findModuleByUser", data)
+        .then(response => {
+          if (
+            response.data == "" ||
+            response.data == undefined ||
+            response.data == null ||
+            response.data == []
+          ) {
+            // _this.mychartdata = false;
+            // _this.aaaechars = false;
+            _this.nodata = true;
+          }
+          if (response.code == _this.success_code) {
+            var arr = response.data;
+            if (arr == "") {
+              return;
+            }
+            _this.initObj = JSON.parse(arr[0].module);
+            if (arr.length > 1) {
+              for (var i = 1; i < arr.length; i++) {
+                var obj = JSON.parse(arr[i].module);
+                for (var str in _this.initObj) {
+                  if (!_this.initObj[str] && obj[str]) {
+                    _this.initObj[str] = obj[str];
+                  }
+                }
+              }
+            }
+            if (_this.initObj["approvel"]) {
+              // 我的审核
+              //
+              _this.approvel = true;
+              _this.Toxamine();
+            }
+            if (_this.initObj["calendar_watch"]) {
+              //日历表
+              _this.calendar_watch = true;
+              _this.listcalendar();
+              _this.getNowFormatDate();
+            }
+            if (_this.initObj["commission_incident"]) {
+              //代办事项
+              _this.commission_incident = true;
+              _this.backlogmattelist();
+            }
+            if (_this.initObj["meeting"]) {
+              // 我的会议
+              _this.meeting = true;
+              _this.my_meeting();
+            }
+            if (_this.initObj["my_client"]) {
+              // 我的客户
+              _this.my_client = true;
+              _this.gomyclientlist();
+            }
+            if (_this.initObj["my_log"]) {
+              // 我的日志
+              _this.my_log = true;
+              _this.query_all();
+            }
+            if (_this.initObj["my_task"]) {
+              // 我的任务
+              _this.my_task = true;
+              _this.getmytaskData();
+            }
+            if (_this.initObj["news_message"]) {
+              // 最新消息
+              _this.news_message = true;
+              _this.getnewmessageFn();
+            }
+            if (_this.initObj["project_schedule"]) {
+              // 项目进度
+              _this.project_schedule = true;
+              _this.proplan();
+            }
+            if (_this.initObj["vote"]) {
+              // 我的投票
+              _this.vote = true;
+              _this.mycvote();
+            }
+            if (_this.initObj["project_statis"]) {
+              // 项目统计
+              // if (!this.financingId || this.financingId == "") {
+              //   return false;
+              // } else {
+              _this.project_statis = true;
+              _this.choseproject = false;
+              _this.drawLine();
+              _this.chushihua();
+              // }
+            }
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    // 获取最新消息数据
+    getnewmessageFn() {
+      var _this = this;
+      var now_year = new Date().getFullYear();
+      var now_month = this.handleDate(new Date().getMonth() + 1);
+      var now_day = this.handleDate(new Date().getDate());
+      var send_data = {
+        token: this.token,
+        userId: this.userId
+      };
+      this.$post("/sys/queryCenterMsg", send_data)
+        .then(response => {
+          if (_this.success_code == response.code) {
+            var arr = [];
+            if (!response.data) {
+              arr = [];
+            } else {
+              arr = response.data;
+            }
+            for (var i = 0; i < arr.length; i++) {
+              if (arr[i].context.length > 50) {
+                arr[i]["contexts"] = arr[i]["context"].substr(0, 50) + "...";
+              } else {
+                arr[i]["contexts"] = arr[i]["context"];
+              }
+              var year = arr[i]["send_time"].substr(0, 4);
+              var month = arr[i]["send_time"].substr(5, 2);
+              var day = arr[i]["send_time"].substr(8, 2);
+              if (year == now_year && month == now_month && day == now_day) {
+                arr[i]["send_times"] = arr[i]["send_time"].substr(
+                  arr[i]["send_time"].indexOf(" ") + 1
+                );
+              } else if (year == now_year && day != now_day) {
+                arr[i]["send_times"] = arr[i]["send_time"].substr(
+                  arr[i]["send_time"].indexOf("-") + 1
+                );
+              } else if (year != now_year) {
+                arr[i]["send_times"] = arr[i]["send_time"];
+              }
+            }
+            _this.new_messages = arr;
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //去往项目统计
+    gostatistFn() {
+      this.$router.push("/statisticalpro");
+    },
+    //去往日历表
+    gocalendarFn() {
+      this.$router.push("/calendar");
+    },
+    //去往项目列表
+    goprolistFn() {
+      this.$router.push("/projectlist");
+    },
+    //去往待办事项
+    gobacklogmattFn() {
+      this.$router.push("/backlogmatter");
+    },
+    gomyclient() {
+      this.$router.push("/myclient");
+    },
+    // 去往会议,去往投票,日志
+    gomeetFn(path) {
+      if (path == "/messagecenter") {
+        // $(".el-menu-item").removeClass("is-active");
+        // $(".msg_cen_menu").eq(0).addClass("is-active");
+      }
+      this.$router.push({ path: path });
+    },
+    //  获取我的任务数据
+    getmytaskData() {
+      this.$post("/info/task/getMyExecutorTask")
+        .then(response => {
+          if (this.success_code == response.code) {
+            this.mytaskData = response.data;
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    // 查询我的日志
+    query_all() {
+      var dataObj = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: 1,
+        pageSize: 10,
+        data: {}
+      };
+      var _this = this;
+      this.$post("/info/project/getWorkProjectLog", dataObj)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            _this.newmessages = response.data;
+          } else {
+            // _this.$message(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //查我的会议
+    my_meeting() {
+      var dataObj = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: 1,
+        pageSize: 10,
+        data: {}
+      };
+      var _this = this;
+      this.$post("/info/project/getMyMeeting", dataObj)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            _this.meetData = response.data.list;
+          } else {
+            // _this.$message(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //查看审核
+    Toxamine() {
+      var dataObj = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: 1,
+        pageSize: 10,
+        data: {
+          projectName: ""
+        }
+      };
+      var _this = this;
+      this.$post("/info/audit/todo_list", dataObj)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            _this.Toxaminelist = response.data.list;
+          } else {
+            // _this.$message(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //查看我得投票
+    mycvote() {
+      this.$post("/info/project/findProjectVoteForWork")
+        .then(response => {
+          if (response.code == this.success_code) {
+            this.cvoteData = response.data;
+          } else {
+            // this.$message(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //查待办事项
+    backlogmattelist() {
+      var datas = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: 1,
+        pageSize: 10,
+        data: {}
+      };
+      var _this = this;
+      this.$post("/sys/pendingItem/pending_item_list_all", datas)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            //console.log(response.data.list)
+            for (var i = 0; i < response.data.list.length; i++) {
+              //console.log(response.data.list[i].endDate)
+              if (response.data.list[i].endDate == null) {
+                response.data.list[i].endDate = "- - ";
+              }
+            }
+
+            _this.backlogmatterData = response.data.list;
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+
+          // console.log(_this.newmessages);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //我的客户
+    gomyclientlist() {
+      var datas = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: this.currentPage,
+        pageSize: this.pageSize,
+        data: {}
+      };
+
+      var _this = this;
+      this.$post("/info/crm/myClientsAll", datas)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            //console.log(response.data);
+            _this.myclientData = response.data.list;
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+
+          // console.log(_this.newmessages);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    drawLine() {
+      if (
+        this.financingId == undefined ||
+        this.financingId == "" ||
+        this.financingId == null
+      ) {
+        return false;
+      } else {
+        this.nodata = false;
+        this.mychartdata = true;
+        this.aaaechars = true;
+        var myCharts = this.$refs.chart;
+        if (myCharts) {
+          var dataseries = [];
+          var datalegend = [];
+          // 基于准备好的dom，初始化echarts实例
+          // let myChart = this.$echarts.init(document.getElementById("myChart"));
+          let myChart = this.$echarts.init(myCharts);
+          // myChart.setOption(option);
+          //绘制图表
+          var data = {
+            data: {
+              financingId: this.financingId
+            },
+            pageNo: 0,
+            pageSize: 10,
+            token: this.token,
+            userId: this.userId
+          };
+          var _this = this;
+          this.$post("/info/project/getProjectCountInfo", data)
+            .then(response => {
+              if (response.code == _this.success_code) {
+                for (var value in response.data.countInfo) {
+                  dataseries.push(response.data.countInfo[value]);
+                }
+                dataseries.map((item, index) => {
+                  datalegend.push(item.name);
+                });
+                myChart.setOption({
+                  tooltip: {
+                    trigger: "item",
+                    formatter: "{a} <br/>{b}: {c} ({d}%)"
+                  },
+                  legend: {
+                    orient: "vertical",
+                    x: "right",
+                    top: 10,
+                    textStyle: {
+                      fontSize: 12
+                    },
+                    tooltip: {
+                      show: true
+                    },
+                    formatter: function(name) {
+                      return name.length > 4 ? name.slice(0, 4) + "..." : name;
+                    },
+                    align: "left",
+                    data: datalegend
+                  },
+                  color: [
+                    "#3BA0FF",
+                    "#36CBCB",
+                    "#4DCB73",
+                    "#FAD337",
+                    "#F2637B",
+                    "#975FE4",
+                    "#e36f7e",
+                    "#d088ce",
+                    "#f5d464",
+                    "#72c9ca"
+                  ],
+                  series: [
+                    {
+                      name: "访问来源",
+                      type: "pie",
+                      radius: ["60%", "70%"],
+                      center: ["40%", "60%"],
+                      avoidLabelOverlap: false,
+                      label: {
+                        normal: {
+                          show: false,
+                          position: "center"
+                        },
+                        emphasis: {
+                          show: true,
+                          textStyle: {
+                            fontSize: "16",
+                            fontWeight: "bold"
+                          }
+                        }
+                      },
+                      labelLine: {
+                        normal: {
+                          show: false
+                        }
+                      },
+                      data: dataseries
+                    }
+                  ]
+                });
+              } else {
+                // (response.code !== this.code.codeNum.RESULT_EMPTY) && this.$message.error(response.msg);
+              }
+            })
+            .catch(function(error) {
+              console.log(error);
+            });
+        } else {
+          console.log();
+        }
+      }
+    },
+    // 页面初始化的时候掉接口
+    chushihua() {
+      var data = {};
+      var _this = this;
+      this.$post("/info/project/getLastProjectCountInfo", data)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            // console.log(response)
+            if (response.data.hasRecord == true) {
+              _this.financingId = response.data.financingId;
+              _this.financingName = response.data.label;
+              _this.nodata = false;
+              _this.mychartdata = true;
+              _this.aaaechars = true;
+              var myCharts = _this.$refs.chart;
+              if (myCharts) {
+                //console.log(myCharts)
+                var dataseries = [];
+                var datalegend = [];
+                // 基于准备好的dom，初始化echarts实例
+
+                // let myChart = this.$echarts.init(document.getElementById('myChart'))
+
+                let myChart = _this.$echarts.init(myCharts);
+                // window.addEventListener("resize", () => { myChart.resize();});
+                // myChart.setOption(option);
+                //绘制图表
+
+                //_this.dataTotal = response.data.projectListInfo.total;
+                //_this.tableData = response.data.projectListInfo.list;
+                //console.log(response.data)
+                for (var value in response.data.lastProjectCountInfo
+                  .countInfo) {
+                  //console.log(response.data.lastProjectCountInfo.countInfo[value])
+                  dataseries.push(
+                    response.data.lastProjectCountInfo.countInfo[value]
+                  );
+                }
+                //aaaaa.push(response.data.countInfo[value])
+                //console.log(aaaaa)
+                dataseries.map((item, index) => {
+                  datalegend.push(item.name);
+                });
+                myChart.setOption({
+                  tooltip: {
+                    trigger: "item",
+                    formatter: "{a} <br/>{b}: {c} ({d}%)"
+                  },
+                  legend: {
+                    orient: "vertical",
+                    x: "right",
+                    top: 10,
+                    textStyle: {
+                      fontSize: 12
+                    },
+                    tooltip: {
+                      show: true
+                    },
+                    formatter: function(name) {
+                      return name.length > 4 ? name.slice(0, 4) + "..." : name;
+                    },
+                    align: "left",
+                    data: datalegend
+                  },
+                  color: [
+                    "#3BA0FF",
+                    "#36CBCB",
+                    "#4DCB73",
+                    "#FAD337",
+                    "#F2637B",
+                    "#975FE4",
+                    "#e36f7e",
+                    "#d088ce",
+                    "#f5d464",
+                    "#72c9ca"
+                  ],
+                  series: [
+                    {
+                      name: "访问来源",
+                      // showVal:true,
+                      type: "pie",
+                      radius: ["60%", "70%"],
+                      center: ["40%", "60%"],
+                      avoidLabelOverlap: false,
+                      label: {
+                        normal: {
+                          show: false,
+                          position: "center"
+                        },
+                        emphasis: {
+                          show: true,
+                          textStyle: {
+                            fontSize: "16",
+                            fontWeight: "bold"
+                          }
+                        }
+                      },
+                      labelLine: {
+                        normal: {
+                          show: false
+                        }
+                      },
+                      // data:[
+                      //     {value:335, name:'直接访问'},
+                      //     {value:310, name:'邮件营销'},
+                      //     {value:234, name:'联盟广告'},
+                      //     {value:135, name:'视频广告'},
+                      //     {value:1548, name:'搜索引擎'}
+                      // ]
+                      data: dataseries
+                    }
+                  ]
+                });
+              } else {
+                //console.log(myCharts)
+              }
+            }
+          } else {
+            // (response.code !== this.code.codeNum.RESULT_EMPTY) && this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    // 日程表插件
+    changeDate() {
+      this.$refs.calendar.fireMethod("gotoDate", this.selectDate);
+      //this.$refs.calendar.fireMethod('prev');
+    },
+
+    // addItem(detail) {
+    //   this.newItem = JSON.parse(detail);
+    //   if (this.editItem.id) {
+    //     //如果是编辑，就删掉该条
+    //     this.events.forEach((el, ind) => {
+    //       if (el.id == this.editItem.id) {
+    //         this.events.splice(ind, 1);
+    //       }
+    //     });
+    //   }
+    //   this.events.push({
+    //     id: this.editItem.id ? this.editItem.id : this.setUuid(),
+    //     title: this.newItem.title,
+    //     start: this.newItem.period[0],
+    //     end: this.newItem.period[1]
+    //   });
+    // },
+    // setUuid() {
+    //   var s = [];
+    //   var hexDigits = "0123456789abcdef";
+    //   for (var i = 0; i < 36; i++) {
+    //     s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    //   }
+    //   s[14] = "4";
+    //   s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);
+    //   s[8] = s[13] = s[18] = s[23];
+    //   var uuid = s.join("");
+    //   return uuid;
+    // },
+    //项目进度的列表查询
+    proplan() {
+      var data = {
+        data: {},
+        token: this.token,
+        userId: this.userId
+      };
+      var _this = this;
+      this.$post("/info/project/getProjectSchedule", data)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            //console.log(response.data);
+            _this.tableData = response.data;
+            for (var i = 0; i < response.data.length; i++) {
+              //console.log(response.data[i].projectProcess);
+              //_this.percentage = response.data[i].projectProcess;
+              _this.tableData[i].progress = response.data[i].projectProcess;
+            }
+            //_this.percentage = response.data.projectProcess;
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    clickprodetail(index, row) {
+      var editObj = {
+        token: this.token,
+        userId: this.userId,
+        projectId: row.id,
+        data: {
+          projectId: row.id
+        }
+      };
+      var that = this;
+      var num = 0;
+      this.$post("/info/project/getProjectPerm", editObj)
+        .then(response => {
+          if (response.code == that.code.codeNum.SUCCESS) {
+            let accessList = response.data;
+            if (!accessList || !accessList.length) {
+              // 没有权限、权限为空
+              this.$message.error("无对应权限,请联系对应项目组负责人处理");
+              return;
+            }
+            let hasAccess = false;
+            let path = "";
+            if (this.$utils.m("project_task")) {
+              // 有任务模块
+              if (accessList.indexOf("project_task") > -1) {
+                // 有项目任务权限
+                hasAccess = true;
+                path = "/project_tasks/tasks";
+              }
+            } else if (accessList.indexOf("project_information") > -1) {
+              // 有项目信息权限
+              console.log("projectmessage");
+              hasAccess = true;
+              path = "/projectmessage";
+            }
+            if (!hasAccess) {
+              this.$message.error("没有权限");
+              return;
+            }
+
+            this.$store.commit("projectId", row.id);
+            this.$store.commit("projectMsg", row);
+            this.$store.commit("projectMsgname", row.name);
+            this.$utils.saveProjectId(row.id);
+            this.$router.push({ path: path });
+            this.$utils.queryProChatNum(row.id);
+            this.$utils.queryProExamNum(row.id);
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    // 处理日期
+    handleDate(str) {
+      if (typeof str != "string") {
+        str = str.toString();
+      }
+      if (str.length < 2) {
+        return "0" + str;
+      } else {
+        return str;
+      }
+    },
+    dayClick(date, jsEvent, allDay, view) {
+      //日期的点击事件
+      (!this.orijectOptions || !this.orijectOptions.length) &&
+        this.getProjectList();
+      // 获取点击的日期
+      var clickdate = this.$moment(date._i).format("YYYY-MM-DD");
+      this.currentstarttime = this.$moment(date._i).format(
+        "YYYY-MM-DD 00:00:00"
+      );
+      this.currentendtime = this.$moment(date._i).format("YYYY-MM-DD 23:59:59");
+      // 获取当前系统的时间
+      var clicktime = this.$moment()
+        .locale("zh-cn")
+        .format("HH:mm:ss");
+      this.clicktimedates = clickdate + " " + clicktime;
+      var time = new Date(date._i);
+      var y = time.getFullYear();
+      var m = time.getMonth() + 1;
+      var d = time.getDate();
+      var h = time.getHours() - 8;
+      var min = time.getMinutes();
+      var second = time.getSeconds();
+      if (m >= 1 && m <= 9) {
+        m = "0" + m;
+      }
+      if (d >= 0 && d <= 9) {
+        d = "0" + d;
+      }
+      if (h >= 1 && h <= 9) {
+        h = "0" + h;
+      }
+      if (min >= 0 && min <= 9) {
+        min = "0" + min;
+      }
+      if (second >= 0 && second <= 9) {
+        second = "0" + second;
+      }
+      var currenttime =
+        y + "-" + m + "-" + d + " " + h + ":" + min + ":" + second;
+
+      //moment().format('MMMM Do YYYY, h:mm:ss a')
+      this.form.date1 = this.clicktimedates;
+      this.isAdd = true;
+      // 初始化抄送人列表
+      this.editccCopy.length = 0;
+
+      var that = this;
+
+      var datas = {
+        token: this.token,
+        userId: this.userId,
+        data: {}
+      };
+      var that = this;
+      //新增的时候调添加抄送人的接口接口
+      this.$post("/sys/schedule/queryScheduleUser", datas)
+        .then(response => {
+          //console.log(response);
+          var data = response.data;
+          if (response.code == that.code.codeNum.SUCCESS) {
+            console.log(data);
+            //if(data.length>0){
+            //    that.moren = true;
+            for (var j = 0; j < data.length; j++) {
+              var obj = {};
+              obj.name = data[j].name;
+              obj.label = data[j].name;
+              obj.id = data[j].userId;
+              obj.userId = data[j].userId;
+              obj.uniqueKey = "user" + data[j].userId;
+              obj.originData = true;
+              console.log(obj);
+              that.deployObjcopymoren.push(obj);
+              console.log(that.deployObjcopymoren);
+              // that.chack_bule = true;
+              var resultcopy = [];
+              var objdeco = {};
+              for (var i = 0; i < that.deployObjcopymoren.length; i++) {
+                if (!objdeco[that.deployObjcopymoren[i].userId]) {
+                  resultcopy.push(that.deployObjcopymoren[i]);
+                  objdeco[that.deployObjcopymoren[i].userId] = true;
+                }
+              }
+              console.log(resultcopy);
+              that.defaultcopy = resultcopy;
+            }
+            //}
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+      this.handleNewProData();
+      // 取出保存的草稿
+      let draft = this.$utils.getDraft("calendarmaid", false);
+      // 如果没有草稿，设置定时器，返回
+      if (!draft) {
+        this.setTimer();
+        return;
+      }
+      // 有草稿，展示提示弹窗
+      this.$confirm("是否载入上次保存的草稿?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          // 回显草稿数据
+          this.form = { ...this.form, ...draft };
+          this.setTimer();
+        })
+        .catch(() => {
+          //closeOnClickModal = false;
+          this.setTimer();
+        });
+    },
+    /**
+     * 设置定时器：每5秒保存一次表单数据
+     */
+    setTimer() {
+      // 启动定时器，每5000ms保存一次草稿
+      this.newProjectDialogTimer = setInterval(() => {
+        this.handleDraftData();
+      }, 5000);
+    },
+    handleDraftData() {
+      let data = {
+        name: this.form.name,
+        desc: this.form.desc
+      };
+      this.$utils.saveDraft("calendarmaid", data, false);
+    },
+    closemediumDialog() {
+      this.handleDraftData();
+      this.isAdd = false;
+      this.deployObjcopy.splice(0);
+      clearInterval(this.newProjectDialogTimer);
+    },
+    handleNewProData() {
+      //if(this.isadd = true){
+      this.form.name = "";
+      this.form.progress = "";
+      this.form.projectId = "";
+      this.form.principal = "";
+      this.form.data1 = "";
+      this.form.date2 = "";
+      this.checked = false;
+      this.form.region = 0;
+      this.letter = [];
+      this.form.repeat = "";
+      this.form.desc = "";
+      //}
+    },
+    // 点击全天的时间
+    changeCheckbos() {
+      console.log(this.checked);
+      console.log(this.currentstarttime);
+      console.log(this.currentendtime);
+      if (this.checked == true) {
+        this.form.date1 = this.currentstarttime;
+        this.form.date2 = this.currentendtime;
+      } else {
+        this.form.date1 = "";
+        this.form.date2 = "";
+      }
+    },
+    changeCheckbosedit() {
+      if (this.checked == true) {
+        this.formeditCopy.date1 = this.eventcancel.start;
+        this.formeditCopy.date2 = this.$moment(this.eventcancel.start).format(
+          "YYYY-MM-DD 23:59:59"
+        );
+      } else {
+        this.formeditCopy.date1 = "";
+        this.formeditCopy.date2 = "";
+      }
+    },
+    quantianshifouchose() {
+      this.checked = false;
+    },
+    // 新增的方法
+    addSchedule() {
+      var _this = this;
+      if (this.form.name == "") {
+        this.$message.error("日程名称内容不能为空");
+        return;
+      }
+      if (this.form.progress == "") {
+        this.$message.error("所属项目不能为空");
+        return;
+      }
+      if (this.form.principal == "") {
+        this.$message.error("人员不能为空");
+        return;
+      }
+      if (this.form.date1 == "" || this.form.date1 == null) {
+        this.$message.error("开始日期不能为空");
+        return;
+      }
+      if (this.form.date2 == "" || this.form.date2 == null) {
+        this.$message.error("结束日期不能为空");
+        return;
+      }
+      if (new Date(this.form.date2) < new Date(this.form.date1)) {
+        this.$message.error("结束日期不能小于开始日期");
+        return;
+      }
+      // if(this.form.region == ""){
+      //     this.$message.error('日程提醒不能为空');
+      //     return;
+      // }
+      if (this.form.repeat == "") {
+        this.$message.error("日期重复方式不能为空");
+        return;
+      }
+      if (this.form.desc == "") {
+        this.$message.error("日程内容不能为空");
+        return;
+      }
+      var decopyarr = [];
+      this.defaultcopy.forEach(function(c) {
+        if (c.userId) {
+          _this.form.userIds.push(c.userId);
+        }
+        var a = {
+          userId: c.userId,
+          defaultUser: 1
+        };
+        decopyarr.push(a);
+      });
+
+      console.log(decopyarr);
+      var decopyme = [];
+      this.deployObjcopy.forEach(function(c) {
+        if (c.userId) {
+          _this.form.userIds.push(c.userId);
+        }
+        var a = {
+          userId: c.userId,
+          defaultUser: 0
+        };
+        decopyme.push(a);
+      });
+
+      console.log(decopyme);
+      this.alldecopyme = decopyarr.concat(decopyme);
+      console.log(this.alldecopyme);
+      var regioms = this.form.region;
+      console.log(this.form.region);
+      if (regioms == "不提醒") {
+        this.form.region = 0;
+      } else if (regioms == "开始前15分钟") {
+        this.form.region = 1;
+      } else if (regioms == "开始前1小时") {
+        this.form.region = 2;
+      } else if (regioms == "开始前3小时") {
+        this.form.region = 3;
+      } else if (regioms == "开始前1天") {
+        this.form.region = 4;
+      }
+      // var letters = this.form.letter;
+      // console.log(letters)
+      // if(letters == "站内信"){
+      //     this.form.letter = 1
+      // }else if(letters == "邮件"){
+      //     this.form.letter = 2
+      // }else if(letters == "短信"){
+      //     this.form.letter = 3
+      // }
+      var repeats = this.form.repeat;
+      if (repeats == "不重复") {
+        this.form.repeat = 1;
+      } else if (repeats == "每天") {
+        this.form.repeat = 2;
+      } else if (repeats == "每周") {
+        this.form.repeat = 3;
+      } else if (repeats == "每年") {
+        this.form.repeat = 4;
+      } else if (repeats == "工作日") {
+        this.form.repeat = 5;
+      }
+      // 是否全天
+      var checkboxs = this.checked;
+      if (checkboxs == true) {
+        this.checked = 1;
+      } else {
+        this.checked = 0;
+      }
+      var endtime = this.form.date2;
+      var shifenmiao = this.$moment(endtime).format("HH:mm:ss");
+      if (shifenmiao == "00:00:00") {
+        var opo = this.$moment(this.form.date2)
+          .subtract(1, "days")
+          .format("YYYY-MM-DD 23:59:59");
+        this.form.date2 = opo;
+      } else {
+        //console.log(2222+"]]]]]")
+        // console.log(this.form.date2)
+      }
+      var datas = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          name: this.form.name,
+          projectId: this.projectids,
+          projectName: this.projectnames,
+          personnel: this.persoArray.join(","),
+          startDate: this.form.date1 + ":00",
+          endDate: this.form.date2 + ":00",
+          isDay: this.checked, //是否全天
+          remindType: this.form.region,
+          sendType: this.letter.join(","), //提醒方式
+          repeatType: this.form.repeat,
+          content: this.form.desc,
+          scheduleUserlist: this.alldecopyme //  默认和自己添加的抄送人
+        }
+      };
+      var _this = this;
+      this.$post("/sys/schedule/add_schedule", datas)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            _this.isAdd = false;
+            this.findUserObjSearch1 = [];
+            this.findUserObjSearch = [];
+            this.findUserObjSearchA = [];
+            this.findUserObj = [];
+            this.findUserObj2 = [];
+            this.deployObj = [];
+            this.deployObjcopy = [];
+            _this.listcalendar();
+            // 保存成功，关闭弹窗，关闭定时器
+            _this.closemediumDialog();
+            this.backlogmattelist();
+            // 保存成功，清空草稿数据
+            _this.$utils.removeDraft("calendarmaid", false);
+            _this.$message({
+              message: "新增成功",
+              type: "success"
+            });
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //删除日程
+    deletecalendar() {
+      //console.log(this.form.name)
+      var datas = {
+        data: {
+          id: this.eventsId,
+          name: this.formedit.name,
+          projectId: this.projectids
+        },
+        token: this.token,
+        userId: this.userId
+      };
+      var _this = this;
+      this.$post("/sys/schedule/del_schedule", datas)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            _this.isdetail = false;
+            _this.$message({
+              message: "删除成功",
+              type: "success"
+            });
+            _this.listcalendar();
+            this.backlogmattelist();
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    // 点击修改日程
+    editSchedule() {
+      var _this = this;
+      if (this.formeditCopy.name == "") {
+        this.$message.error("日程名称内容不能为空");
+        return;
+      }
+      if (this.formeditCopy.progress == "") {
+        this.$message.error("所属项目不能为空");
+        return;
+      }
+      if (this.formeditCopy.principal == "") {
+        this.$message.error("人员不能为空");
+        return;
+      }
+      if (this.formeditCopy.date1 == "" || this.formeditCopy.date1 == null) {
+        this.$message.error("开始日期不能为空");
+        return;
+      }
+      if (this.formeditCopy.date2 == "" || this.formeditCopy.date2 == null) {
+        this.$message.error("结束日期不能为空");
+        return;
+      }
+      // if(this.formeditCopy.region == ""){
+      //     this.$message.error('日程提醒不能为空');
+      //     return;
+      // }
+      if (
+        new Date(this.formeditCopy.date2) < new Date(this.formeditCopy.date1)
+      ) {
+        this.$message.error("结束日期不能小于开始日期");
+        return;
+      }
+
+      if (this.formeditCopy.repeat == "") {
+        this.$message.error("日期重复方式不能为空");
+        return;
+      }
+      if (this.formeditCopy.desc == "") {
+        this.$message.error("日程内容不能为空");
+        return;
+      }
+      var decopyarr = [];
+      this.formeditdefaultcopy.forEach(function(c) {
+        // if (c.userId) {
+        //     _this.formeditCopy.userIds.push(c.userId);
+        // }
+        var a = {
+          userId: c.userId,
+          defaultUser: 1
+        };
+        decopyarr.push(a);
+      });
+
+      console.log(decopyarr);
+      var decopyme = [];
+      this.ccObj.forEach(function(c) {
+        // if (c.userId) {
+        //     _this.formeditCopy.userIds.push(c.userId);
+        // }
+        var a = {
+          userId: c.userId,
+          defaultUser: 0
+        };
+        decopyme.push(a);
+      });
+
+      console.log(decopyme);
+      this.editalldecopyme = decopyarr.concat(decopyme);
+      console.log(this.editalldecopyme);
+      //   this.formeditCopy.region = Array.isArray(this.formeditCopy.region) ? this.formeditCopy.region[0] : this.formeditCopy.region
+      //   var letters = this.formeditCopy.letter;
+      //   if(letters == "站内信"){
+      //       this.formeditCopy.letter = 1
+      //   }else if(letters == "邮件"){
+      //       this.formeditCopy.letter = 2
+      //   }else if(letters == "短信"){
+      //       this.formeditCopy.letter = 3
+      //   }
+      var repeats = this.formeditCopy.repeat;
+      if (repeats == "不重复") {
+        this.formeditCopy.repeat = 1;
+      } else if (repeats == "每天") {
+        this.formeditCopy.repeat = 2;
+      } else if (repeats == "每周") {
+        this.formeditCopy.repeat = 3;
+      } else if (repeats == "每年") {
+        this.formeditCopy.repeat = 4;
+      } else if (repeats == "工作日") {
+        this.formeditCopy.repeat = 5;
+      }
+      // 是否全天
+      var checkboxs = this.checked;
+      // console.log(checkboxs)
+      if (checkboxs == true) {
+        this.checked = 1;
+      } else {
+        this.checked = 0;
+      }
+      //console.log(this.formeditCopy.principal)
+      //console.log(this.persoArray.join(","))
+
+      // console.log(this.chosePerson)
+      // var chosePersonif = this.chosePerson;
+      // var isChanges = 0;
+      // console.log(chosePersonif)
+      // if(chosePersonif == this.chosePerson){
+      //     alert(55)
+      //     isChanges = 0
+      // }{
+      //     alert(77)
+      //     isChanges = 1;
+      // }
+      //var isChanges = ''
+      //console.log(this.chosePerson) //回显的第一个id
+      // console.log(this.persoArray.join(","))
+      //   this.eventcancel.start = this.eventcancel.start._i
+
+      if (
+        this.chosePerson == this.persoArray.join(",") ||
+        this.chosePerson == "" ||
+        this.persoArray.join(",") == ""
+      ) {
+        this.isChanges = 0;
+      } else {
+        this.isChanges = 1;
+      }
+
+      if (
+        this.persoArray.join(",") != null &&
+        this.persoArray.join(",") != undefined &&
+        this.persoArray.join(",") != ""
+      ) {
+        this.chosePerson = this.persoArray.join(",");
+      }
+      if (this.eventcancel.start == this.formeditCopy.date1) {
+        this.isChanges = 0;
+      } else {
+        this.isChanges = 1;
+      }
+
+      if (this.eventcancel.end == this.formeditCopy.date2) {
+        this.isChanges = 0;
+      } else {
+        this.isChanges = 1;
+      }
+      var datas = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          id: this.eventsId, //修改的日程id
+          name: this.formeditCopy.name, //日程名称
+          projectId: this.projectids, //项目id
+          projectName: this.formeditCopy.progress, //项目名称
+          personnel: this.chosePerson, //人员id
+          startDate: this.formeditCopy.date1 + ":00", //开始时间
+          endDate: this.formeditCopy.date2 + ":00", //截止时间
+          isDay: this.checked, //是否全天
+          remindType: this.formeditCopy.region, //提醒类型
+          sendType: this.formeditCopy.letter.join(","), //发送类型
+          repeatType: this.formeditCopy.repeat, //重复方式
+          content: this.formeditCopy.desc, //内容
+          isChange: this.isChanges, //配置人员和时间有没有改动
+          scheduleUserlist: this.editalldecopyme //默认的抄送人和自己添加的抄送人
+        }
+      };
+      var _this = this;
+      this.$post("/sys/schedule/edit_schedule", datas)
+        .then(response => {
+          if (response.code == _this.success_code) {
+            this.findUserObj = [];
+            this.findUserObj2 = [];
+            this.findUserObjSearch = [];
+            this.findUserObjSearch1 = [];
+            this.findUserObjSearchA = [];
+            this.deployObj = [];
+            this.editccCopy = [];
+            _this.isedit = false;
+            _this.isdetail = false;
+            _this.listcalendar();
+            _this.$message({
+              message: "修改成功",
+              type: "success"
+            });
+            this.backlogmattelist();
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    handleSelect(val) {
+      let projectData = this.orijectOptions.find(v => v.id === val);
+      if (!projectData) return;
+      this.projectids = projectData.id;
+      this.projectnames = projectData.name;
+      this.form.progress = projectData.name;
+    },
+
+    handleSelectedit(val) {
+      //console.log(val)
+      let projectData = this.orijectOptions.find(v => v.id === val);
+      if (!projectData) return;
+      this.projectids = projectData.id;
+      this.formeditCopy.progress = projectData.name;
+    },
+    cancelcander() {
+      this.isedit = false;
+      if (this.userId == this.eventcancel.userId) {
+        this.disabledsedit = false;
+      } else {
+        this.disabledsedit = true;
+      }
+      this.calendarEvents = this.eventcancel;
+      this.eventsId = this.eventcancel.id;
+      // 提醒方式
+      var eventRemtype = this.eventcancel.remindType;
+      if (eventRemtype == 0) {
+        this.eventcancel.remindType = "不提醒";
+      } else if (eventRemtype == 1) {
+        this.eventcancel.remindType = "开始前15分钟";
+      } else if (eventRemtype == 2) {
+        this.eventcancel.remindType = "开始前1小时";
+      } else if (eventRemtype == 3) {
+        this.eventcancel.remindType = "开始前3小时";
+      } else if (eventRemtype == 4) {
+        this.eventcancel.remindType = "开始前1天";
+      }
+      // 发送方式
+      var evenSendtype = this.eventcancel.sendType.split(",");
+      //console.log(evenSendtype)
+      //console.log(evenSendtype.map(Number))
+      // var evenSendtype = this.eventcancel.sendType
+      // evenSendtype = evenSendtype.replace(/\b(1|2|3)\b/g, function($0, $1) {
+      // return {
+
+      //     "1": "站内信"
+
+      //     , "2": "邮件"
+
+      //     , "3": "短信"
+
+      // }[$1];
+      // });
+      // 重复方式
+      var eventRepeat = this.eventcancel.repeatType;
+      if (eventRepeat == 1) {
+        this.eventcancel.repeatType = "不重复";
+      } else if (eventRepeat == 2) {
+        this.eventcancel.repeatType = "每天";
+      } else if (eventRepeat == 3) {
+        this.eventcancel.repeatType = "每周";
+      } else if (eventRepeat == 4) {
+        this.eventcancel.repeatType = "每年";
+      } else if (eventRepeat == 5) {
+        this.eventcancel.repeatType = "工作日";
+      }
+
+      var checkbox = this.eventcancel.isDay;
+      //console.log(checkbox)
+      if (checkbox == 0) {
+        this.checked = false;
+      } else {
+        this.checked = true;
+      }
+      //console.log(event.personnel)
+      //console.log(event.start._i)
+      //console.log(event.end._i)
+      // if(event.start._i == undefined || event.start._i == "" || event.start._i == null){
+
+      // }
+      //console.log(this.event.start._i)
+      // this.eventcancel.start = this.event.start._i
+
+      // this.eventcancel.end = this.event.end._i
+      this.isdetail = true;
+      this.formeditCopy.name = this.eventcancel.title; //日程名称
+      this.formeditCopy.progress = this.eventcancel.projectName; //项目名称
+      this.formeditCopy.projectId = this.eventcancel.projectId; //项目名称
+      this.formeditCopy.principal = this.eventcancel.personnelName; //选择人员
+      this.chosePerson = this.eventcancel.personnel;
+      //   this.formeditCopy.date1 = this.eventcancel.start  //开始日期
+      //   this.formeditCopy.date2 = this.eventcancel.end //截止日期
+      this.checked = this.eventcancel.isDay; //是否全天
+      this.formeditCopy.region = this.eventcancel.remindType; //提醒方式
+      this.formeditCopy.letter = evenSendtype.map(Number); //发送方式
+      this.formeditCopy.repeat = this.eventcancel.repeatType; //重复方式
+      this.formeditCopy.desc = this.eventcancel.content; //内容
+    },
+    //大写转小写
+    zhuan(value) {
+      var data = "";
+      switch (value) {
+        case "一":
+          data = "01";
+          break;
+        case "二":
+          data = "02";
+          break;
+        case "三":
+          data = "03";
+          break;
+        case "四":
+          data = "04";
+          break;
+        case "五":
+          data = "05";
+          break;
+        case "六":
+          data = "06";
+          break;
+        case "七":
+          data = "07";
+          break;
+        case "八":
+          data = "08";
+          break;
+        case "九":
+          data = "09";
+          break;
+        case "十":
+          data = "10";
+          break;
+        case "十一":
+          data = "11";
+          break;
+        case "十二":
+          data = "12";
+          break;
+        default:
+          break;
+      }
+      return data;
+    },
+    eventClick(event) {
+      //events的点击事件 日程详情
+      console.log(event);
+      var dataObj = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          id: event.id
+        }
+      };
+      var that = this;
+      this.$post("/sys/schedule/select_schedule", dataObj)
+        .then(response => {
+          console.log(response);
+          var data = response.data;
+          if (response.code == this.code.codeNum.SUCCESS) {
+            // 将人员的数据拼接起来
+            let arr = data.personnelName.split(",");
+            let arr1 = data.personnel.split(",");
+            let result = arr.map((name, i) => ({
+              name,
+              id: arr1[i],
+              label: name,
+              uniqueKey: "user" + arr1[i]
+            }));
+            this.deployObj = result;
+            console.log(this.findUserObj2, 66);
+            // 初始化抄送人列表
+            this.editccCopy.length = 0;
+            this.ccObj.length = 0;
+            data.scheduleUserlist.map(item => {
+              if (item.defaultUser == 1) {
+                item.originData = true;
+                this.formeditdefaultcopy.push(item);
+                var resultcopy = [];
+                var objdeco = {};
+                for (var i = 0; i < this.formeditdefaultcopy.length; i++) {
+                  if (!objdeco[this.formeditdefaultcopy[i].userId]) {
+                    resultcopy.push(this.formeditdefaultcopy[i]);
+                    objdeco[this.formeditdefaultcopy[i].userId] = true;
+                  }
+                }
+                console.log(resultcopy);
+                this.editdefaultCopy = resultcopy;
+              } else {
+                console.log(item, 323232);
+                this.ccObj.push(item);
+                var resultcopyCc = [];
+                var objdecoCc = {};
+                for (var i = 0; i < this.ccObj.length; i++) {
+                  if (!objdecoCc[this.ccObj[i].userId]) {
+                    resultcopyCc.push(this.ccObj[i]);
+                    objdecoCc[this.ccObj[i].userId] = true;
+                  }
+                }
+                // console.log(resultcopyCc);
+                this.editccCopy = resultcopyCc;
+              }
+            });
+            this.findUserObjSearch1 = this.editdefaultCopy.concat(
+              this.editccCopy
+            );
+            event.start = data.startDate;
+            event.end = data.endDate;
+            this.alldaymowei = this.$moment(event.start).format(
+              "YYYY-MM-DD 23:59:59"
+            );
+            this.Moment = event.end;
+            if (
+              this.Moment == null ||
+              this.Moment == undefined ||
+              this.Moment == ""
+            ) {
+              event.end = this.alldaymowei;
+              this.formedit.date2 = event.end; //截止日期
+            } else {
+              event.end = event.end;
+              this.formedit.date2 = event.end; //截止日期
+            }
+            this.eventcancel = event;
+            this.disabledsedit = this.userId != data.userId;
+            this.calendarEvents = data;
+            this.eventsId = data.id;
+
+            this.checked = data.isDay == 1;
+            this.isdetail = true;
+            this.formedit.name = data.name; //日程名称
+            this.projectids = data.projectId;
+            this.projectnames = "";
+            this.formedit.progress = data.projectName; //项目名称
+            this.formedit.projectId = data.projectId; //项目名称
+            this.formedit.principal = data.personnelName; //选择人员
+            this.chosePerson = data.personnel;
+            this.formedit.date1 = event.start; //开始日期
+            this.formedit.date2 = event.end; //截止日期
+            //this.checked = event.isDay //是否全天
+            this.formedit.region = data.remindType; //提醒方式
+            this.formedit.letter = data.sendType.split(",").map(Number); //发送方式
+            this.formedit.repeat = data.repeatType; //重复方式
+            this.formedit.desc = data.content; //内容
+            //console.log(event.start._i,'event.start._i')
+            //console.log(event.end,'event.end')
+            console.log(
+              this.userNums,
+              this.editdefaultCopy,
+              this.editccCopy,
+              this.findUserObjSearch1
+            );
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+      (!this.orijectOptions || !this.orijectOptions.length) &&
+        this.getProjectList();
+    },
+    //日程事件
+    listcalendar() {
+      var liststarttime = this.firstDates;
+      var listendtime = this.lastDates;
+      var datas = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          startDate: liststarttime,
+          endDate: listendtime
+        }
+      };
+      var _this = this;
+      this.$post("/sys/schedule/schedule_list", datas)
+        .then(response => {
+          //var dataseries = [];
+          if (response.code == _this.success_code) {
+            for (var value in response.data) {
+              //console.log(response.data[value])
+              var name = response.data[value].name;
+              response.data[value].title = name;
+              delete response.data[value].name;
+              var startDate = response.data[value].startDate;
+              response.data[value].start = startDate;
+              delete response.data[value].startDate;
+              var endDate = response.data[value].endDate;
+              response.data[value].end = endDate;
+              delete response.data[value].endDate;
+            }
+            _this.events = response.data;
+            // var title = {};
+            // title = response.data[0].name;
+            // console.log(title)
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    // 获取当前月的第一天
+    getCurrentMonthFirst() {
+      var date = new Date();
+      date.setDate(1);
+      var month = parseInt(date.getMonth() + 1);
+      var day = date.getDate();
+
+      if (month < 10) {
+        month = "0" + month;
+      }
+      if (day < 10) {
+        day = "0" + day;
+      }
+      this.firstData =
+        date.getFullYear() +
+        "-" +
+        month +
+        "-" +
+        day +
+        " " +
+        "00" +
+        ":" +
+        "00" +
+        ":" +
+        "00";
+      return this.firstData;
+    },
+    // 获取当前月的最后一天
+    getCurrentMonthLast() {
+      var date = new Date();
+      var currentMonth = date.getMonth();
+      var nextMonth = ++currentMonth;
+      var nextMonthFirstDay = new Date(date.getFullYear(), nextMonth, 1);
+      var oneDay = 1000 * 60 * 60 * 24;
+      var lastTime = new Date(nextMonthFirstDay - oneDay);
+      var month = parseInt(lastTime.getMonth() + 1);
+      var day = lastTime.getDate();
+      if (month < 10) {
+        month = "0" + month;
+      }
+      if (day < 10) {
+        day = "0" + day;
+      }
+      var lastmouth = new Date(date.getFullYear() + "-" + month + "-" + day);
+      var y = lastmouth.getFullYear();
+      var m = lastmouth.getMonth() + 1;
+      var d = lastmouth.getDate();
+      // var h = lastmouth.getHours();
+      // console.log(h)
+      // var min = lastmouth.getMinutes();
+      // var second = lastmouth.getSeconds();
+      if (m >= 1 && m <= 9) {
+        m = "0" + m;
+      }
+      if (d >= 0 && d <= 9) {
+        d = "0" + d;
+      }
+      // if (h >= 1 && h <= 9) {
+      //     h = "0" + h;
+      // }
+      // if (min >= 0 && min <= 9) {
+      //     min = "0" + min;
+      // }
+      // if (second >= 0 && second <= 9) {
+      //     second = "0" + second;
+      // }
+      this.lastdate =
+        y + "-" + m + "-" + d + " " + "23" + ":" + "59" + ":" + "59";
+      //console.log(this.lastdate)
+      return this.lastdate;
+      //return new Date(date.getFullYear() + '-' + month + '-' + day );
+    },
+
+    // 获取当前系统日期
+    getNowFormatDate() {
+      var date = new Date();
+      var seperator1 = "-";
+      var year = date.getFullYear();
+      var month = date.getMonth() + 1;
+      var strDate = date.getDate();
+      var hours = date.getHours();
+      var minutes = date.getMinutes();
+      var seconds = date.getSeconds();
+      if (month >= 1 && month <= 9) {
+        month = "0" + month;
+      }
+      if (strDate >= 0 && strDate <= 9) {
+        strDate = "0" + strDate;
+      }
+      if (hours >= 1 && hours <= 9) {
+        hours = "0" + hours;
+      }
+      if (minutes >= 0 && minutes <= 9) {
+        minutes = "0" + minutes;
+      }
+      if (seconds >= 1 && seconds <= 9) {
+        seconds = "0" + seconds;
+      }
+      //this.currentdate = year + seperator1 + month + seperator1 + strDate;
+      this.currentdate =
+        year +
+        seperator1 +
+        month +
+        seperator1 +
+        strDate +
+        " " +
+        hours +
+        ":" +
+        minutes +
+        ":" +
+        seconds;
+      this.curenttoday =
+        year +
+        seperator1 +
+        month +
+        seperator1 +
+        strDate +
+        " " +
+        "00" +
+        ":" +
+        "00" +
+        ":" +
+        "00";
+      this.currentendtoday =
+        year +
+        seperator1 +
+        month +
+        seperator1 +
+        strDate +
+        " " +
+        "23" +
+        ":" +
+        "59" +
+        ":" +
+        "00";
+      this.selectDate = this.currentdate;
+    },
+    //  选择融资类型
+    optType(val) {
+      this.tupeNum = val;
+      var typeObj = { token: this.token, userId: this.userId, data: {} };
+      var that = this;
+      this.$post("/info/project/getAllFinanceType", typeObj)
+        .then(response => {
+          var data = response.data;
+          if (response.code == that.code.codeNum.SUCCESS) {
+            that.typeFlag = true;
+            that.state = 1;
+            that.typeObj = data;
+            that.optState = { value: val };
+          } else {
+            response.code !== this.code.codeNum.RESULT_EMPTY &&
+              this.$message.error(response.msg);
+          }
+        })
+        .catch(error => {});
+    },
+    //融资类型返回值
+    typeProject(data) {
+      if (data.length > 0) {
+        if (this.tupeNum == 1) {
+          this.financingId = data[0].id;
+          this.financingName = data[0].label;
+          this.drawLine();
+        }
+      } else {
+        if (this.tupeNum == 1) {
+          this.financingId = "";
+          this.financingName = "";
+          this.selectStageList = [];
+        }
+      }
+    },
+    getProjectList() {
+      var dataObj = {
+        token: this.token,
+        userId: this.userId,
+        data: {}
+      };
+
+      //项目信息信息回显的查询接口
+      this.$post("/info/project/getSimpleProjectList", dataObj)
+        .then(response => {
+          //console.log(response);
+          if (response.code == this.code.codeNum.SUCCESS) {
+            this.orijectOptions = response.data;
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    }
+  },
+
+  created() {
+    this.token = this.$store.state.loginObject.userToken;
+    this.userId = this.$store.state.loginObject.userId;
+    this.success_code = this.code.codeNum.SUCCESS;
+    // this.getnewmessageFn();
+    this.initCheckFn();
+    this.getProjectList();
+  }
+};
+</script>
+<style>
+/* .fc-unthemed th, .fc-unthemed td, .fc-unthemed thead, .fc-unthemed tbody, .fc-unthemed .fc-divider, .fc-unthemed .fc-row, .fc-unthemed .fc-content, .fc-unthemed .fc-popover, .fc-unthemed .fc-list-view, .fc-unthemed .fc-list-heading td{
+    border-color: #fff;
+}
+.fc-basic-view .fc-body .fc-row{
+    border-bottom: 1px solid #eee;
+} */
+.maindeskindex > .el-row .el-col:nth-child(odd) {
+  padding-right: 5px;
+}
+.maindeskindex .el-row .el-col:nth-child(even) {
+  padding-left: 5px;
+}
+.addcander .el-form-item__content {
+  text-align: left;
+}
+.addcander .ovchack,
+.addcander .elcol12 {
+  overflow-y: auto;
+  max-height: 113px;
+}
+
+/* .zhugontaiparents .maindeskindex .addcander .el-button {
+    height: 40px;
+} */
+.zhugontaiparents .maindeskindex .addcander .userbtn {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+.zhugontaiparents .maindeskindex .addcander .el-col-12 {
+  width: 100% !important;
+}
+.zhugontaiparents
+  .maindeskindex
+  .fc-event-container
+  .fc-day-grid-event
+  .fc-content {
+  max-width: 95px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zhugontaiparents
+  .maindeskindex
+  .fc-more-popover
+  .fc-widget-content
+  .fc-event-container
+  .fc-day-grid-event
+  .fc-content {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.zhugontaiparents .maindeskindex .el-textarea .el-textarea__inner {
+  resize: none;
+}
+.zhugontaiparents .maindeskindex .el-scrollbar {
+  height: 100%;
+  /* margin-bottom: 15px; */
+}
+.zhugontaiparents .maindeskindex .is-horizontal {
+  display: none;
+}
+
+.zhugontaiparents .maindeskindex .el-scrollbar__wrap {
+  overflow-x: hidden;
+  padding-bottom: 15px;
+}
+.maindeskindex .box_card .el-table .el-button--text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  text-align: left;
+}
+.zhugontaiparents .maindeskindex .container .fc-toolbar.fc-header-toolbar {
+  /* margin-top: 13px;
+  margin-bottom: 1px; */
+  margin-top: -20px;
+}
+.zhugontaiparents .maindeskindex .container .box-card .fc-event,
+.zhugontaiparents .maindeskindex .container .box-card .fc-event-dot {
+  background-color: #e6f7ff !important;
+  color: #002666;
+  border: #e6f7ff !important;
+}
+.zhugontaiparents .maindeskindex .container .fc-toolbar .fc-center {
+  margin-top: 4px !important;
+  margin-left: 100px;
+  /* position: relative;
+    top: -33px; */
+}
+.zhugontaiparents .maindeskindex .el-card__header {
+  border-bottom: 0px;
+}
+
+.zhugontaiparents .maindeskindex .fc-event {
+  /* background-color: #e6f7ff !important; */
+  background-color: #e6f7ff !important;
+  color: #002666 !important;
+  border: #e6f7ff !important;
+}
+.fc-unthemed td.fc-today {
+  background-color: #f6fbff;
+}
+
+.zhugontaiparents .maindeskindex .fc-toolbar h2 {
+  display: inline;
+  font-size: 100%;
+}
+.zhugontaiparents .maindeskindex .fc-state-default {
+  border: 1px solid #fff;
+  background-image: linear-gradient(to bottom, #ffffff, #fff);
+  -webkit-box-shadow: inset 0 0px 0 rgba(255, 255, 255, 0),
+    0 0px 0px rgba(0, 0, 0, 0);
+  box-shadow: inset 0 0px 0 rgba(255, 255, 255, 0), 0 0px 0px rgba(0, 0, 0, 0);
+}
+.zhugontaiparents .maindeskindex .fc-state-hover {
+  background-color: #fff;
+}
+.zhugontaiparents .maindeskindex .fc-view-container {
+  margin-top: -16px;
+}
+/* .el-scrollbar__wrap{
+    overflow-x:hidden!important;
+} */
+.zhugontaiparents
+  .maindeskindex
+  .el-table--scrollable-x
+  .el-table__body-wrapper {
+  height: 278px;
+}
+</style>
+<style lang="scss" scoped>
+.zhugontaiparents .maindeskindex .el-col-12 {
+  width: 50%;
+  //   overflow-y: auto;
+  //   max-height:113px;
+}
+// .el-row {
+//   // margin-bottom: 20px;
+//   &:last-child {
+//     margin-bottom: 0;
+//   }
+// }
+.zhugontaiparents .maindeskindex .el-col {
+  border-radius: 4px;
+  text-align: left;
+}
+
+.zhugontaiparents .maindeskindex .maindeskindex_contenti_headers {
+  padding: 0 20px;
+  padding-left: 10px;
+  margin: auto;
+  height: 60px;
+  overflow: hidden;
+  background-color: #fff;
+  text-align: left;
+
+  .headers_clearFix {
+    height: 40px;
+    font-size: 20px;
+    font-weight: bold;
+    color: rgba(51, 51, 51, 1);
+    margin-top: 10px;
+    // margin-bottom: 10px;
+
+    .headers_clearFix_title {
+      font-size: 20px;
+      line-height: 40px;
+      color: #333;
+    }
+  }
+}
+
+.zhugontaiparents .maindeskindex .container {
+  // margin-top: 10px;
+  // padding: 10px;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
+
+  .imgzhustyle {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    top: 3px;
+    right: 5px;
+  }
+
+  .messagebox {
+    width: 57% !important;
+  }
+
+  .rightWidth {
+    width: 39% !important;
+  }
+
+  .box-card {
+    width: 49%;
+    height: 350px;
+    text-align: left;
+    overflow: auto;
+    margin-bottom: 10px;
+    background: #ffffff;
+
+    .th_rows,
+    .tb_rows {
+      height: 48px;
+      line-height: 48px;
+      border-collapse: separate;
+      border-bottom: solid 1px #ebeef5;
+    }
+
+    .th_rows {
+      color: #606266;
+    }
+
+    .tb_rows:hover {
+      background-color: #f5f7fa;
+    }
+  }
+
+  .box_card {
+    // width: 49%;
+    width: 100%;
+    height: 350px;
+    text-align: left;
+    overflow: auto;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ebeef5;
+    background-color: #fff;
+    color: #303133;
+    box-shadow: 0 0px 0px 0 rgba(0, 0, 0, 0);
+    -webkit-box-shadow: 0 0px 0px 0 rgba(0, 0, 0, 0);
+
+    .th_rows,
+    .tb_rows {
+      height: 48px;
+      line-height: 48px;
+      border-collapse: separate;
+      border-bottom: solid 1px #ebeef5;
+    }
+
+    .th_rows {
+      color: #606266;
+    }
+
+    .tb_rows:hover {
+      background-color: #f5f7fa;
+    }
+
+    .el-card__header span {
+      font-size: 16px;
+      color: #000;
+      font-weight: 500;
+    }
+  }
+
+  .box_meet {
+    width: 49%;
+    height: 350px;
+    text-align: left;
+    overflow: auto;
+
+    .tb_rows {
+      height: 30px;
+      line-height: 30px;
+    }
+
+    .tb_rows:nth-child(odd) {
+      background-color: #f2f2f2;
+    }
+
+    .text-overflow {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .ri_box-card {
+    width: 47%;
+    height: 350px;
+    text-align: left;
+    // overflow: auto;
+    border-radius: 4px;
+    // border: 1px solid #ebeef5;
+    background: #fff;
+    color: #303133;
+    padding: 12px;
+
+    // box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    .clearfix {
+      height: 25px;
+    }
+
+    // .cont_box {
+    //   width: 95%;
+    //   height: 330px;
+    // }
+    .ri_box {
+      margin: 12px;
+      width: 98%;
+      height: 280px;
+      padding: 8px;
+    }
+    .ri_box div:hover {
+      background-color: #f5f7fa;
+    }
+
+    .tb_rows {
+      height: 40px;
+      line-height: 40px;
+      // border-collapse: separate;
+      border-bottom: solid 1px #ebeef5;
+    }
+
+    .th_rows {
+      color: #606266;
+    }
+
+    .tb_rows:hover {
+      background-color: #f5f7fa;
+    }
+  }
+
+  .boxmy_meet {
+    width: 47%;
+    height: 340px;
+    background: #ffffff;
+    padding: 14px;
+    text-align: left;
+
+    .clearfix {
+      height: 25px;
+    }
+
+    .cont_box {
+      width: 100%;
+      height: 315px;
+    }
+
+    .tb_rows {
+      height: 30px;
+      line-height: 30px;
+    }
+
+    .tb_rows:nth-child(odd) {
+      background-color: #f2f2f2;
+    }
+
+    .text-overflow {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .tbheader_row {
+    background: rgb(250, 250, 250);
+    color: rgb(0, 0, 0);
+    font-weight: 500;
+    padding: 12px;
+    min-width: 0;
+    border-bottom: solid 1px #ebeef5;
+  }
+}
+
+.zhugontaiparents .maindeskindex .cotitle_over {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.zhugontaiparents .maindeskindex .nodata_row {
+  //   border-bottom: solid 1px #ebeef5;
+  //   border-top: solid 1px #ebeef5;
+  color: #909399;
+  min-height: 47px;
+}
+
+.zhugontaiparents .maindeskindex .tb_rowsw {
+  height: 47px;
+  line-height: 47px;
+  padding-left: 10px;
+  // border-collapse: separate;
+  border-bottom: solid 1px #ebeef5;
+}
+.zhugontaiparents .maindeskindex .view_more {
+  height: 30px;
+  line-height: 30px;
+  box-sizing: border-box;
+  padding: 0;
+  width: 72px;
+  text-decoration: underline;
+}
+.zhugontaiparents .maindeskindex .content_box {
+  width: clac(100% - 100) px;
+}
+.zhugontaiparents .maindeskindex .tit_l {
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+.zhugontaiparents .maindeskindex .img_box {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.zhugontaiparents .maindeskindex .img_box img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50% 50%;
+}
+.zhugontaiparents .maindeskindex .tb_rowsw .tb_rowsw_proName,
+.zhugontaiparents .maindeskindex .tb_rowsw .time_box {
+  color: #999999;
+}
+.zhugontaiparents .maindeskindex .ri_box .tb_rowsw {
+  border-bottom: solid 0px #fff;
+}
+
+.zhugontaiparents .maindeskindex .ri_box div:hover {
+  background-color: #f5f7fa;
+}
+// 解决切换持续抖动问题
+.el-table {
+  width: 99.9% !important;
+}
+// .el-table--scrollable-x .el-table__body-wrapper
+</style>

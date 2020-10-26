@@ -1,0 +1,6 @@
+<div ng-controller="voteruleCtrl">
+    <select ng-model="property.value" ng-change="voteruleChanged()">
+        <option  value="0"></option>
+        <option ng-repeat="x in property.options track by $index"  value="{{x.id}}" >{{x.typeName}}</option>
+    </select>
+</div>

@@ -1,0 +1,1861 @@
+<template>
+  <div class="associated-content">
+    <div class="associatedContent" id="associatedContent">
+      <p class="addContent" style="width: 460px;;margin-top: 3px;">
+        <el-button type="text" :class="[forbiddenis == 4?'notclick':'']"  @click="addcontlx">
+          <i class="el-icon-plus"></i>
+          <span>添加关联内容</span>
+        </el-button>
+      </p>
+      <div style="height: 565px;">
+        <el-scrollbar style="height: 100%;">
+        <ul class="associatedDetail" style="height:91px;width: 460px">
+          <el-scrollbar style="height:100%;padding: 3px;">
+            <h3 style="font-weight: bold;">关联的审批</h3>
+            <li
+              class="clearfix"
+              style="padding-left: 12px;height: 24px;overflow: hidden;margin-top: 3px;"
+              v-for="item in taskProcesss"
+            >
+              <span @click="sheh(item)" class="iclas">
+                <el-button style="color:#333333" class="cssls" type="text">{{item.name}}</el-button>
+              </span>
+              <div style="margin-top: -7px;" :class="[forbiddenis == 4?'notclick':'']">
+                <span @click="cancelAssoc1(item)">
+                  <el-button type="text" >取消关联</el-button>
+                </span>
+                <i @click="cancelAssocsh2(item)" v-if="item.relyOn == 0">
+                  <el-button type="text">配置(未依赖)</el-button>
+                </i>
+                <i @click="cancelAssocsh1(item)" v-else>
+                  <el-button type="text">配置(已依赖)</el-button>
+                </i>
+              </div>
+            </li>
+          </el-scrollbar>
+        </ul>
+        <ul v-if="$utils.m('project_meeting')" class="associatedDetail" style="height:91px;width: 460px">
+          <el-scrollbar style="height:100%;">
+            <h3 style="font-weight: bold;padding: 3px;">关联的会议</h3>
+            <li
+              class="clearfix"
+              style="padding-left: 12px;height: 24px;overflow: hidden;margin-top: 3px;"
+              v-for="item in taskMeetings"
+            >
+              <!-- <router-link to="/projecmeeting"><span class="fl" >{{item.name}}</span></router-link> -->
+              <span  class="iclas">
+                <el-button style="color:#333333" @click="huiyipd(item)" class="cssls" :class="[forbiddenis == 4?'notclick':'']" type="text">{{item.name}}</el-button>
+              </span>
+              <div class="clss" style="margin-top: -7px;">
+                <span style="padding-right: 27px;">
+                  <el-button  @click="cancelAssoc2(item)"
+                  :class="[forbiddenis == 4?'notclick':'']"
+                  style="clear: both;" type="text">取消关联</el-button>
+                </span>
+              </div>
+            </li>
+          </el-scrollbar>
+        </ul>
+        <ul class="associatedDetail" style="height:91px;width: 460px">
+          <el-scrollbar style="height:100%">
+            <h3 style="font-weight: bold;padding: 3px;">关联的文件</h3>
+            <li
+              class="clearfix"
+              style="padding-left: 12px;height: 24px;overflow: hidden;margin-top: 3px;"
+              v-for="item in taskProjectFiles"
+            >
+              <span @click="yulan(item)"  :class="[forbiddenis == 4?'notclick':'iclas']">
+                <el-button style="color:#333333" :class="`cssls ${item.delFlag == 1?'del-file':''}`" type="text">{{item.name}}</el-button>
+              </span>
+              <div class="clss" style="margin-top: -7px;">
+                <span :style="item.delFlag != 1?'':'padding-right:23px'" @click="cancelAssoc3(item)" :class="[forbiddenis == 4?'notclick':'']">
+                  <el-button style="clear: both;" type="text">取消关联</el-button>
+                </span>
+                <span @click="updown(item)" v-if="item.delFlag != 1"  :class="[forbiddenis == 4?'notclick':'']">
+                  <el-button
+                    style="clear: both;padding-right: 23px;"
+                    type="text"
+
+                  >下载</el-button>
+                </span>
+              </div>
+            </li>
+          </el-scrollbar>
+        </ul>
+        <ul v-if="$utils.m('paper_manage')" class="associatedDetail" style="height:91px;width: 460px">
+          <el-scrollbar style="height:100%">
+            <h3 style="font-weight: bold;padding: 3px;">关联的底稿</h3>
+            <li
+              class="clearfix"
+              style="padding-left: 12px;height: 24px;overflow: hidden;
+                    margin-top: 3px;"
+              v-for="item in taskPaperFiles"
+            >
+              <span @click="digao(item)"  :class="[forbiddenis == 4?'notclick':'iclas']">
+                <el-button style="color:#333333" class="cssls" type="text">{{item.name}}</el-button>
+              </span>
+              <div class="clss" style="margin-top: -7px;">
+                <span @click="cancelAssoc4(item)" :class="[forbiddenis == 4?'notclick':'']">
+                  <el-button type="text">取消关联</el-button>
+                </span>
+                <sapn @click="updown(item)" :class="[forbiddenis == 4?'notclick':'']">
+                  <el-button
+                    style="clear: both;padding-right: 23px;"
+                    type="text"
+                  >下载</el-button>
+                </sapn>
+              </div>
+            </li>
+          </el-scrollbar>
+        </ul>
+        <ul class="associatedDetail" style="height:91px;width: 460px">
+          <el-scrollbar style="height:100%">
+            <h3 style="font-weight: bold;padding: 3px;">关联的任务</h3>
+            <li class="clearfix" style="overflow: hidden;margin-top: 3px;" v-for="item in taskVo">
+              <span @click="xqye(item)"  :class="[forbiddenis == 4?'notclick':'iclas']">
+                <el-button
+                  style="color:#333333;width: 289px;margin-left: 13px;"
+                  class="cssls"
+                  type="text"
+                >{{item.name}}</el-button>
+                <el-button
+                  style="color:#333333;width: 62px;"
+                  class="cssls"
+                  type="text"
+                >{{item.implementStageName}}</el-button>
+              </span>
+              <div class="clss" style="margin-top: -7px;padding-right: 24px;">
+                <span @click="cancelAssoc5(item)" :class="[forbiddenis == 4?'notclick':'']">
+                  <el-button type="text">取消关联</el-button>
+                </span>
+              </div>
+            </li>
+          </el-scrollbar>
+        </ul>
+         </el-scrollbar>
+      </div>
+    </div>
+    <el-dialog
+      title="关联内容"
+      :visible.sync="addcont"
+      :close-on-click-modal="false"
+      width="700px"
+      @close="closes"
+      :append-to-body="true"
+    >
+      <span>
+        <div class="contentTab" id="contentTab" style="position: relative;">
+          <i class="el-icon-search" v-if="seek"></i>
+          <div class="sosss" v-if="seek">
+            <el-input placeholder="请输入搜索内容" size="mini" v-model="filterText"></el-input>
+          </div>
+          <el-tabs
+            :tab-position="tabPosition"
+            v-model="activeName"
+            @tab-click="handleClick"
+            style="height: auto;"
+          >
+            <el-tab-pane label="文件" name="first">
+              <div class="fileTask">
+                <div class="spans" id="spans">
+                  <el-scrollbar style="height:100%">
+                    <el-tree
+                      class="filter-tree"
+                      :props="leftTreeProps"
+                      :load="loadNode1"
+                      lazy
+                      node-key="id"
+                      ref="tree"
+                      @check="tree1s"
+                      :filter-node-method="filterNode"
+                      show-checkbox
+                    ></el-tree>
+                  </el-scrollbar>
+                </div>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane v-if="$utils.m('paper_manage')" label="底稿" name="second">
+              <div class="fileTask">
+                <div class="spans" id="spans">
+                  <el-scrollbar style="height:100%">
+                    <el-tree
+                      class="filter-tree"
+                      :props="props"
+                      :load="loadNode2"
+                      lazy
+                      ref="trees"
+                      node-key="id"
+                      @check="tree2s"
+                      show-checkbox
+                      :filter-node-method="filterNode2"
+                    ></el-tree>
+                  </el-scrollbar>
+                </div>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane v-if="$utils.m('project_meeting')" label="会议" name="third">
+              <div class="fileTask">
+                <div class="spans">
+                  <el-checkbox
+                    :indeterminate="isIndeterminate"
+                    v-model="checkAll"
+                    @change="handleCheckAllChange"
+                    style="display:-webkit-box"
+                  >全选</el-checkbox>
+                  <div style="margin: 15px 0;"></div>
+                  <div>
+                    <div>
+                      <span class="taskNames">会议</span>
+                      <el-checkbox-group
+                        v-model="checkedCities"
+                        @change="handleCheckedCitiesChange($event)"
+                      >
+                        <div style="height: 137px;" id="spans">
+                          <el-scrollbar style="height:100%">
+                            <el-checkbox
+                              v-for="item in lists"
+                              v-model="item.id"
+                              :label="item.id"
+                              :key="item.id"
+                              style="width:90%;text-align:left;"
+                            >
+                              <span class="huyiclass">{{item.name}}</span>
+                              <span style="margin-left:10px;">{{item.endTime}}</span>
+                            </el-checkbox>
+                          </el-scrollbar>
+                        </div>
+                      </el-checkbox-group>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane label="审批" name="fourth">
+              <div class="fileTask">
+                <div class="spans">
+                  <el-checkbox
+                    :indeterminate="isIndeterminate2"
+                    v-model="checkAll2"
+                    @change="handleCheckAllChange2"
+                    style="display:-webkit-box"
+                  >全选</el-checkbox>
+                  <div style="margin: 15px 0;"></div>
+                  <div style>
+                    <div>
+                      <span class="taskNames">审批</span>
+                      <el-checkbox-group
+                        v-model="checkedCities2"
+                        @change="handleCheckedCitiesChange2"
+                      >
+                        <div style="height: 137px;" id="spans">
+                          <el-scrollbar style="height:100%">
+                            <el-checkbox
+                              v-for="item in lists2"
+                              :label="item.id"
+                              :key="item.id"
+                              style="width:90%;text-align:left;"
+                            >
+                              <span class="huyiclass">{{item.procName}}</span>
+                              <span style="margin-left:10px;">{{item.createDate}}</span>
+                            </el-checkbox>
+                          </el-scrollbar>
+                        </div>
+                      </el-checkbox-group>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane label="任务" name="five">
+              <div id="taks">
+                <el-tabs
+                  v-model="activeName2"
+                  :tab-position="tabPosition"
+                  @tab-click="handleClick2"
+                  style="height: 200px;"
+                >
+                  <!-- <el-tab-pane name="first2" label="任务筛选"></el-tab-pane> -->
+                  <el-tab-pane name="second2" label="全部任务"></el-tab-pane>
+                  <el-tab-pane name="third2" label="今天的任务"></el-tab-pane>
+                  <el-tab-pane name="fourth2" label="未完成任务"></el-tab-pane>
+                </el-tabs>
+              </div>
+              <div>
+                <div class="takscenter" id="spans">
+                  <el-scrollbar style="height:100%">
+                    <div v-for="(item,index) in datarea" ref="folds">
+                      <p style="display: inline-block" >{{item.stageName}}</p> <br>
+                      <i @click="fold(item,index)" ref="referenceicon" style="vertical-align: super;" class="el-icon-arrow-down"></i>
+                      <i @click="folds(item,index)" style="display: none;vertical-align: super;" ref="referenceicons"  class="el-icon-arrow-right"></i>
+                      <div v-for="it in item.data" >
+                        <el-radio-group v-model="radio" @change="changeinfo(it)">
+                          <div style="padding-bottom: 3px;">
+                            <el-radio :label="it.id" :disabled="disabled" :name="it.name">
+                              <span class="ridos">{{it.name}}</span>
+                            </el-radio>
+                          </div>
+                        </el-radio-group>
+                      </div>
+                    </div>
+                    <div v-if="shuju">暂无数据</div>
+                  </el-scrollbar>
+                </div>
+              </div>
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+      </span>
+      <span slot="footer" class="dialog-footer">
+        <el-button size="medium" @click="addcontqx">取 消</el-button>
+        <el-button size="medium" type="primary" @click="addconts">完 成</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { type } from "os";
+import { types } from "util";
+import { setTimeout } from "timers";
+import { constants } from "fs";
+const cityOptions = [];
+export default {
+  name: "associated-content",
+  props: ["changes", "associatData", "mbids", "createById",'forbiddenis'],
+  data() {
+    return {
+      leftTreeProps: {
+        label: "docName",
+        children: "child",
+        isLeaf: "docType" === 1 ? "false" : "true"
+      },
+      token: "String",
+      userId: "0",
+      lists: "",
+      huiarr: [],
+      disabled: false,
+      typeId: "",
+      seek: true,
+      inputs: "",
+      huiarr2: [],
+      radio: 3,
+      dataId1: [],
+      dataId3: [],
+      dataId4: [],
+      taskVo: [],
+      arrayobj: [],
+      disabled: "",
+      activeName2: "third2",
+      nodeids2: "",
+      shuju: true,
+      dataId1s: [],
+      datarea: [],
+      dataId5: [],
+      taskMeetings: [],
+      taskPaperFiles: [],
+      taskProcesss: [],
+      nodeid: "",
+      nodeid2: "",
+      tree1Id: [],
+      tree2Id: [],
+      arrs: [],
+      lists2: [],
+      array: [],
+      taskProjectFiles: [],
+      tree1: [],
+      nodeid: "",
+      rjshes: [],
+      rjshe: [],
+      addcont: false,
+      tabPosition: "left",
+      activeName: "first",
+      tabPos: "left",
+      checkAll: false,
+      checkAll2: false,
+      filterText: "",
+      filterText2: "",
+      typeinfo: "",
+      dataId: "",
+      radios: "",
+      type: 2,
+      itname: "",
+      checkedCities: [],
+      checkedCities2: [],
+      cities: cityOptions,
+      isIndeterminate: false,
+      isIndeterminate2: false,
+      data2: [],
+      defaultProps: {
+        children: "children",
+        label: "docName"
+      },
+      props: {
+        label: "docName",
+        children: "zones",
+        isLeaf: "leaf"
+      }
+    };
+  },
+  mounted() {
+    //  console.log(this)
+  },
+  watch: {
+
+    mbids(val) {
+      this.mbids = val;
+    },
+    changes(val) {
+      console.log(val);
+      if (val.state == 1) {
+        // alert(1)
+        this.loadNode1s();
+        this.loadNode2s();
+      }
+    },
+    filterText(val) {
+      // console.log(this.type)
+      if (this.type == 2) {
+        this.$refs.tree.filter(val);
+      } else if (this.type == 3) {
+        this.$refs.trees.filter(val);
+      } else if (this.type == 1) {
+        this.inputss(val);
+      }
+    }
+  },
+  methods: {
+    fold(item,index){
+      var ref=this.$refs.folds
+      for (let i = 0; i < ref.length; i++) {
+        if(i == index){
+         for (let j = 2; j < ref[i].children.length; j++) {
+             ref[i].children[j].style.display="none"
+             this.$refs.referenceicon[i].style.display="none"
+             this.$refs.referenceicons[i].style.display="block"
+         }
+       }
+      }
+    },
+    folds(item,index){
+      var ref=this.$refs.folds
+      for (let i = 0; i < ref.length; i++) {
+        if(i == index){
+         for (let j = 2; j < ref[i].children.length; j++) {
+             ref[i].children[j].style.display="block"
+             this.$refs.referenceicons[i].style.display="none"
+             this.$refs.referenceicon[i].style.display="block"
+         }
+       }
+      }
+    },
+    xqye(item) {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          id: item.id
+        }
+      };
+      var _this = this;
+      this.$post("/info/task/isLookTask", data)
+        .then((response)=> {
+          if (response.code == 0) {
+            item.isstate = "task";
+            _this.$store.commit("projectstatinfo", item);
+          } else {
+            _this.$message({
+              type: "error",
+              message: response.msg
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    changeinfo(it) {
+      this.itname = it.name;
+    },
+    handleClick2(tab) {
+      this.filterText = "";
+      this.radio = "";
+      this.itname = "";
+      if (tab.index == 0) {
+        this.typeinfo = 1; //全部  2 //未完成
+        this.tasksrw(this.typeinfo);
+      } else if (tab.index == 1) {
+        this.typeinfo = "";
+        this.tasksrw(this.typeinfo);
+      } else if (tab.index == 2) {
+        this.typeinfo = 2;
+        this.tasksrw(this.typeinfo);
+      }
+    },
+    //接口
+    tasksrw(type, val) {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        projectId: this.$store.state.projectMsg.pro_id,
+        data: {
+          projectId: this.$store.state.projectMsg.pro_id,
+          type: type,
+          taskName: val
+        }
+      };
+      var _this = this;
+      this.$post("/info/task/getRelevanceTask", data)
+        .then((response)=> {
+          var arr = response.data;
+          var newarr = [];
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i].data != "") {
+              newarr.push(arr[i]);
+            }
+          }
+          // if (newarr != "") {
+          //   _this.shuju = false;
+          // } else {
+          //   _this.shuju = true;
+          // }
+          _this.shuju = !(newarr != "");
+          _this.datarea = newarr;
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //搜索
+    inputss(val) {
+      console.log(val);
+      if (this.typeinfo == 1) {
+        this.tasksrw(this.typeinfo, val);
+      } else if (this.typeinfo == "") {
+        this.tasksrw(this.typeinfo, val);
+      } else if ((this.typeinfo = 2)) {
+        this.tasksrw(this.typeinfo, val);
+      }
+    },
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.docName.indexOf(value) !== -1;
+    },
+    filterNode2(value, data) {
+      if (!value) return true;
+      return data.docName.indexOf(value) !== -1;
+    },
+    huiyipd(item) {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          id: item.meetingId
+        }
+      };
+      console.log(data);
+      var _this = this;
+      this.$post("/info/project/isLockProjectMeeting", data)
+        .then((response)=> {
+          if (response.data == false) {
+            _this.$message({
+              type: "info",
+              message: "无权限此会议"
+            });
+            return;
+          } else {
+            _this.$router.push({
+              path: "/projecmeeting",
+              query: {
+                rfsId: item.docVersionRfs
+              }
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    sheh(item) {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: "0",
+        pageSize: "10",
+        data: {
+          id: item.processId
+        }
+      };
+      console.log(data);
+      var _this = this;
+      this.$post("/info/audit/judge_approval_userId", data)
+        .then((response)=> {
+          if (response.data == false) {
+            _this.$message({
+              type: "info",
+              message: "无权限此审批"
+            });
+            return;
+          } else {
+            _this.$router.push({
+              path: "/myapproval",
+              query: {
+                rfsId: item.docVersionRfs
+              }
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    digao(item) {
+      var previewData = {
+        projectId: this.$store.state.projectMsg.pro_id,
+        docId: item.docId,
+        rfsId: item.docVersionRfs,
+        photoType: item.docType,
+        docName: item.name
+      };
+      this.$store.commit("previewAllFn", previewData);
+    },
+    yulan(item) {
+      if(item.delFlag == 1) {
+        this.$message({
+          type: 'warning',
+          message: '该附件已被删除'
+        })
+        return
+      }
+      var previewData = {
+        projectId: this.$store.state.projectMsg.pro_id,
+        docId: item.docId,
+        rfsId: item.docVersionRfs,
+        photoType: item.docType,
+        docName: item.name
+      };
+      this.$store.commit("previewAllFn", previewData);
+    },
+    updown(item) {
+      console.log(item);
+      if(this.$store.state.isPC) {
+        this.$store.commit("pcOtherDownload",{
+          docId: item.docId,
+          docName: item.name
+        });
+      }else {
+        this.$store.commit("download", [
+          {
+            id: item.docId,
+            name: item.name
+          }
+        ]);
+      }
+    },
+
+    handleClick(tab, event) {
+      this.huiarr2 = [];
+      this.dataId4 = [];
+      this.huiarr = [];
+      this.dataId3 = [];
+      this.dataId1 = [];
+      this.dataId5 = [];
+      this.filterText = "";
+      this.activeName2 = "third2";
+      this.itname = "";
+      // this.filterText2 = "";
+      // this.inputs = "";
+      var data, type;
+      // this.$forceUpdate()
+
+      if (event.target.innerText == "文件") {
+        // data=this.tree1Id
+        type = 2;
+        // this.dataId=[]
+        this.dataId = [];
+        this.seek = true;
+      } else if (event.target.innerText == "底稿") {
+        // data=this.tree2Id
+        this.dataId = [];
+        type = 3;
+        this.seek = true;
+      } else if (event.target.innerText == "会议") {
+        this.dataId = [];
+        // data=this.huiarr
+        type = 0;
+        this.huiarr = [];
+        this.huiyi();
+        this.seek = false;
+      } else if (event.target.innerText == "审批") {
+        // data=this.huiarr2
+        this.dataId = [];
+        this.huiarr2 = [];
+        this.shenh();
+        this.seek = false;
+        // 审核
+        type = 4;
+      } else if (event.target.innerText == "任务") {
+        type = 1;
+        var types = "";
+        this.seek = true;
+        this.tasksrw(types);
+      }
+      // this.dataId=data
+      this.type = type;
+      console.log(event.target.innerText)
+    },
+    jiequ2(arr, arrs) {
+      for (let i = 0; i < arr.length; i++) {
+        for (let j = 0; j < arrs.length; j++) {
+          if (arr[i] == arrs[j].meetingId) {
+            arr.splice(i, 1);
+          }
+        }
+      }
+
+      // console.log(arr)
+      return arr;
+    },
+    jiequ3(arr, arrs) {
+      for (let i = 0; i < arr.length; i++) {
+        for (let j = 0; j < arrs.length; j++) {
+          // console.log(arr[i].id)
+          // console.log(arrs[j].processId)
+          if (arr[i] == arrs[j].processId) {
+            arr.splice(i, 1);
+          }
+        }
+      }
+      return arr;
+    },
+    jiequ4(arr, arrs) {
+      console.log(arr);
+      console.log(arrs);
+      for (let i = 0; i < arr.length; i++) {
+        for (let j = 0; j < arrs.length; j++) {
+          if (arr[i].id == arrs[j].paperId) {
+            arr.splice(i, 1);
+          }
+        }
+      }
+      // console.log(arr)
+      return arr;
+    },
+    addconts() {
+      //   _this.taskMeetings  //会议
+      //   _this.taskPaperFiles // 底稿
+      //   _this.taskProcesss //审核
+      //   _this.taskProjectFiles //文件
+      if (this.typeId == 1) {
+        var arr = this.dataId1,
+          arrs = this.taskProjectFiles;
+        for (let j = 0; j < arrs.length; j++) {
+          if (arrs != "") {
+            for (let i = 0; i < this.dataId1.length; i++) {
+              // console.log(this.dataId1[i])
+              // console.log(arrs[j].projectFileId)
+              if (this.dataId1[i].id == arrs[j].projectFileId) {
+                this.dataId1.splice(i, 1);
+                // console.log(arr[i])
+              }
+            }
+          }
+        }
+        var arr = this.dataId1;
+        var array = [];
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i].docType == 0) {
+            array.push(arr[i]);
+          }
+        }
+        this.dataId1 = array;
+        this.dataId = this.dataId1;
+      } else if (this.typeId == 3) {
+        //会议
+        //   this.dataId=this.jiequ2(this.dataId3,this.taskMeetings)
+        var isarr = this.lists;
+        var ids = this.jiequ2(this.dataId3, this.taskMeetings);
+        var newarr = [];
+        for (let i = 0; i < isarr.length; i++) {
+          for (let j = 0; j < ids.length; j++) {
+            if (ids[j] == isarr[i].id) {
+              newarr.push(isarr[i]);
+            }
+          }
+        }
+        this.dataId = newarr;
+      } else if (this.typeId == 4) {
+        //this.dataId4 id 已选择的数据
+        //this.taskProcesss  总数据
+        //审核
+        //   this.dataId=this.jiequ3(this.dataId4,this.taskProcesss)
+        var isarr = this.lists2;
+        var ids = this.jiequ3(this.dataId4, this.taskProcesss);
+        console.log(ids);
+        var newarr = [];
+        for (let i = 0; i < isarr.length; i++) {
+          for (let j = 0; j < ids.length; j++) {
+            if (ids[j] == isarr[i].id) {
+              newarr.push(isarr[i]);
+            }
+          }
+        }
+        this.dataId = newarr;
+      } else if (this.typeId == 2) {
+        //   this.dataId=this.jiequ4(this.dataId5,this.taskPaperFiles)
+        var arr = this.dataId5,
+          arrs = this.taskPaperFiles;
+        for (let j = 0; j < arrs.length; j++) {
+          if (arrs != "") {
+            for (let i = 0; i < this.dataId5.length; i++) {
+              if (this.dataId5[i].id == arrs[j].paperId) {
+                this.dataId5.splice(i, 1);
+              }
+            }
+          }
+        }
+        var arr = this.dataId5;
+        var array = [];
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i].docType == 0) {
+            array.push(arr[i]);
+          }
+        }
+        this.dataId5 = array;
+        console.log(this.dataId5);
+        this.dataId = this.dataId5;
+      }
+      //   console.log(this.dataId)
+      var arr = this.dataId,
+        obj,
+        arrs = [],
+        url;
+      if (this.type == 0) {
+        for (let i = 0; i < arr.length; i++) {
+          obj = {
+            taskId: this.mbids,
+            relevanceId: arr[i].id,
+            name: arr[i].name,
+            type: this.type
+          };
+          arrs.push(obj);
+        }
+        url = "/info/task/saveTaskRelevance";
+      } else if (this.type == 4) {
+        console.log(arr);
+        for (let i = 0; i < arr.length; i++) {
+          //   console.log(arr[i].procName)
+          obj = {
+            taskId: this.mbids,
+            processId: arr[i].id,
+            name: arr[i].procName,
+            type: this.type
+          };
+          arrs.push(obj);
+        }
+        url = "/info/task/saveTaskProcess";
+      } else if (this.type == 1) {
+        // 保存的Id
+        console.log(this.radio);
+        if (this.radio == "") {
+          this.$message({
+            message: "请选择任务",
+            type: "warning"
+          });
+          return;
+        }
+        // var arrnew = this.datarea;
+        // for (let i = 0; i < arrnew.length; i++) {
+        //   for (let j = 0; j < arrnew[i].data.length; j++) {
+        //     if (arrnew[i].data[j].id == this.radio) {
+        //       var name = arrnew[i].data[j].name;
+        //     }
+        //   }
+        // }
+        obj = {
+          taskId: this.mbids,
+          relevanceId: this.radio,
+          name: this.itname,
+          type: this.type
+        };
+        url = "/info/task/saveTaskRelevance";
+        arrs.push(obj);
+      } else {
+        for (let i = 0; i < arr.length; i++) {
+          obj = {
+            taskId: this.mbids,
+            relevanceId: arr[i].id,
+            name: arr[i].docName,
+            type: this.type
+          };
+          arrs.push(obj);
+        }
+        url = "/info/task/saveTaskRelevance";
+      }
+      //   return;
+      //  console.log(arrs)
+      if (arrs == "") {
+        this.addcont = false;
+        return;
+      }
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: arrs
+      };
+      var _this = this;
+      this.$post(url, data)
+        .then((response)=> {
+          if (response.code == 0) {
+            _this.addcont = false;
+            _this.$message({
+              type: "success",
+              message: response.msg
+            });
+            _this.huiarr2 = [];
+            _this.dataId4 = [];
+            _this.huiarr = [];
+            _this.dataId3 = [];
+            _this.dataId1 = [];
+            _this.dataId5 = [];
+            (_this.typeinfo = ""), (_this.itname = "");
+            _this.inputs = _this.filterText = "";
+            _this.filterText2 = "";
+            _this.activeName = "first";
+            (_this.activeName2 = "third2"), _this.ajax();
+            _this.dataId = [];
+            _this.radio = "";
+            // _this.huiarr=[]
+            // _this.huiarr2=[]
+            // _this.dataId1=[]
+            // _this.dataId5=[]
+            _this.huiyi();
+            _this.shenh();
+          } else {
+            _this.$message({
+              type: "error",
+              message: response.msg
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    tree1s(Node, val) {
+      this.dataId1 = val.checkedNodes;
+      this.typeId = 1;
+    },
+    tree2s(Node, val) {
+      //底稿
+      this.dataId5 = val.checkedNodes;
+      this.typeId = 2;
+    },
+    // 会议请求
+    huiyi() {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          //   "projectId":this.$store.state.projectMsg.pro_id
+          projectId: this.$store.state.projectMsg.pro_id
+        }
+      };
+      console.log(data);
+      var _this = this;
+      this.$post("/info/project/getRelevanceMeeting", data)
+        .then((response)=> {
+          console.log(response);
+          _this.lists = response.data;
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //审核请求
+    shenh() {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {}
+      };
+      console.log(data);
+      var _this = this;
+      this.$post("/info/audit/select_list_project_user", data)
+        .then((response)=> {
+          console.log(response);
+          _this.lists2 = response.data;
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //文件请求
+    loadNode1(node, resolve) {
+      if (node.data != undefined) {
+        this.nodeid = node;
+      }
+      // return resolve([{ docName: '项目文档', id: '0'}]);
+      if (node.level === 0) {
+        return resolve([{ docName: "项目文档", id: "0", disabled: true }]);
+      } else {
+        var data = {
+          token: this.token,
+          userId: this.userId,
+          pageNo: 0,
+          pageSize: 1000,
+          data: {
+            projectId: this.$store.state.projectMsg.pro_id,
+            parentId: node.data.id
+          }
+        };
+        console.log(data);
+        // alert(1)
+        var _this = this;
+        this.$post("/doc/project/query", data)
+          .then((response)=> {
+            _this.rjshes = response.data.content;
+            _this.rjshe = response.data.content;
+            if (response.code != 0) {
+              _this.$message.error(response.msg);
+            }
+            resolve(_this.rjshe);
+            setTimeout(() => {
+              _this.$refs.tree.setCheckedNodes(_this.array);
+            });
+            // if (response.code != 0) {
+            //   _this.$message(response.msg);
+            // }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+    },
+    //底稿请求
+    loadNode2(node, resolve) {
+      if (node.data != undefined) {
+        this.nodeids2 = node;
+      }
+      if (node.level === 0) {
+        return resolve([{ docName: "项目底稿", id: "0", disabled: true }]);
+      } else {
+        var data = {
+          token: this.token,
+          userId: this.userId,
+          pageNo: 0,
+          pageSize: 1000,
+          data: {
+            projectId: this.$store.state.projectMsg.pro_id,
+            parentId: node.data.id
+          }
+        };
+        console.log(data);
+        var _this = this;
+        this.$post("/doc/paper/query", data)
+          .then((response)=> {
+            resolve(response.data.content);
+            if (response.code != 0) {
+              _this.$message.error(response.msg);
+            }
+            setTimeout(() => {
+              _this.$refs.trees.setCheckedNodes(_this.arrayobj);
+            });
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+    },
+    audit() {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: 0,
+        pageSize: 1000,
+        data: {}
+      };
+      console.log(data);
+      var _this = this;
+      this.$post("/info/project/getRelevanceMeeting", data)
+        .then((response)=> {
+          _this.tree1 = response.data;
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    cancelAssocsh1(item) {
+      this.$confirm(
+        "当前任务[" + item.name + "], 是否取消依赖批结果?",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      )
+        .then(() => {
+          //审核
+          var data = {
+            id: item.id,
+            name: item.name,
+            relyOn: 0,
+            taskId: this.mbids
+          };
+          this.relyOn(data);
+        })
+        .catch(() => {});
+    },
+    cancelAssocsh2(item) {
+      this.$confirm("当前任务[" + item.name + "], 是否依赖审批结果?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          //审核
+          var data = {
+            id: item.id,
+            name: item.name,
+            relyOn: 1,
+            taskId: this.mbids
+          };
+          this.relyOn(data);
+        })
+        .catch(() => {});
+    },
+    relyOn(data) {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: data,
+        taskId: this.mbids
+      };
+      console.log(data);
+      var _this = this;
+      this.$post("/info/task/updateTaskProcess", data)
+        .then((response)=> {
+          _this.$message({
+            type: "success",
+            message: response.msg
+          });
+          _this.ajax();
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    cancelAssoc1(item) {
+      this.$confirm("取消关联" + item.name + ", 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          //审核
+          var url = "/info/task/delTaskProcess";
+          this.cancelAssoc(item, type, url);
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消关联"
+          });
+        });
+    },
+    cancelAssoc2(item) {
+      this.$confirm("取消关联" + item.name + ", 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          var type = 0; //会议
+          var url = "/info/task/delTaskRelevance";
+          this.cancelAssoc(item, type, url);
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消关联"
+          });
+        });
+    },
+    cancelAssoc3(item) {
+      this.$confirm("取消关联" + item.name + ", 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          var type = 2; // 文件
+          var url = "/info/task/delTaskRelevance";
+          this.cancelAssoc(item, type, url);
+          this.rjshe = [];
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消关联"
+          });
+        });
+    },
+    cancelAssoc4(item) {
+      this.$confirm("取消关联" + item.name + ", 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          var type = 3; // 底稿
+          var url = "/info/task/delTaskRelevance";
+          this.cancelAssoc(item, type, url);
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消关联"
+          });
+        });
+    },
+    cancelAssoc5(item) {
+      this.$confirm("取消关联" + item.name + ", 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          var type = 1; //
+          var url = "/info/task/delTaskRelevance";
+          this.cancelAssoc(item, type, url);
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消关联"
+          });
+        });
+    },
+    cancelAssoc(item, type, url) {
+      console.log(item);
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          id: item.id,
+          processId: item.processId,
+          name: item.name,
+          taskId: this.mbids,
+          type: type
+        }
+      };
+      var _this = this;
+      this.$post(url, data)
+        .then((response)=> {
+          if (response.code == 0) {
+            _this.$message({
+              type: "success",
+              message: response.msg
+            });
+          } else {
+            _this.$message({
+              type: "error",
+              message: response.msg
+            });
+          }
+          if (type == 2) {
+            _this.loadNode1s(item);
+          } else if (type == 3) {
+            _this.loadNode2s(item);
+          }
+          _this.ajax();
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    ajax(id) {
+      if (id != undefined) {
+        this.mbids = id;
+      }
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          taskId: this.mbids
+        },
+        pageNo: 0,
+        pageSize: 10
+      };
+      console.log(data);
+      var _this = this;
+      this.$post("/info/task/getTaskContentByTaskid", data)
+        .then((response)=> {
+          if (response.data.taskVo != null) {
+            _this.taskVo = [response.data.taskVo];
+            _this.radio = response.data.taskVo.id;
+            _this.radios = response.data.taskVo.id;
+            _this.disabled = true;
+          } else {
+            _this.taskVo = [];
+            _this.radio = "";
+            _this.radios = "";
+            _this.disabled = false;
+          }
+          _this.taskMeetings = response.data.taskMeetings; //会议
+          // _this.checkedCities=response.data.taskMeetings
+          var arr = response.data.taskMeetings;
+          _this.checkedCities = [];
+          for (let i = 0; i < arr.length; i++) {
+            console.log(arr[i].meetingId);
+            _this.checkedCities.push(arr[i].meetingId);
+          }
+          _this.taskPaperFiles = response.data.taskPaperFiles; // 底稿
+          var objs,
+            arrays = response.data.taskPaperFiles;
+          for (let i = 0; i < arrays.length; i++) {
+            console.log(arrays[i]);
+            _this.arrayobj.push({
+              id: arrays[i].paperId
+            });
+          }
+
+          _this.taskProcesss = response.data.taskProcesss; //审核
+          var arrs = response.data.taskProcesss;
+          _this.checkedCities2 = [];
+          for (let i = 0; i < arrs.length; i++) {
+            _this.checkedCities2.push(arrs[i].processId);
+          }
+          _this.taskProjectFiles = response.data.taskProjectFiles; //文件
+          var array = response.data.taskProjectFiles;
+          var obj;
+          for (let i = 0; i < array.length; i++) {
+            _this.array.push({
+              id: array[i].projectFileId
+            });
+          }
+          console.log(_this.array);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    handleCheckAllChange(val) {
+      // this.checkedCities = val ? this.lists : [];
+      var arr = this.lists;
+      if (val == true) {
+        for (let i = 0; i < arr.length; i++) {
+          this.huiarr.push(arr[i].id);
+          this.checkedCities.push(arr[i].id);
+        }
+      } else {
+        this.checkedCities = [];
+        this.huiarr = [];
+      }
+      this.isIndeterminate = false;
+      this.dataId3 = this.huiarr;
+      this.typeId = 3;
+    },
+    handleCheckedCitiesChange(val, el) {
+      console.log(val);
+      this.checkedCities = Array.from(new Set(val));
+      var arr = val;
+      var huiarr = [];
+      for (let i = 0; i < arr.length; i++) {
+        huiarr.push(arr[i]);
+      }
+      this.huiarr = huiarr;
+      // if (this.huiarr.length == this.lists.length) {
+      //   this.isIndeterminate = false;
+      // } else {
+      //   this.isIndeterminate = true;
+      // }
+      let checkedCount = this.huiarr.length
+      this.checkAll = checkedCount === this.lists.length;
+      this.isIndeterminate = checkedCount > 0 && checkedCount < this.lists.length;
+      this.dataId3 = this.huiarr;
+      this.typeId = 3;
+      //   console.log(this.dataId3)
+      // console.log(this.huiarr)
+    },
+
+    //审核
+    handleCheckAllChange2(val) {
+      var arr = this.lists2;
+      console.log(val);
+      if (val == true) {
+        for (let i = 0; i < arr.length; i++) {
+          this.huiarr2.push(arr[i].id);
+          this.checkedCities2.push(arr[i].id);
+        }
+        // this.isIndeterminate2 = false;
+      } else {
+        this.huiarr2 = [];
+        this.checkedCities2 = [];
+        // this.isIndeterminate2 = true;
+      }
+      this.isIndeterminate2 = false;
+      this.dataId4 = this.huiarr2;
+      console.log(this.dataId4);
+      this.typeId = 4;
+    },
+    handleCheckedCitiesChange2(val, value) {
+      var arr = val;
+      var huiarr = [];
+      for (let i = 0; i < arr.length; i++) {
+        huiarr.push(arr[i]);
+      }
+      this.huiarr2 = huiarr;
+      let checkedCount = val.length;
+      this.checkAll2 = checkedCount === this.lists2.length;
+      this.isIndeterminate2 = checkedCount > 0 && checkedCount < this.lists2.length;
+      this.dataId4 = this.huiarr2;
+      this.typeId = 4;
+    },
+    associalist() {
+      console.log(this.associatData);
+    },
+    addcontlx() {
+      this.addcont = true;
+      this.ajax();
+      // this.loadNode1s()
+      // this.loadNode2s()
+    },
+    addcontqx() {
+      this.itname = "";
+      this.radio = "";
+      this.huiarr2 = [];
+      this.dataId4 = [];
+      this.huiarr = [];
+      this.dataId3 = [];
+      this.dataId1 = [];
+      (this.typeinfo = ""), (this.dataId5 = []);
+      this.filterText = "";
+      this.filterText2 = "";
+      this.activeName = "first";
+      this.activeName2 = "third2";
+      this.addcont = false;
+      this.ajax();
+      this.type = 2;
+    },
+    closes() {
+      // alert(1)
+      this.itname = "";
+      this.radio = "";
+      this.huiarr2 = [];
+      this.dataId4 = [];
+      this.huiarr = [];
+      this.dataId3 = [];
+      (this.typeinfo = ""), (this.dataId1 = []);
+      this.dataId5 = [];
+      this.inputs = "";
+      this.filterText = "";
+      this.filterText2 = "";
+      this.activeName = "first";
+      this.activeName2 = "third2";
+      this.addcont = false;
+      this.ajax();
+      this.loadNode1s();
+      this.loadNode2s();
+      this.type = 2;
+    },
+    loadNode1s(item) {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: 0,
+        pageSize: 1000,
+        data: {
+          projectId: this.$store.state.projectMsg.pro_id,
+          parentId: 0
+        }
+      };
+      console.log(data);
+      var _this = this;
+      this.$post("/doc/project/query", data)
+        .then((response)=> {
+          var oldArr = _this.array;
+          console.log(oldArr);
+          var allArr = []; //新数组
+          for (var i = 0; i < oldArr.length; i++) {
+            var flag = true;
+            for (var j = 0; j < allArr.length; j++) {
+              if (oldArr[i].id == allArr[j].id) {
+                flag = false;
+              }
+            }
+            if (flag) {
+              allArr.push(oldArr[i]);
+            }
+          }
+          if (item == undefined) {
+            setTimeout(() => {
+              _this.$refs.tree.setCheckedNodes(_this.array);
+              _this.array = [];
+            });
+          } else {
+            for (let i = 0; i < allArr.length; i++) {
+              if (item.projectFileId == allArr[i].id) {
+                allArr.splice(i, 1);
+              }
+            }
+            _this.array = allArr;
+            setTimeout(() => {
+              _this.$refs.tree.setCheckedNodes(_this.array);
+              _this.array = [];
+            });
+          }
+          //  console.log(response.data.content)
+          _this.refreshLazyTree(_this.nodeid[0], response.data.content);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    refreshLazyTree(node, children) {
+      var theChildren = node.childNodes;
+      theChildren.splice(0, theChildren.length);
+      node.doCreateChildren(children);
+    },
+    loadNode2s(item) {
+      console.log(item);
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        pageNo: 0,
+        pageSize: 1000,
+        data: {
+          projectId: this.$store.state.projectMsg.pro_id,
+          parentId: 0
+        }
+      };
+      var _this = this;
+      this.$post("/doc/paper/query", data)
+        .then((response)=> {
+          var oldArr = _this.arrayobj;
+          var allArr = []; //新数组
+          for (var i = 0; i < oldArr.length; i++) {
+            var flag = true;
+            for (var j = 0; j < allArr.length; j++) {
+              if (oldArr[i].id == allArr[j].id) {
+                flag = false;
+              }
+            }
+            if (flag) {
+              allArr.push(oldArr[i]);
+            }
+          }
+          if (item == undefined) {
+            _this.arrayobj = allArr;
+            setTimeout(() => {
+              _this.$refs.trees.setCheckedNodes(_this.arrayobj);
+              _this.arrayobj = [];
+            });
+            // console.log(allArr)
+          } else {
+            for (let i = 0; i < allArr.length; i++) {
+              if (allArr[i].id == item.paperId) {
+                allArr.splice(i, 1);
+              }
+            }
+            _this.arrayobj = allArr;
+            setTimeout(() => {
+              _this.$refs.trees.setCheckedNodes(_this.arrayobj);
+              _this.arrayobj = [];
+            });
+          }
+          _this.refreshLazyTree(_this.nodeids2[0], response.data.content);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    }
+  }
+};
+</script>
+<style lang="scss">
+#taks {
+  width: 22%;
+  float: left;
+  .el-tabs__active-bar {
+    background: #f0f2f5;
+  }
+}
+.associated-content .el-scrollbar__wrap {
+  overflow: auto;
+  height: 100%;
+}
+</style>
+<style lang="scss" scoped>
+.notclick{
+ pointer-events: none;
+}
+.clss {
+  float: right;
+}
+.iclas {
+  float: left;
+}
+.cssls {
+  display: inline-block;
+  width: 300px;
+  height: 6px;
+  line-height: 1px;
+  text-align: left;
+  overflow: hidden;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.del-file{
+  text-decoration: line-through;
+}
+.el-icon-search {
+  position: absolute;
+  left: 37%;
+  z-index: 1002;
+  top: 7px;
+  color: hsl(220, 11%, 78%);
+}
+.el-scrollbar__wrap {
+  overflow-x: hidden;
+}
+.associatedContent {
+}
+/* 右边的样式 */
+.rightShelter {
+  margin-left: 20px;
+}
+.rightShelter .attentionMatters,
+.rightShelter .relatedFile,
+.rightShelter .surveyTool,
+.rightShelter .associatedContent {
+  margin-top: 30px;
+}
+
+.rightShelter .attentionMatters .addMatt,
+.rightShelter .relatedFile .addRelate,
+.rightShelter .surveyTool .addHref,
+.rightShelter .associatedContent .addContent {
+  border: 1px solid #d9d9d9;
+  width: 460px;
+  height: 32px;
+  border-radius: 3px;
+  text-align: center;
+  line-height: 32px;
+}
+.rightShelter .attentionMatters .addMatt i,
+.rightShelter .attentionMatters .addMatt span,
+.rightShelter .relatedFile .addRelate i,
+.rightShelter .relatedFile .addRelate span,
+.rightShelter .surveyTool .addHref i,
+.rightShelter .surveyTool .addHref span,
+.rightShelter .associatedContent .addContent i,
+.rightShelter .associatedContent .addContent span {
+  position: relative;
+  top: -2px;
+}
+.rightShelter .attentionMatters .mattersDetail,
+.rightShelter .relatedFile .relateDetail,
+.rightShelter .surveyTool .surveyDetail,
+.rightShelter .associatedContent .associatedDetail {
+  margin-top: 20px;
+  .el-scrollbar__wrap{
+    margin-bottom: !important;
+  }
+}
+.rightShelter .attentionMatters .mattersDetail li {
+  border-radius: 3px;
+  width: 460px;
+  line-height: 20px;
+  border: 1px solid #d9d9d9;
+  height: auto;
+  text-align: left !important;
+  padding-bottom: 10px;
+}
+
+/* 相关文件和调查工具和关联内容的一部分样式 */
+.rightShelter .relatedFile .relateDetail,
+.rightShelter .surveyTool .surveyDetail,
+.rightShelter .associatedContent .associatedDetail {
+  border: 1px solid #d9d9d9;
+}
+.rightShelter .relatedFile .relateDetail h3,
+.rightShelter .surveyTool .surveyDetail h3,
+.rightShelter .associatedContent .associatedDetail h3 {
+  color: #333;
+  font-size: 14px;
+  text-align: left !important;
+}
+.rightShelter .relatedFile .relateDetail .relateLi,
+.rightShelter .surveyTool .surveyDetail .surveyLi,
+.rightShelter .associatedContent .associatedDetail .associatedLi {
+  margin-top: 3px;
+  margin-left: 15px;
+  margin-bottom: -19px;
+}
+.rightShelter .surveyTool .surveyDetail .surveyLi {
+  text-align: left;
+}
+.rightShelter .surveyTool .surveyDetail .surveyLi span:nth-child(1) {
+  width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rightShelter .surveyTool .surveyDetail .surveyLi span:nth-child(2) {
+  width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: lef;
+}
+.rightShelter .relatedFile .relateDetail .relateLi em,
+.rightShelter .surveyTool .surveyDetail .surveyLi em {
+  margin-right: 10px;
+  color: #0061a9;
+}
+
+/* 关联内容 */
+.rightShelter .associatedContent .associatedDetail .associatedLi em {
+  margin-right: 10px;
+  color: #0061a9;
+}
+
+/* 任务动态 */
+.rightShelter .dynamicTask {
+  height: 560px;
+  overflow-y: auto;
+  border-bottom: 1px solid #d9d9d9;
+}
+.rightShelter .dynamicTask h4 {
+  color: #333333;
+  font-size: 14px;
+  text-align: left !important;
+  margin-bottom: 15px;
+}
+.rightShelter .dynamicTask h5 {
+  color: #999999;
+  text-align: left !important;
+  margin-bottom: 15px;
+}
+.rightShelter .dynamicTask .dynamicUl li {
+  margin-bottom: 15px;
+}
+.rightShelter .dynamicTask .dynamicUl li p {
+  margin-bottom: 10px;
+}
+.rightShelter .dynamicTask .dynamicUl li p span,
+.rightShelter .dynamicTask .dynamicUl li p em {
+  color: #999;
+}
+.rightShelter .dynamicTask .dynamicUl li p span .downFiles {
+  color: #0061a9 !important;
+  margin-left: 5px;
+}
+
+/* 底下发布 */
+.dialogOthers {
+}
+.dialogOthers textarea {
+  width: 98%;
+  height: 100px;
+  border: 0px;
+  padding-top: 10px;
+}
+.dialogOthers .release {
+}
+.dialogOthers .release img {
+  width: 24px;
+  height: 24px;
+}
+.dialogOthers .release span {
+  color: #0061a9;
+}
+
+/* 关联内容弹框中的样式 */
+/* .el-checkbox:last-child{
+    margin-right: 30px!important;
+} */
+
+.contentTab .taskNames {
+  text-align: left;
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+.contentTab .el-checkbox__label img {
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+}
+.spans {
+  height: 200px;
+  // overflow: hidden;
+  // overflow-y: auto;
+}
+.attentionMatters,
+.rightShelter .relatedFile,
+.rightShelter .surveyTool,
+.rightShelter .associatedContent {
+  margin-top: 3px;
+}
+.sosss {
+  width: 38%;
+  margin-left: 2%;
+  margin-bottom: 17px;
+}
+.takscenter {
+  float: left;
+  width: 76%;
+  height: 200px;
+  padding: 5px;
+  p {
+    font-size: 13px;
+    padding-bottom: 8px;
+    width: 137px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-weight: bold;
+    color: #333333;
+    margin-top: 5px;
+  }
+}
+.taksright {
+  width: 25%;
+  height: 200px;
+  float: left;
+  margin-left: 20px;
+}
+.huyiclass {
+  float: left;
+  width: 71%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ridos {
+  display: inline-block;
+  width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: sub;
+}
+</style>
+<style lang="scss">
+#spans {
+  .el-scrollbar__wrap {
+    overflow: auto;
+    height: 100%;
+  }
+}
+.associatedDetail {
+  .el-scrollbar__wrap{
+    margin-bottom: 0!important;
+  }
+}
+</style>

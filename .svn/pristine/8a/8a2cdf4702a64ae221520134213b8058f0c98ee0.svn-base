@@ -1,0 +1,5 @@
+
+<span ng-if="property.key==='oryx-approvetype'">{{property.value==1? '会签':'或签'}}</span>
+<span ng-if="property.key!=='oryx-approvetype' && !property.noValue">{{property.value|limitTo:20}}</span>
+<span ng-if="!property.noValue && property.value != null && property.value.length > 20">...</span>
+<span ng-if="property.noValue" translate>PROPERTY.EMPTY</span>

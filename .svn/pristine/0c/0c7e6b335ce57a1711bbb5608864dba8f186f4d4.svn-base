@@ -1,0 +1,942 @@
+<template>
+  <div class="projectrole">
+    <div class="header-box">
+      <el-breadcrumb separator="/">
+        <el-breadcrumb-item>项目管理</el-breadcrumb-item>
+        <el-breadcrumb-item>项目角色权限</el-breadcrumb-item>
+      </el-breadcrumb>
+
+      <div class="flex a-center j-spaceBetween h-40">
+        <div class="flex a-center company-wrap">
+          <i class="project-company iconfont jianzhu color-primary"></i>
+          <span class="company-name ellipsis1 ml-3">{{projectName}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!--        <div class="riheader">-->
+    <!--            <el-breadcrumb separator="/">-->
+    <!--                <el-breadcrumb-item>项目管理</el-breadcrumb-item>-->
+    <!--                <el-breadcrumb-item>项目角色权限</el-breadcrumb-item>-->
+    <!--            </el-breadcrumb>-->
+    <!--            <el-row class="finance_tit">-->
+    <!--                &lt;!&ndash; <span>项目角色权限</span> &ndash;&gt;-->
+    <!--                <p class="fl"><img src="../../../../assets/image/logocompany.png" alt style="width:24px;height:24px;margin-right: 5px"  /></p>-->
+    <!--                <p class="project_name fl">{{projectName}}</p>-->
+    <!--            </el-row>-->
+    <!--        </div>-->
+
+    <div class="cont_box"
+         id="cont_box_hei">
+      <el-scrollbar style="height:100%;margin-right:5px">
+        <div class="left_box">
+          <div class="fun_btn">
+            <div>
+              <el-button @click="addRole"
+                         type="primary"
+                         size="small"
+                         v-if="$utils.checkProjectPermission('project_role_add')">添加
+              </el-button>
+            </div>
+            <div>
+              <el-button @click="copyRole"
+                         type="primary"
+                         size="small">复制
+              </el-button>
+              <el-button @click="pasteRole"
+                         type="primary"
+                         size="small">粘贴
+              </el-button>
+            </div>
+            <!-- <el-button @click="deleteRole" size="small" type="danger">删除</el-button> -->
+          </div>
+          <div class="per_list">
+            <el-scrollbar style="height:100%">
+              <div class="ullist">
+                <div class="all_sel">
+                  <el-checkbox style="font-weight:bold"
+                               :value="checkAll"
+                               :indeterminate="isIndeterminate"
+                               @change="rolePermCheckAll">全选</el-checkbox>
+                </div>
+                <div v-for="(item,index) in personObj"
+                     :key="item.id"
+                     class="personObj_list"
+                     @click="rolePermissions(item.id,item.name,index)">
+                  <div class="list_item">
+                    <el-checkbox @click.stop.native="rolePermCheck(item,$event)"
+                                 v-model="item.isSel"></el-checkbox>
+                    <div class="item_name"
+                         :title="item.name">{{item.name}}</div>
+                  </div>
+                 <!-- tempId==0 可删除 -->
+                  <div class="personObj_list_r"
+                       v-if="item.tempId !==1 && item.tempId !==2 && item.tempId !==3 &&item.tempId !==4">
+                    <i class="el-icon-delete personObj_list_icon"
+                       @click.stop="handleDelete(index,item)"></i>
+                    <i class="el-icon-edit-outline personObj_list_icon"
+                       @click.stop="modify(item)"></i>
+                  </div>
+                </div>
+              </div>
+            </el-scrollbar>
+          </div>
+          <div class="msg_box">已选 <span class="color-primary">{{personCheckList.length}}</span> 项</div>
+        </div>
+        <div class="right_box">
+          <div class="right_box_title">
+            <span class="operate-title-text">可操作功能</span>
+            <div class="foot_small"
+                 v-if="$utils.checkProjectPermission('config_permission_project')">
+              <el-button @click="rolePeiz"
+                         type="primary">保存</el-button>
+              <!-- <el-button @click="Rolecancel" size="small" plain>取消</el-button> -->
+            </div>
+          </div>
+          <div class="power_box">
+            <div class="power_box_all_select">
+              <el-checkbox style="font-weight:bold"
+                           v-model="chenckedall">全选</el-checkbox>
+            </div>
+            <el-checkbox-group v-model="checkWhole"
+                               top:20px
+                               class="project-role-list clearfix">
+              <el-row v-for="group in checkWholeshu"
+                      :key="group.id">
+                <el-checkbox :label="group.id"
+                             :key="group.id"
+                             style="padding:20px">{{group.permissionDescribe}}
+                </el-checkbox>
+                <el-checkbox v-for="item in group.children"
+                             :label="item.id"
+                             :key="item.id"
+                             @change="checked=>checkChange(checked, item,group)"
+                             style="padding:20px">{{item.permissionDescribe}}
+                </el-checkbox>
+              </el-row>
+            </el-checkbox-group>
+          </div>
+        </div>
+      </el-scrollbar>
+    </div>
+
+    <!-- 添加角色 -->
+    <el-dialog title="角色基本信息"
+               :close-on-click-modal="false"
+               :visible.sync="dialogVisible"
+               width="660px">
+      <div class="tan_dialog"
+           style="height:300px;">
+        <el-scrollbar style="height:90%">
+          <el-form ref="form"
+                   label-width="120px"
+                   class="form_box"
+                   align="left">
+            <el-form-item label="角色名称:"
+                          label-width="120px"
+                          width="400px">
+              <el-input v-model="role_name"
+                        placeholder="请输入角色名称"
+                        maxlength="50"
+                        style="width:300px"></el-input>
+            </el-form-item>
+            <!-- <el-form-item label="角色描述:" label-width="120px" width="400px">
+                          <el-input
+                            v-model="role_take"
+                            placeholder="请输入角色描述"
+                            maxlength="50"
+                            style="width:300px"
+                          ></el-input>
+                        </el-form-item>-->
+          </el-form>
+
+          <div class="func_but">
+            <el-button @click="saveRole"
+                       size="small"
+                       type="primary">保存</el-button>
+            <el-button @click="cancelRole"
+                       size="small"
+                       plain>取消</el-button>
+          </div>
+        </el-scrollbar>
+      </div>
+    </el-dialog>
+    <!-- 修改角色 -->
+    <el-dialog title="修改项目角色"
+               :close-on-click-modal="false"
+               :visible.sync="dialogmodify"
+               width="660px">
+      <div class="tan_dialog"
+           style="height:200px;">
+        <el-form ref="form"
+                 label-width="120px"
+                 class="form_box"
+                 align="left">
+          <el-form-item label="角色名称:"
+                        label-width="120px"
+                        width="400px">
+            <el-input v-model="mode_name"
+                      placeholder="请输入角色名称"
+                      maxlength="50"
+                      style="width:300px"></el-input>
+          </el-form-item>
+        </el-form>
+
+        <div class="func_but">
+          <el-button @click="modRole"
+                     size="small"
+                     type="primary">保存</el-button>
+          <el-button @click="canRole"
+                     size="small"
+                     plain>取消</el-button>
+        </div>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+const powerTask = [];
+// const powerTask = [
+//   "创建任务",
+//   "删除任务",
+//   "关闭任务",
+//   "任务编辑",
+//   "完成任务",
+//   "设置任务执行者",
+//   "设置任务时间",
+//   "设置任务关系"
+// ];
+const powerFile = [
+  "上传文件/新版本",
+  "版本还原",
+  "重命名",
+  "文件复制",
+  "文件剪切",
+  "文件删除",
+  "文件锁定",
+  "文件关联"
+];
+export default {
+  name: "projectrole",
+  data () {
+    return {
+      projectId: "",
+      token: "",
+      userId: "",
+      activeName: "first",
+      dialogVisible: false, //添加角色弹框控制
+      dialogmodify: false, //修改角色弹框控制
+      modid: "", //修改角色id变量
+      mode_name: "", //修改角色name变量
+      roLeid: "", //查看角色权限，所用id变量
+      roLename: "", //查看角色权限，所用name变量
+      personObj: [],
+      role_name: "",
+      role_take: "",
+
+      //    权限设置
+      //  项目任务
+      pro_task: {
+        checkAll: false,
+        checkedTask: [],
+        tasks: powerTask,
+        isIndeterminate: true
+      },
+      //  项目文档
+      pro_file: {
+        checkAll: false,
+        checkedTask: [],
+        tasks: powerFile,
+        isIndeterminate: false
+      },
+      checkWholeIds: [],
+      checkWhole: [],
+      checkWholeshu: [],
+      chenckedall: false,
+      saicuan: [],
+      checklbian: [], //查看权限是保存权限id
+      roleUserId: '',
+      roleUserName: '',
+      roleUserIndex: '',
+      projectName: '',
+      personCheckList: [], // 项目角色已选列表
+      checkAll: false,
+      isIndeterminate: false,
+      frontProjectRole: {}, // 存储项目角色已选权限集合
+      mode_named: '' // 记录名称编辑前的值
+    };
+  },
+  mounted () {
+    this.projectName = this.$store.state.projectMsg.projectMsg.name;
+    this.roleList();
+    document.getElementById("cont_box_hei").style.height = (this.getViewPortHeight() - 170) + "px";
+  },
+  methods: {
+    checkChange(checked,item,group){
+      if(checked && group.parentId == -1 && group.id == 1 && item.id == 57){//选中分配任务时选中项目任务   // 项目角色
+        this.checkWhole.push(group.id);
+      }
+      if(checked && item.parentId == 1 && item.id == 57){ // 项目角色的权限 （项目角色的第一个为分类点击不触发此方法）
+        group.children.forEach(obj => {
+          if(obj.id == 12 || obj.id == 7 || obj.id == 11 || obj.id == 10 || obj.id == 6){
+            if(this.checkWhole.indexOf(obj.id) === -1){
+              this.checkWhole.push(obj.id);
+            }
+          }
+        });
+      }
+    },
+    // 复制功能
+    copyRole () {
+      if (this.personCheckList.length == 0) {
+        this.$message.warning('请至少选择一条数据')
+        return
+      }
+      this.$store.commit('setFrontProjectRole', {
+        roleIds: this.personCheckList.map(v => v.id),
+        projectId: this.projectId
+      })
+			/** 此处后端完成
+      // 筛出取消选择的
+      // 取差集 删掉取消选择的权限
+      const otherList = Array.from(this.personObj.filter(v => !new Set(this.personCheckList).has(v)))
+      otherList.forEach(item => {
+        delete this.frontProjectRole[item.id]
+      })
+      console.log(this.frontProjectRole)
+      // 取出所有权限取并集
+      let authorityArr = []
+      for (const [prop, value] of Object.entries(this.frontProjectRole)) {
+        authorityArr = authorityArr.concat(value)
+      }
+      // 去重
+      let hash = {};
+      authorityArr = authorityArr.reduce((item, next) => {
+        hash[next.permId] ? '' : hash[next.permId] = true && item.push(next);
+        return item
+			}, []);
+			console.log(hash)
+			console.log(authorityArr)
+			*/
+
+      this.rolePermCheckAll(false)
+      this.$message.success('选中角色已复制，请选择需要粘贴的角色')
+
+    },
+    // 粘贴功能
+    pasteRole () {
+      const copyData = this.$store.state.frontProjectRole
+      if (!copyData.roleIds) {
+        this.$message.warning('请先复制角色权限')
+        return
+      }
+      if (this.personCheckList.length == 0) {
+        if (!this.$utils.checkProjectPermission('project_role_add')) {
+          this.$message.warning('您没有添加角色权限')
+          return
+        }
+      }
+      this.$post('/info/project/projectRolePaste', {
+        data: {
+          copyProject: copyData.projectId,
+          pasteProjectId: this.projectId,
+          copyRoleIds: copyData.roleIds,
+          pasteRoleIds: this.personCheckList.map(v=>v.id)
+        }
+      }).then(res => {
+        if (res.code != this.code.codeNum.SUCCESS) {
+          this.$message.error(res.msg);
+          return
+        }
+        this.$message.success('粘贴成功')
+        // 新建角色情况
+        if (this.personCheckList.length == 0) {
+          this.roleList()
+          return
+        }
+        // 无需新建角色
+        // 只更新当前选中的并且有勾选粘贴操作的项目角色权限
+        this.personCheckList.forEach(item => {
+          if (item.id == this.roLeid) {
+            this.rolePermissions(item.id, item.name, 0, true)
+          }
+        })
+        this.rolePermCheckAll(false)
+      }).catch(err => { console.log(err) })
+    //   console.log(copyData)
+    },
+    // 项目人员全选
+    rolePermCheckAll (val) {
+      this.personObj.forEach(v => v.isSel = val)
+      this.updateRolePermList()
+    },
+    // 项目人员选择
+    rolePermCheck (item, e) {
+      // 防止多次触发
+      if (e.target.className === 'el-checkbox__original') return
+      // 获取人员权限
+      // this.$post('/info/project/getProjectRolePerm', {
+      //   data: {
+      //     roleId: item.id
+      //   }
+      // }).then(res => {
+      //   if (res.code != this.code.codeNum.SUCCESS) {
+      //     this.$message.error(res.msg);
+      //     return
+      //   }
+      //   this.frontProjectRole[item.id] = res.data
+      // }).catch(err => { console.log(err) })
+      this.updateRolePermList()
+    },
+    // 更新项目人员选择列表
+    updateRolePermList () {
+      setTimeout(() => {
+        this.personCheckList = this.personObj.filter(v => v.isSel)
+        this.allCheckStatus()
+      })
+    },
+    // 全选按钮半选状态更新
+    allCheckStatus () {
+      this.checkAll = this.personCheckList.length === this.personObj.length;
+      this.isIndeterminate = this.personCheckList.length > 0 && this.personCheckList.length < this.personObj.length;
+    },
+    //点击查看角色权限
+    rolePermissions (roleid, rolename, index, isUpdate) {
+      if (!isUpdate) {
+        const list = Array.from(document.getElementsByClassName("personObj_list"));
+        list.forEach(v => v.classList.remove('is-active'))
+        list[index].classList.add('is-active')
+      }
+
+      this.roLeid = roleid;
+      this.roLename = rolename;
+      this.checkWhole = [];
+      this.checklbian = [];
+
+      this.$post("/info/project/getProjectRolePerm", {
+        data: {
+          roleId: roleid
+        }
+      }).then(res => {
+        if (res.code != this.code.codeNum.SUCCESS) {
+          this.$message.error(res.msg);
+          return
+        }
+        this.saicuan = res.data;
+      }).catch(err => { console.log(err) });
+    },
+    getViewPortHeight () {
+      return document.documentElement.clientHeight || document.body.clientHeight;
+    },
+    //    添加
+    addRole () {
+      this.dialogVisible = true;
+      // this.$router.push({path: "/projectmember"});
+    },
+    //    删除
+    deleteRole () {
+    },
+    //保存添加项目角色
+    saveRole () {
+      if (this.role_name == "") {
+        this.$message.error("角色名称不能为空");
+        return;
+      }
+      var dataObj = {
+        data: {},
+        token: this.token,
+        userId: this.userId,
+        data: {
+          projectId: this.projectId,
+          name: this.role_name //"角色名称",
+        }
+      };
+      this.$post("/info/project/addProjectRole", dataObj)
+        .then((response) => {
+          // console.log(response);
+          if (response.code == this.code.codeNum.SUCCESS) {
+            this.roleList();
+            this.$message.success("保存!");
+            this.dialogVisible = false;
+            this.role_name = "";
+            this.role_take = "";
+          } else {
+            this.$message.warning(response.msg);
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+
+      //   this.$message({
+      //     type: "success",
+      //     message: "保存!"
+      //   });
+    },
+    //取消
+    cancelRole () {
+      this.role_name = "";
+      this.role_take = "";
+      this.dialogVisible = false;
+      this.$message({
+        message: "已取消",
+        type: "warning"
+      });
+    },
+    //权限设置
+    //项目任务
+    handleTaskChange (val) {
+    },
+    handleProTaskChange (value) {
+      let checkedCount = value.length;
+      this.pro_task.checkAll = checkedCount === this.pro_task.tasks.length;
+      this.pro_task.isIndeterminate =
+        checkedCount > 0 && checkedCount < this.pro_task.tasks.length;
+      // console.log(value); //所有选中项
+    },
+    //项目文档
+    handleFileChange (val) {
+      this.pro_file.checkedTask = val ? powerFile : [];
+      this.pro_file.isIndeterminate = false;
+    },
+    handleProFileChange (value) {
+      let checkedCount = value.length;
+      this.pro_file.checkAll = checkedCount === this.pro_file.tasks.length;
+      this.pro_file.isIndeterminate =
+        checkedCount > 0 && checkedCount < this.pro_file.tasks.length;
+    },
+
+    // 查询角色列表
+    roleList () {
+      this.$post("/info/project/getProjectRoleAll", {
+        data: {
+          projectId: this.projectId
+        }
+      }).then((response) => {
+        if (response.code == this.code.codeNum.SUCCESS) {
+          this.personObj = response.data.projectRoleList.map(item => {
+            item.isSel = false
+            return item
+          });
+          this.updateRolePermList()
+          this.checkWholeIds = response.data.projectPermissionList.map(v => v.id)
+          //将扁平数据转为树形数据
+          this.checkWholeshu = this.$utils.plainToTree(response.data.projectPermissionList);
+        }
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    //删除角色
+    // 会议删除删除
+    // 删除
+    handleDelete (index, rowid) {
+      var _this = this;
+      this.$confirm("确定删除选中的角色", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          var data = {
+            token: _this.token,
+            userId: _this.userId,
+            data: {
+              id: rowid.id,
+              name: rowid.name
+            }
+          };
+
+          _this
+            .$post("/info/project/delProjectRole", data)
+            .then((response) => {
+              if (response.code == _this.code.codeNum.SUCCESS) {
+                _this.$message({
+                  type: "success",
+                  message: "删除成功!"
+                });
+                _this.roleList();
+                _this.rolePermissions(_this.personObj[0].id, _this.personObj[0].name, 0);
+              } else {
+                _this.$message({
+                  type: "info",
+                  message: response.msg
+                });
+              }
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除"
+          });
+        });
+    },
+    //修改项目角色弹框
+    modify (mod_id) {
+      console.log(mod_id.name)
+      this.mode_name = mod_id.name;
+      this.mode_named = mod_id.name; // 记录修改前input值 用于判断保存是否调接口
+      this.dialogmodify = true; //添加角色弹框控制
+      this.modid = mod_id.id;
+    },
+    //取消项目修改
+    canRole () {
+      this.mode_name = "";
+      this.modid = "";
+      this.dialogmodify = false; //添加角色弹框控制关闭
+    },
+    //保存修改项目角色
+    modRole () {
+      if (this.mode_name == "") {
+        this.$message.error("角色名称不能为空");
+        return;
+      }
+      // 判断修改内容和当前是否一致 一致直接提示成功不调取接口
+      if(this.mode_name == this.mode_named){
+        this.dialogmodify = false; // 关闭弹窗
+        this.$message.success("成功");
+        return;
+      }
+      var dataObj = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          projectId: this.projectId,
+          id: this.modid,
+          name: this.mode_name
+        }
+      };
+      var that = this;
+      this.$post("/info/project/updateProjectRole", dataObj)
+        .then((response) => {
+          // console.log(response);
+          if (response.code == that.code.codeNum.SUCCESS) {
+            that.roleList();
+            that.$message({
+              type: "success",
+              message: "修改成功!"
+            });
+            that.dialogmodify = false; //添加角色弹框控制关闭
+          } else {
+            that.$message({
+              type: "warning",
+              message: response.msg
+            });
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    },
+    //角色权限配置提交
+    rolePeiz () {
+      // if (this.roLeid <= 7) {
+      //   this.$message.error("角色权限不能修改");
+      //   return;
+      // }
+      if (this.roLeid === '') {
+        this.$message({
+          type: "warning",
+          message: '请选择角色'
+        });
+        return;
+      } else if (this.checkWhole.length === 0) {
+        this.$message({
+          type: "warning",
+          message: '请选择权限'
+        });
+        return;
+      }
+      var dataObj = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          permIds: this.checkWhole, //[ "权限id", "1", "2" ]
+          roleId: this.roLeid, // "角色id"
+          roleName: this.roLename //.. "角色名称",
+        }
+      };
+      var that = this;
+      this.$post("/info/project/addProjectRolePerm", dataObj)
+        .then((response) => {
+          // console.log(response);
+          if (response.code == that.code.codeNum.SUCCESS) {
+            that.$message({
+              type: "success",
+              message: "修改成功!"
+            });
+            // that.getProPermissionFn()
+            that.$utils.getProPermissionFn(that.projectId)
+
+
+            // that.checkWhole = [];
+            // that.roLeid = "";
+            // that.roLename = "";
+            // that.checklbian = [];
+            // that.rolePermissions(that.roleUserId, that.roleUserName, that.roleUserIndex)
+          } else {
+            that.$message({
+              type: "warning",
+              message: response.msg
+            });
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    },
+    //取消权限配置
+    Rolecancel () {
+      this.checkWhole = this.checklbian;
+    },
+    getProPermissionFn (id) {
+      var proObj = {
+        'token': JSON.parse(sessionStorage.getItem("userToken")),
+        'userId': JSON.parse(sessionStorage.getItem("userId")),
+        "projectId": id,
+        "data": {
+          "projectId": this.projectId
+        }
+      };
+      $.ajax({
+        url: url + '/info/project/getProjectPerm',
+        type: 'POST',
+        dataType: 'json',
+        contentType: "application/json",
+        data: JSON.stringify(proObj),
+        success: function (res) {
+          if (res.code !== 0) return
+          sessionStorage.setItem("projectPerm", JSON.stringify(res.data));
+
+        },
+        error: function (e) {
+          console.log(e);
+        }
+      })
+    }
+  },
+  created () {
+    this.token = this.$store.state.loginObject.userToken;
+    this.userId = this.$store.state.loginObject.userId;
+    this.projectId = this.$store.state.projectMsg.pro_id;
+  },
+
+  watch: {
+    chenckedall: function () {
+      // 处理全选
+      this.checkWhole = this.chenckedall ? this.$utils.cloneDeepArray(this.checkWholeIds) : []
+    },
+    saicuan: function (value) {
+      if (value.length > 0) {
+        for (var i = 0; i < value.length; i++) {
+          this.checkWhole.push(value[i].permId);
+          this.checklbian.push(value[i].permId);
+        }
+      } else {
+        this.chenckedall = false;
+      }
+    }
+  }
+};
+</script>
+
+<style scoped lang="scss" type="text/css">
+.projectrole {
+  .el-breadcrumb {
+    line-height: 26px;
+  }
+  .riheader {
+    width: 100%;
+    background: #fff;
+  }
+  .finance_tit {
+    padding: 10px 0 10px 10px;
+    span {
+      float: left;
+      color: #333;
+      font-size: 20px;
+      font-weight: 500;
+      /*// line-height: 32px;*/
+      margin-left: 10px;
+      font-weight: bold;
+    }
+  }
+  .project_name {
+    padding-top: 6px;
+  }
+  .cont_box {
+    width: 100%;
+    /*height: 550px;*/
+    margin-top: 12px;
+    background: #ffffff;
+    // box-sizing: border-box;
+    position: relative;
+    .left_box {
+      position: absolute;
+      // left: 10px;
+      left: 0;
+      top: 0;
+      width: 290px;
+      height: 100%;
+      border-right: 6px solid #f0f2f5;
+      .fun_btn {
+        margin: 10px 10px 0 10px;
+        display: flex;
+        justify-content: space-between;
+        /deep/ .el-button {
+          margin: 0;
+        }
+      }
+      .msg_box {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        height: 30px;
+        line-height: 30px;
+        padding-right: 10px;
+        text-align: right;
+      }
+      .per_list {
+        box-sizing: border-box;
+        border-radius: 5px;
+        padding-top: 8px;
+        height: 85%;
+        height: -moz-calc(100% - 70px);
+        height: -webkit-calc(100% - 70px);
+        height: calc(100% - 70px);
+        .ullist {
+          padding: 6px 0;
+          .personObj_list,
+          .all_sel {
+            &:hover {
+              background: #e6eff6;
+              .personObj_list_icon {
+                display: inline-block;
+              }
+            }
+            &_icon {
+              display: none;
+              line-height: 20px;
+              margin-right: 2px;
+              flex-shrink: 0;
+            }
+            cursor: pointer;
+            padding-left: 20px;
+            padding-right: 17px;
+            height: 38px;
+            box-sizing: border-box;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .list_item {
+              width: 148px;
+              display: flex;
+              align-items: center;
+              text-align: left;
+            }
+            .item_name {
+              padding-left: 10px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            .personObj_list_r {
+              width: 45px;
+              display: flex;
+              justify-content: space-between;
+            }
+            .el-icon-delete {
+              color: #d22c2c;
+            }
+            .el-icon-edit-outline {
+              color: #1561a4;
+            }
+          }
+          .all_sel {
+              cursor:auto;
+          }
+        }
+      }
+    }
+    .right_box {
+      width: 100%;
+      height: 470px;
+      padding-left: 280px;
+      box-sizing: border-box;
+      margin: 10px 0;
+    //   position: relative;
+    //   float: right;
+      .right_box_title {
+        height: 30px;
+        padding-left: 40px;
+        text-align: left;
+        .operate-title-text {
+          color: #333;
+          font-size: 14px;
+          font-weight: 500;
+        }
+      }
+
+      .role_inp {
+        width: 100%;
+        margin-top: 30px;
+        .el-input {
+          width: 250px;
+        }
+      }
+      .power_box {
+        margin: 15px 0;
+      }
+      .foot_small {
+        /*position: absolute;*/
+        /*bottom: 20px;*/
+        /*left: 500px;*/
+        text-align: right;
+        padding-bottom: 20px;
+        float: right;
+        margin-right: 25px;
+      }
+    }
+  }
+}
+.el-scrollbar__wrap {
+    margin-right:0;
+}
+.cur {
+  color: red;
+}
+.el-checkbox-group .el-checkbox {
+  float: left;
+  margin-right: 20px;
+}
+.el-checkbox-group {
+  width: auto;
+  // margin-left: 100px;
+  margin-left: 20px;
+}
+.tan_dialog {
+  text-align: center;
+}
+.power_box_all_select {
+  text-align: left;
+  padding-left: 40px;
+}
+.company-wrap {
+  width: calc(100% - 20px);
+}
+.company-name {
+  width: calc(100% - 26px);
+  text-align: left;
+}
+.project-role-list{
+  .el-row{
+    border-bottom: 1px solid rgba(245,245,245,1);
+  }
+}
+</style>

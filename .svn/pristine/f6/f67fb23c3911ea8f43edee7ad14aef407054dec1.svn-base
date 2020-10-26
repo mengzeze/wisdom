@@ -1,0 +1,1242 @@
+<template>
+  <div class="tasksModule">
+    <div class="contenti_headers">
+      <el-breadcrumb separator="/" class="page-breadcrumb">
+        <el-breadcrumb-item>系统配置</el-breadcrumb-item>
+        <el-breadcrumb-item>任务配置</el-breadcrumb-item>
+        <el-breadcrumb-item>{{ routerData.handleTitle }}</el-breadcrumb-item>
+      </el-breadcrumb>
+      <h3 class="clearfix">
+        <!-- <span class="fl">任务配置</span> -->
+        <div>
+          <el-button
+            circle
+            @click="backBtn"
+            class="iconfont leftarrow back_btn fl"
+          ></el-button>
+          <div class="module-name-text fl" v-show="!nameIsEdit">
+            {{ routerData.name }}
+          </div>
+          <el-input
+            v-model="editName"
+            class="module-name fl"
+            v-show="nameIsEdit"
+            maxlength="100"
+            placeholder="请输入内容"
+          ></el-input>
+          <div class="fl">
+            <el-button
+              type="text"
+              @click="nameIsEdit = true"
+              v-show="!nameIsEdit"
+              class="fl"
+              >编辑</el-button
+            >
+          </div>
+          <i
+            class="el-icon-error icon_btn edit-icon fl"
+            style="color: #efb87f"
+            title="取消"
+            @click="nameIsEdit = false"
+            v-show="nameIsEdit"
+          ></i>
+          <i
+            class="el-icon-success icon_btn edit-icon fl"
+            style="color: #add7a0"
+            title="确定"
+            v-show="nameIsEdit"
+            @click="submitReName"
+          ></i>
+        </div>
+        <el-button
+          v-if="$utils.checkSystemPermission('bask_task_export')"
+          class="el-icon-upload2"
+          size="small"
+          style="float: right;margin-top: 1px;margin-left: 17px;"
+          type="primary"
+          @click="Task_export"
+          >&nbsp;任务导出</el-button
+        >
+      </h3>
+    </div>
+    <div class="tasksContent clearfix">
+      <div
+        ref="htnowrap"
+        style="white-space: nowrap;text-align: left;width: 100%;overflow: hidden;overflow-x: auto;height: 739px;"
+      >
+        <ul
+          class="phase_task fls"
+          style="width:395px;position: relative"
+          v-for="(item, index) in listData"
+          :key="index"
+        >
+          <div class="phaseTiele clearfix">
+            <h4 class="fl">
+              <span>{{ item.stageName }}</span>
+              <span>({{ item.taskCount }})</span>
+            </h4>
+          </div>
+          <p
+            style="text-align: right;margin-bottom: -7px;margin-top: -15px;position: relative;"
+          >
+            <el-button @click="pourintos(item, index)" type="text"
+              >导入</el-button
+            >
+            <el-button @click="groundderived(item)" type="text">导出</el-button>
+          </p>
+          <div
+            class="idclass"
+            ref="htnowraps"
+            style="height: 650px;position: relative;width: 395px;"
+          >
+            <!-- <el-scrollbar style="height: 100%"> -->
+            <Container
+              group-name="col"
+              @drop="e => onCardDrop(item.stageId, e)"
+              @drag-start="dragstart($event)"
+              :get-child-payload="getCardPayload(item)"
+            >
+              <Draggable v-for="(items, indexes) in item.data" :key="indexes">
+                <div>
+                  <li
+                    class="phaseContent"
+                    style="height: 49px;cursor:pointer"
+                    @click="enter(items)"
+                  >
+                    <span
+                      v-if="items.priority == 0"
+                      class="hoverChange"
+                      style="background: #919191"
+                    ></span>
+                    <span
+                      v-else-if="items.priority == 1"
+                      class="hoverChange"
+                      style="background:  #FFC53D"
+                    ></span>
+                    <span v-else class="hoverChange"></span>
+                    <div class="phaseDiv clearfix">
+                      <span
+                        :title="items.name"
+                        style="display: inline-block;width: 300px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;"
+                        >{{ items.name }}</span
+                      >
+                    </div>
+                    <i
+                      class="delete-btn iconfont shanchu"
+                      @click="delecterw(items, $event)"
+                    ></i>
+                  </li>
+                </div>
+              </Draggable>
+            </Container>
+            <!-- </el-scrollbar> -->
+          </div>
+          <li
+            class="phaseContent"
+            style="height: 45px;border: 1px solid #dcdfe6;width: 393px;"
+            ref="addNode"
+            v-if="$utils.checkSystemPermission('bask_model_task_add')"
+          >
+            <div>
+              <div class="phaseDivAdd clearfix" @click="changeWindowadds(item)">
+                <i
+                  style="font-size: 19px;"
+                  class="el-icon-plus color-primary-hover"
+                ></i>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <input
+      style="position: absolute;width: 30px;top: 8px;opacity: 0;display: none"
+      @change="pour_into()"
+      ref="files"
+      id="files"
+      type="file"
+    />
+    <addtasksDetail
+      @ischangeWindoweditor="ischangeWindoweditor"
+      :id="id"
+      :item3="item3"
+      :isaddtasksDetail="isaddtasksDetail"
+    />
+    <a style="display: none;" id="downA" href download>
+      <span id="downFile"></span>
+    </a>
+    <tasksDetail
+      :states="states"
+      :Editthe="Editthe"
+      v-on:changeWindoweditor="changeWindoweditors"
+    />
+  </div>
+</template>
+<script>
+import Editor from "@/components/select_box/Editor5";
+import tasksDetail from "./components/tasksDetail.vue";
+import addtasksDetail from "./components/addtasksDetail.vue";
+import {
+  applyDrag,
+  generateItems
+} from "@/pages/behind/systemconfig/tasksconfig/utils/helpers";
+import {
+  Container,
+  Draggable
+} from "@/pages/behind/systemconfig/tasksconfig/utils/main";
+import { setTimeout } from "timers";
+export default {
+  components: {
+    tasksDetail,
+    Editor,
+    addtasksDetail,
+    // draggable
+    Container,
+    Draggable
+  },
+  data() {
+    return {
+      upperDropPlaceholderOptions: {
+        className: "cards-drop-preview",
+        animationDuration: "150",
+        showOnTop: true
+      },
+      dropPlaceholderOptions: {
+        className: "drop-preview",
+        animationDuration: "150",
+        showOnTop: true
+      },
+      indexI: 0,
+      leaveStageIdinfo: "",
+      infoitem: "",
+      oldeArr: [],
+      startstageId: "",
+      endstageId: "",
+      financingId: this.$route.query.financingId,
+      id: this.$route.query.id,
+      infoClass: false,
+      warninClass: false,
+      listDataOld: [],
+      dangerClass: false,
+      isaddtasksDetail: false,
+      flagadd: false,
+      changeWindowadd: false,
+      addphasesphase: false,
+      hoverShowDivsdiv: false,
+      token: this.$store.state.loginObject.userToken,
+      userId: this.$store.state.loginObject.userId,
+      inputadd: "",
+      listData: [],
+      pageID: [],
+      menetask: true,
+      chosepract: false,
+      valueendtime: "",
+      endtimes: false,
+      deletestask: false,
+      closetasks: false,
+      dragsIndex: [],
+      dragsIndexs: {},
+      copyArr: [],
+      dialogFormVisible: true,
+      form: {
+        name: "",
+        region: "",
+        date1: "",
+        date2: "",
+        delivery: false,
+        type: [],
+        resource: "",
+        changes: { state: 0 },
+        desc: ""
+      },
+      formLabelWidth: "100px",
+      //弹框日期插件
+      pickerOptions2: {},
+      value6: "",
+      options: [
+        {
+          value: "0",
+          label: "普通"
+        },
+        {
+          value: "1",
+          label: "紧急"
+        },
+        {
+          value: "2",
+          label: "非常紧急"
+        }
+      ],
+      value: "普通",
+      label: 0,
+      jbxx: "",
+      nr: "",
+      item3: "",
+      states: "",
+      Editthe: "",
+      listDataI: 0,
+      handleTitle: "编辑任务模板",
+      //路由传过来的数据
+      routerData: {
+        financingId: "", //业务类型id
+        financingName: "", //业务类型名称
+        id: "",
+        name: "",
+        backPosition: 1,
+        handleTitle: "编辑任务模板", //跳转到配置页面做区分
+        treeObjId: ""
+      },
+      editName: "", //编辑名称输入框绑定值
+      nameIsEdit: false
+    };
+  },
+  created() {
+    this.financingIds();
+  },
+  updated() {
+    var he =
+      document.documentElement.clientHeight || document.body.clientHeight;
+    var arr = this.$refs.htnowraps;
+    if (!arr) return;
+    for (let i = 0; i < arr.length; i++) {
+      arr[i].style.height = he - 245 + "px";
+    }
+    this.dndcontainer();
+  },
+  mounted() {
+    var he =
+      document.documentElement.clientHeight || document.body.clientHeight;
+    he = he - 175;
+    this.$refs.htnowrap.style.height = he + "px";
+    this.routerData.financingId = this.$route.query.financingId;
+    this.routerData.financingName = this.$route.query.financingName;
+    this.routerData.id = this.$route.query.id;
+    this.routerData.name = this.$route.query.name;
+    this.editName = this.$route.query.name;
+    this.routerData.backPosition = this.$route.query.backPosition;
+    this.routerData.handleTitle = this.$route.query.handleTitle;
+    this.routerData.treeObjId = this.$route.query.treeObjId;
+    console.log("左侧树", this.$route.query.treeObjId);
+  },
+  methods: {
+    submitReName() {
+      if (this.editName == this.routerData.name) {
+        this.nameIsEdit = false;
+        this.$message.success("成功");
+        return;
+      }
+      if (this.editName == "") {
+        this.$message({
+          message: "请输入任务模板名称",
+          type: "warning"
+        });
+        return;
+      }
+      this.isSameName().then(res => {
+          if (res != "") {
+            console.log("有");
+            this.$confirm("存在同名模板是否确定继续保存", "提示", {
+              confirmButtonText: "自动重命名",
+              cancelButtonText: "取消",
+              type: "warning"
+            })
+              .then(() => {
+                this.editMoudleName(res);
+              })
+              .catch(() => {});
+          } else {
+            console.log("没有");
+            this.editMoudleName(this.editName);
+          }
+        },
+        err => {}
+      );
+    },
+    async isSameName() {
+      //修改模板名称时较验是否重名
+      var obj = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          name: this.editName
+        }
+      };
+      return await this.$post("/info/taskTpl/isDuplicateTaskTplName", obj).then(
+        response => {
+          if (response.code !== this.code.codeNum.SUCCESS) {
+            return;
+          }
+
+          return response.data;
+        },
+        err => {
+          Message.error(err.message || "网络异常，请刷新重试");
+        }
+      );
+    },
+    editMoudleName(newName) {
+      //修改模板名称
+      var data = {
+        data: {
+          id: this.routerData.id,
+          name: newName
+        }
+      };
+      var _this = this;
+      this.$post("/info/taskTpl/updateTaskTplType", data)
+        .then(response => {
+          if (response.code == 0) {
+            _this.$message({
+              message: response.msg,
+              type: "success"
+            });
+            this.nameIsEdit = false;
+            this.routerData.name = response.data.name;  
+            this.$router.replace({
+            path: '/tasksmodule',
+            query: {
+              financingId: this.routerData.financingId,
+              financingName: this.routerData.financingName,
+              id: this.routerData.id,
+              name: this.routerData.name,
+              backPosition: this.routerData.backPosition,
+              handleTitle: this.routerData.handleTitle, 
+              treeObjId: this.routerData.id }
+            })    
+          } else {
+            _this.$message({
+              message: response.msg,
+              type: "warning"
+            });
+            // this.nameIsEdit = false
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    backBtn() {
+      // 列表状态为1 搜索状态为2
+      let isSearchState = this.routerData.backPosition;
+      console.log("位置", this.routerData.backPosition);
+      if (this.nameIsEdit) {
+        this.$confirm("是否保存已编辑内容", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+          .then(() => {
+            this.submitReName();
+          })
+          .catch(() => {
+            this.$router.push({
+              path: "/tasksconfig",
+              query: {
+                isSearchState,
+                businessType: this.routerData.treeObjId
+              }
+            });
+          });
+      } else {
+        this.$router.push({
+          path: "/tasksconfig",
+          query: {
+            isSearchState,
+            businessType: this.routerData.treeObjId
+          }
+        });
+      }
+    },
+    dndcontainer() {
+      var arr = $(".smooth-dnd-container");
+      let addNode = this.$refs.addNode;
+      Array.from(arr).forEach((element, idx) => {
+        addNode[idx].style.position = "absolute";
+        element.children.length == 0
+          ? (addNode[idx].style.top = 63 + "px")
+          : element.children.length * 65;
+        Array.from(element.children).forEach((ele, index) => {
+          var item = element.children.length * 65;
+          item < this.$refs.htnowraps[0].offsetHeight - 100
+            ? (addNode[idx].style.top = item + 65 + "px")
+            : (addNode[idx].style.top =
+                this.$refs.htnowraps[0].offsetHeight - 40 + "px");
+        });
+      });
+      Array.from(arr).forEach(ele => {
+        ele.style.height = this.$refs.htnowraps[0].offsetHeight - 100 + "px";
+      });
+    },
+    getCardPayload(columnId) {
+      return index => {
+        return this.listData.filter(p => p.stageId === columnId.stageId)[0]
+          .data[index];
+      };
+    },
+    dragstart(e) {
+      const scene = Object.assign([], this.listData);
+      scene.forEach((element, index) => {
+        element.data.forEach(ele => {
+          if (ele.id == e.payload.id) {
+            this.startstageId = index;
+          }
+        });
+      });
+    },
+    onCardDrop(columnId, dropResult) {
+      if (dropResult.removedIndex !== null || dropResult.addedIndex !== null) {
+        let column;
+        this.listData.forEach(ele => {
+          if (ele.stageId == columnId) {
+            column = ele;
+          }
+        });
+        const columnIndex = this.listData.indexOf(column);
+        column.data = applyDrag(column.data, dropResult);
+        this.listData.splice(columnIndex, 1, column);
+      }
+      this.indexI++;
+      if (this.indexI == this.listData.length) {
+        setTimeout(() => {
+          this.listData.forEach((element, index) => {
+            element.data.forEach(ele => {
+              if (ele.id == dropResult.payload.id) {
+                this.endstageId = index;
+                this.end();
+                this.indexI = 0;
+              }
+            });
+          });
+        }, 300);
+      }
+    },
+    end: function() {
+      if (this.listData[0].sort) {
+        if (this.startstageId == this.endstageId) {
+          this.commet([this.listData[this.endstageId]]);
+        } else {
+          this.commet([
+            this.listData[this.startstageId],
+            this.listData[this.endstageId]
+          ]);
+        }
+      } else {
+        this.commet(this.listData);
+      }
+    },
+    dragDIV(data) {
+      var dat = [];
+      data.forEach((ele, index) => {
+        if (ele != undefined) {
+          dat.push(ele);
+        } else {
+          if (data.length == 0) {
+            dat.push([]);
+          } else {
+            dat.push(ele);
+          }
+        }
+      });
+      var datas = {
+        token: this.token,
+        userId: this.userId,
+        data: dat
+      };
+      this.$post("/info/taskTpl/saveTaskTplSort", datas)
+        .then(response => {
+          if (response.code == 0) {
+            this.dragsIndex = [];
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    commet(val) {
+      var copeArr = [];
+      var obj;
+      val.forEach((elemen, index) => {
+        var copyArr = [];
+        elemen.sort = true;
+        elemen.taskCount = elemen.data.length;
+        elemen.data.forEach((ele, idx) => {
+          ele.index = index;
+          ele.stage = elemen.stageId;
+          if (index == ele.index) {
+            copyArr.push({
+              typeId: ele.typeId,
+              stageId: ele.stage,
+              taskId: ele.id,
+              name: ele.name,
+              sort: idx + 1
+            });
+            obj = [...copyArr];
+          }
+        });
+        if (obj == undefined) {
+          obj = [];
+        }
+        copeArr.push({
+          typeId: this.$route.query.id,
+          stageId: elemen.stageId,
+          tasks: obj
+        });
+        obj = [];
+      });
+      // console.log(copeArr);
+      this.dragDIV(copeArr);
+    },
+    Task_export() {
+      var arr = [];
+      var isarr = this.listData;
+      for (let i = 0; i < isarr.length; i++) {
+        var item = isarr[i].data;
+        for (let j = 0; j < item.length; j++) {
+          arr.push(item[j].id);
+        }
+      }
+      if (arr == "") {
+        this.$message({
+          message: "暂无模板导出",
+          type: "error"
+        });
+        return;
+      }
+      console.log("导出名称", this.routerData.financingName);
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        projectId: this.$store.state.projectMsg.projectMsg.id,
+        data: {
+          id: this.$route.query.id,
+          name: this.routerData.financingName + "-" + this.$route.query.name,
+          taskIds: arr
+        }
+      };
+      var _this = this;
+      this.$post("/info/taskTpl/exportTaskTplIsFileSize", data)
+        .then(response => {
+          if (response.code == 0) {
+            _this.$store.commit("export", {
+              url: "/rfs/export/taskTpl/exportTaskTplAndFile",
+              data: data.data
+            });
+          } else if (response.code == -550) {
+            _this
+              .$confirm(response.msg + ", 是否继续?", "提示", {
+                confirmButtonText: "确定",
+                cancelButtonText: "取消",
+                type: "warning"
+              })
+              .then(() => {
+                _this.$store.commit("export", {
+                  url: "/rfs/export/taskTpl/exportTaskTplAndFile",
+                  data: data.data
+                });
+              })
+              .catch(() => {});
+          } else {
+            _this.$message({
+              message: response.msg,
+              type: "error"
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    groundderived(item) {
+      // var infodate = [];
+      // this.listData.forEach((ele, index) => {
+      //   ele.data.forEach((el, ind) => {
+      //     if (item.stageId == el.stageId) {
+      //       infodate.push(el);
+      //     }
+      //   });
+      // });
+      // var getdata = [];
+      // item.data.forEach(ele => {
+      //   if (ele.stage == undefined) {
+      //     if (ele.sortStageId != ele.stageId) {
+      //       getdata.push(ele.sortStageId);
+      //     }
+      //   } else {
+      //     if (ele.stageId != Number(ele.stage)) {
+      //       getdata.push(ele.sortStageId);
+      //     }
+      //   }
+      // });
+      // if (getdata.length == item.data.length && infodate == "") {
+      //   this.$message({
+      //     message: "阶段任务模板为空！",
+      //     type: "error"
+      //   });
+      //   return;
+      // }
+      // if(item.data == ""){
+      //   this.$message.error('阶段任务模板为空！')
+      // }
+      console.log("要导出", item);
+      let userId = this.$store.state.loginObject.userId;
+      let userToken = this.$store.state.loginObject.userToken;
+      let project = this.$store.state.loginObject.loginData.projectId;
+      let id = this.$route.query.id;
+      let name = this.$route.query.name;
+      let arr = {
+        stageName: item.stageName,
+        id: id,
+        typeName: this.routerData.financingName + "-" + this.routerData.name, //业务类型名称
+        stageId: item.stageId,
+        token: userToken,
+        userId: userId
+      };
+      this.$store.commit("export", {
+        url: `/rfs/export/task/exportTaskTplByStage`,
+        data: arr
+      });
+    },
+    pourintos(item, index) {
+      this.$confirm(
+        "导入后的阶段任务模板将会覆盖当前阶段模板，是否导入?",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      )
+        .then(() => {
+          this.infoitem = item;
+          $("#files").trigger("click");
+        })
+        .catch(() => {});
+    },
+    pour_into() {
+      var item = this.infoitem,
+        files = this.$refs.files;
+      let formData = new FormData();
+      var fs = files.files[0];
+      console.log(fs);
+      formData.append("file", fs);
+      formData.append("token", this.$store.state.loginObject.userToken);
+      formData.append("userId", this.$store.state.loginObject.userId);
+      formData.append("id", this.$route.query.id);
+      formData.append("stageId", item.stageId);
+      var name = fs.name.substring(fs.name.lastIndexOf("."), fs.name.length);
+      if (name == ".zip") {
+        let config = {
+          headers: { "Content-Type": "multipart/form-data" }
+        };
+        this.$post("/info/taskTpl/importTaskTpl", formData, config)
+          .then(res => {
+            console.log(this);
+            if (res.code == 0) {
+              this.$message({
+                message: res.msg,
+                type: "success"
+              });
+              this.financingIds();
+              files.value = "";
+            } else {
+              this.$message({
+                message: res.msg,
+                type: "error"
+              });
+            }
+          })
+          .catch(() => {});
+      } else {
+        this.$message({
+          message: "请导入从系统中下载的模板！",
+          type: "error"
+        });
+        files.value = "";
+      }
+    },
+    // 新建
+    ischangeWindoweditor(val) {
+      // console.log(val);
+      // if (val == 1) {
+      //   this.isaddtasksDetail = false;
+      //   return;
+      // }
+      this.isaddtasksDetail = false;
+      this.financingIds();
+    },
+    htmls2(val) {
+      this.nr = val;
+    },
+    closesss() {
+      this.jbxx = "";
+      this.nr = "";
+      this.changes = { state: 1 };
+    },
+    Priority() {
+      this.label = this.value;
+    },
+    dialogFormVisibles() {
+      this.changeWindowadd = false;
+    },
+    enter(items) {
+      this.states = true;
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          id: items.id
+        }
+      };
+      var _this = this;
+      this.$post("/info/taskTpl/getTplTaskDetail", data)
+        .then(response => {
+          console.log(response);
+          _this.Editthe = response.data;
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    changeWindoweditors(val) {
+      // if (!val) {
+      this.states = false;
+      this.financingIds();
+      //   return;
+      // }
+      // this.states = false;
+    },
+    dialogFormVisibless() {
+      if (this.jbxx == "") {
+        this.$message({
+          message: "请填写完整",
+          type: "warning"
+        });
+        return;
+      }
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          stageId: this.item3.stageId,
+          typeId: this.id,
+          name: this.jbxx,
+          parentId: 0,
+          priority: this.label,
+          content: this.nr
+        }
+      };
+      var _this = this;
+      this.$post("/info/taskTpl/addTplTask", data)
+        .then(response => {
+          if (response.code == 0) {
+            _this.$message({
+              message: response.msg,
+              type: "success"
+            });
+            _this.financingIds();
+            _this.changeWindowadd = false;
+            _this.jbxx = "";
+            _this.nr = "";
+          } else {
+            _this.$message({
+              message: response.msg,
+              type: "warning"
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    changeWindowadds(item) {
+      console.log(item);
+      this.item3 = item;
+      this.isaddtasksDetail = true;
+    },
+    financingIds() {
+      var data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          id: this.id,
+          financingId: this.financingId
+        }
+      };
+      var loading = this.$loading({
+        lock: true,
+        text: "拼命加载中",
+        spinner: "el-icon-loading"
+      });
+      var _this = this;
+      this.$post("/info/taskTpl/getTaskTplList", data)
+        .then(response => {
+          window.localStorage.setItem("keyold", JSON.stringify(response.data));
+          _this.listData = response.data;
+          loading.close();
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    onResultChangeadd(val) {
+      console.log("子组件传过来的是", val);
+      this.flagadd = val;
+    },
+    //展示设置栏菜单
+    showMenu() {
+      this.chosepract = true;
+      this.menetask = false;
+    },
+    delecterw(item, e) {
+      e.stopPropagation(); //  阻止事件冒泡
+      this.$confirm("此操作将永久删除该任务, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          var data = {
+            token: this.token,
+            userId: this.userId,
+            data: {
+              id: item.id,
+              name: item.name
+            }
+          };
+          var _this = this;
+          this.$post("/info/taskTpl/delTplTask", data)
+            .then(response => {
+              if (response.code == 0) {
+                _this.$message({
+                  message: response.msg,
+                  type: "success"
+                });
+                _this.financingIds();
+              } else {
+                _this.$message({
+                  message: response.msg,
+                  type: "warning"
+                });
+              }
+            })
+            .catch(function(error) {
+              console.log(error);
+            });
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除"
+          });
+        });
+    },
+    showEndtime() {
+      this.endtimes = true;
+      this.menetask = false;
+    },
+    showDelete() {
+      this.deletestask = true;
+      this.menetask = false;
+    },
+    closetasksop() {
+      this.closetasks = true;
+      this.menetask = false;
+    },
+    closeMenu() {
+      this.menetask = true;
+      this.chosepract = false;
+      this.endtimes = false;
+      this.deletestask = false;
+      this.closetasks = false;
+    },
+    addphases() {
+      this.addphasesphase = true;
+    },
+    clickhoverdiv() {
+      this.hoverShowDivsdiv = true;
+    },
+    closeHover() {
+      this.hoverShowDivsdiv = false;
+    },
+    closeHoverinfo() {
+      this.hoverShowDivsdiv = false;
+      this.infoClass = true;
+      this.warninClass = false;
+      this.dangerClass = false;
+    },
+    closeHoverwarning() {
+      this.hoverShowDivsdiv = false;
+      this.warninClass = true;
+      this.dangerClass = false;
+      this.infoClass = false;
+    },
+    closeHoverdanger() {
+      this.hoverShowDivsdiv = false;
+      this.dangerClass = true;
+      this.warninClass = false;
+      this.infoClass = false;
+    }
+  },
+  watch: {
+    nameIsEdit(val) {
+      if (val) {
+        this.editName = this.routerData.name;
+      }
+    }
+  }
+};
+</script>
+<style lang="">
+.idclass .smooth-dnd-container {
+  position: relative;
+  /* max-width: 500px; */
+  overflow: auto;
+}
+.idclass .el-scrollbar__wrap {
+  overflow-x: hidden;
+  margin-right: -6px !important;
+}
+.flip-list-move {
+  transition: transform 0.5s;
+}
+.no-move {
+  transition: transform 0s;
+}
+</style>
+<style scoped>
+/* . */
+@import "../../../common/css/tasksmodule.css";
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #333;
+}
+.el-scrollbar__bar.is-horizonta {
+  height: 0px !important;
+  left: 0px !important;
+}
+.infoClass {
+  background: #919191 !important;
+}
+.warninClass {
+  background: #ffc53d !important;
+}
+
+.dangerClass {
+  background: #ff4d4f !important;
+}
+.el-main {
+  padding: 0px 0px !important;
+}
+.tasksModule {
+  height: auto;
+  /* margin-top: 10px; */
+  /* overflow-x: auto; */
+  min-width: 100%;
+}
+.el-form-item__content {
+  text-align: left;
+}
+.el-form-item__label {
+  text-align: left;
+}
+
+.taskMenu i {
+  cursor: pointer;
+}
+.contenti_headers {
+  width: 98%;
+  height: 9%;
+  text-align: left;
+  background: white;
+  padding-left: 10px;
+  margin-left: 14px;
+  overflow: hidden;
+}
+.contenti_headers p {
+  height: 3%;
+  font-size: 14px;
+  font-family: MicrosoftYaHei;
+  font-weight: 400;
+  color: rgba(51, 51, 51, 1);
+  margin-top: 0.5%;
+}
+.contenti_headers h3 {
+  height: 5%;
+  font-size: 20px;
+  font-family: MicrosoftYaHei;
+  font-weight: bold;
+  color: rgba(51, 51, 51, 1);
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.contenti_headers h3 span:nth-child(1) {
+  font-size: 20px;
+  color: #333;
+}
+.contenti_headers h3 span:nth-child(2) {
+  display: inline-block;
+  width: 136px;
+  height: 34px;
+  background-color: #1a5fa4;
+  line-height: 34px;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  border-radius: 5px;
+  margin-right: 5px;
+}
+.sonTasksMenu {
+  padding-bottom: 10px;
+  display: inline-block;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+.sonTasksUl {
+  padding: 12px;
+}
+.sonTasksUl li {
+  margin-bottom: 6px;
+}
+.sonTasksUl li img {
+  position: relative;
+  top: 1px;
+}
+.sonTasksUl li span {
+  margin-left: 5px;
+}
+/* .practitioners{
+    text-align: center;
+} */
+.practitioners .paracFist {
+  padding: 5px;
+}
+.practitioners .paracFist i {
+  margin-left: 5px;
+}
+.practitioners .paracFist span {
+  margin-left: 65px;
+}
+.practitioners .paracSecond {
+  padding: 5px;
+}
+.practitioners .paracSecond p {
+  padding: 5px;
+  margin-top: 15px;
+}
+.practitioners .paracSecond p img {
+  position: relative;
+  top: 3px;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 16px;
+  height: 16px;
+}
+
+.practitioners .sure {
+  margin-left: 83px;
+  height: 30px;
+  padding: 0 10px;
+  margin-bottom: 10px;
+}
+
+.hoverChange {
+  position: absolute;
+  width: 5px;
+  height: 100%;
+  background: #919191;
+}
+.hoverChange {
+  position: absolute;
+  width: 5px;
+  height: 100%;
+  background: yellow;
+}
+.hoverChange {
+  position: absolute;
+  width: 5px;
+  height: 100%;
+  background: #ff4d4f;
+}
+.hoverChange:hover {
+  width: 10px;
+}
+.hoverShowDiv {
+  position: absolute;
+  width: 200px;
+  height: auto;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  z-index: 11;
+  top: 160px;
+}
+.hoverShowDiv div {
+  display: block;
+  margin-top: 15px;
+  margin-left: 15px;
+  margin-bottom: 15px;
+}
+@import "../../../common/css/sheltersright.css";
+.el-form-item__content .shelterPers,
+.el-form-item__content .shekterAdd {
+  position: relative;
+  top: 7px;
+  margin-right: 10px;
+  width: 24px;
+  height: 24px;
+}
+.el-form-item__label {
+  text-align: left;
+}
+
+.baseMessage {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  text-align: left;
+}
+
+.encapsulationSelect {
+}
+input::-webkit-input-placeholder {
+  color: red;
+}
+.fls {
+  /* display: inline-block;
+   */
+  display: inline-table;
+  text-align: left;
+}
+.tasksModule .tasksContent {
+  margin-top: 0px;
+}
+.module-name {
+  width: 320px;
+  margin-right: 10px;
+}
+.edit-icon {
+  margin-top: 10px;
+  margin-right: 8px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #efb87f;
+}
+.back_btn {
+  margin-right: 10px;
+  border: none;
+}
+.module-name-text {
+  margin-top: 6px;
+  margin-right: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: rgba(51, 51, 51, 1);
+}
+.phaseContent {
+  position: relative;
+}
+.delete-btn {
+  position: absolute;
+  top: 18px;
+  right: 10px;
+  font-size: 14px;
+}
+</style>

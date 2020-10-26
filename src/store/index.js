@@ -1,0 +1,1191 @@
+import Vue from 'vue'
+import 'babel-polyfill'
+import Vuex from 'vuex'
+import axios from 'axios'
+import { post, get } from '../api/axios'
+
+import VuexPersistence from "vuex-persist";
+import global from '@/global.js'
+import $utils from '../utils/utils'
+import { Message } from 'element-ui';
+
+const vuexLocal = new VuexPersistence({
+  storage: window.sessionStorage
+});
+Vue.use(Vuex)
+
+//要设置的初始属性值
+const state = {
+  versionMsg: {}, // 版本变更信息
+  selectionProjectDoc: [], // 储存项目文档选中的数据
+  selectionPaper: [], // 储存定稿管理选中的数据
+  selectionApproveDoc: [], // 储存文件审批-项目文档选中的数据
+  selectionApproveDocRevision: [], // 储存文件修订审批-项目文档选中的数据
+  selectionApprovePaper: [], // 储存文件审批-底稿选中的数据
+  selectionApprovePaperRevision: [], // 储存文件修订审批-项目文档选中的数据
+  selectionApproveDir: [], // 储存文件审批页目录审批-选中的数据
+  selectionApproveDirRevision: [], // 储存文件审批页目录修订审批-选中的数据
+  selectedNum: 0,
+  setupdata: {},
+  themeColor: sessionStorage.getItem('themeColor') || "#0061A9",  // 主题颜色
+  oldThemeColor: sessionStorage.getItem('themeColor') || "#0061A9",   // 上一次主题颜色
+  stage: 'front',
+  isCloseUploadDialog: false,
+  isUpload: false, // 是否有文件正在上传
+  isPC: false, // 判断是否是PC端
+  curAjaxProjectId: '', // 当前请求项目Id。切换项目时
+  that: {},
+  loginObject: {
+    loginData: "",
+    userToken: "",
+    keyCode: "",
+    userName: "",
+    userNameAccn: "",
+    userId: '',
+    isSuperUser: false//是否是超级用户，0不是超级用户，1是超级用户
+  },
+  Management: {
+    state: 0,
+    statedate: ''
+  },
+  projectMsg: {   //项目信息
+    pro_id: '',
+    projectMsg: {},
+    stopProjectId: '',
+    hideProjectId: []//后台一键隐藏的项目id
+  },
+  projectMsgs: {   //项目数据
+    topdata: '',
+    topdataid: '',
+    lzstatus: '',
+    datas: ''
+  },
+  projectstat: {   //项目数据
+    states: '',
+    projectMsgname: "",
+    setdatas: [],
+    isref: { state: 0 },
+    projectstatinfo: '',
+    pzhistate: '',// 导入
+    pzhistates: '',// 导入显示
+    Task_exports: '',  //导出事件
+    isCurrentPages: 10,
+    isTask_exports: '',
+    projectmember: []
+  },
+  // projectDocCopy: { //项目文档复制剪切粘贴相关
+  //   ids: '',//文件ID
+  //   projId: '',//粘贴到的项目ID
+  //   sourceProjId: '',//原项目ID
+  //   parentId: '',//原父级ID
+  //   copyOrCut: '',//已复制或者剪切
+  //   hasCutOrCopy: false,
+  //   seleFileIds: [],//复制剪切时文件id集合
+  //   seleFolderIds: []//复制剪切时文件夹id集合
+
+  // },
+  projectDocCopy: { //项目文档复制剪切粘贴相关
+    ids: '',//文件ID
+    projId: '',//粘贴到的项目ID
+    sourceProjId: '',//原项目ID
+    parentId: '',//原父级ID
+    copyOrCut: '',//已复制或者剪切
+    hasCutOrCopy: false,
+    seleFileIds: [],//复制剪切时文件id集合
+    seleFolderIds: [],//复制剪切时文件夹id集合
+
+    auditProjectId: '',
+    docSource: 0,//复制的来源0: 项目文档/ 1: 底稿管理
+
+  },
+  proDocSearchList: {
+    searchList: {
+      titleKey: '',
+      conKey: '',
+      proStage: '',
+      dirStateSel: [], // 目录状态检索条件
+      fileStateSel: [], // 文件状态检索条件
+      fileTypesSel: [],//文件类型检索条件
+      starTime: '',
+      endTime: ''
+    }
+  },
+  proDocSearchProData: {//项目文档搜索结果页项目相关数据
+    projectId: '',
+    projectName: '',
+    processName: '',
+    processId: 0,
+    docParentId: 0,
+    pathNameList: [],
+    projectCreatBy: 0
+  },
+  manuscriptCopy: { //底稿管理复制剪切粘贴相关
+    ids: '', //文件ID
+    oldProjId: '', //粘贴到的项目ID
+    newProjId: '', //原项目ID
+    copyData: '', //粘贴数据
+    copyType: '' //已复制或者剪切
+  },
+  behindTaskSearch: {
+    starTime: '',
+    endTime: '',
+    creater: '',//在创建人搜索条件中做展示
+    createByIds: [],//搜索条件中创建人id集合
+    financingName: '',//业务类型名称
+    financingList: [],
+    mouleName: '',//模板名称
+  },
+  voteprojId: '',
+  url: {
+    E_IP: global.baseUrl,  //  导出地址
+  },
+  //    客户管理跳转
+  customObj: {},
+  showPreview: false,
+  previewData: {},
+  allFloatingObj: {
+    allFloatingFromUrl: '',
+    allFloatingFlage: false,
+    iconStyle: false
+  },
+  chatProjectObj: {   //聊天项目信息
+    projectId: '',
+  },
+  chatMessageObj: {},
+  systemPerm: [], //系统权限
+  projectPerm: [], //项目权限
+  roleModulePerm: {},//角色配置数据
+  modulePerm: [],
+  modulePermBak: [
+    'bask_workbench_operation',
+    'project_manage',
+    'project_list',
+    'project_task',
+    'project_member',
+    'project_info',
+    'project_role',
+    'project_meeting',
+    'project_vote',
+    'project_document',
+    'project_log',
+    'project_chat',
+    'message_center',
+    'customer_manage',
+    'paper_manage',
+    'person_manage',
+    'role_manage',
+    'workflow_engine',
+    'system_config',
+    'system_log',
+    'organizational_structure',
+    'bask_time_configuration'
+  ], //模块权限
+  curPath: '',
+  proChatIsShow: false,
+  projectHide: false,
+  jumpLoginApprovalId: '',
+  curMenu: '',
+  approvalIsShow: false,
+  approvalData: {},
+  asideMessageIcon: false, // icon状态
+  asidCollapse: false, // 导航栏状态
+  isSelectList: {
+    viewType: false,// 底稿检索页状态
+    backFlag: false // 返回标识
+  },
+  frontProjectRole: {}, // 前台项目角色
+  behiendProjectRole: {}, // 后台项目角色
+  behindRoleAuth: [], // 后台角色权限
+  behindDirTemplate: [] // 后台目录模板复制内容
+}
+
+const getters = {
+  keyData: (state) => {
+    return state.loginObject.keyCode;
+  },
+  loginData: (state) => {
+    return state.loginObject.loginData;
+  },
+  userToken: (state) => {
+    return state.loginObject.userToken;
+  },
+  userId: (state) => {
+    return state.loginObject.userId;
+  },
+  userName: (state) => {
+    return state.loginObject.userName;
+  },
+  userNameAccn: (state) => {
+    return state.loginObject.userNameAccn;
+  },
+  isSuperUser: (state) => {
+    return state.loginObject.isSuperUser;
+  },
+  projectId: (state) => {
+    return state.projectMsg.pro_id;
+  },
+  voteprojId: (state) => {
+    return state.voteprojId;
+  },
+  projectMsg: (state) => {
+    return state.projectMsg.projectMsg;
+  }
+}
+
+const mutations = {
+  // 版本更新通知
+  setUpdateVersion(state, data) {
+    state.versionMsg = data
+  },
+
+  updateDocName(state, data) {
+    let curStoreData = []
+    switch (data.type) {
+      case 1:
+        curStoreData = state.selectionProjectDoc
+        break;
+      case 2:
+        curStoreData = state.selectionPaper
+        break;
+      case 3:
+        curStoreData = state.selectionApproveDoc
+        break;
+      case 4:
+        curStoreData = state.selectionApprovePaper
+        break;
+    }
+
+    let cur = curStoreData.find(v => v.id === data.id)
+    let file = cur.file
+    let manaullyFile = cur.manaullyFile
+
+    let idx = file.findIndex(v => v.id === data.fileId)
+    idx > -1 && (file[idx].docName = data.docName)
+
+    let mIdx = manaullyFile.findIndex(v => v.id === data.fileId)
+    mIdx > -1 && (manaullyFile[mIdx].docName = data.docName)
+
+  },
+
+  deleteManaullyFile(state, data) {
+    let curStoreData = []
+    switch (data.type) {
+      case 1:
+        curStoreData = state.selectionProjectDoc
+        break;
+      case 2:
+        curStoreData = state.selectionPaper
+        break;
+      case 3:
+        curStoreData = state.selectionApproveDoc
+        break;
+      case 4:
+        curStoreData = state.selectionApprovePaper
+        break;
+      case 5:
+        curStoreData = state.selectionApproveDir
+        break;
+    }
+    // console.log('setSelection-store-curStoreData', curStoreData)
+    // return
+
+
+    let cur = curStoreData.find(v => v.id === data.id)
+    if (data.type === 5) { // 处理目录审批，移除手动选择的目录
+      let dir = cur.dir
+      // 移除文件
+      if (!dir.length) return
+      data.deleted.forEach(v => {
+        // 移除文件列表中存储的文件
+        let idx = dir.findIndex(f => f.id === v)
+        idx > -1 && dir.splice(idx, 1)
+      })
+      return
+    }
+
+    let manaullyFile = cur.manaullyFile
+    // 移除文件
+    if (!manaullyFile.length) return
+    data.deleted.forEach(v => {
+      // 移除文件列表中存储的文件
+      let idx = manaullyFile.findIndex(f => f.id === v)
+      idx > -1 && manaullyFile.splice(idx, 1)
+    })
+
+  },
+
+
+  // 更新已选文件状态
+  updateStatus(state, data) {
+    let curStoreData = []
+    switch (data.type) {
+      case 1:
+        curStoreData = state.selectionProjectDoc
+        break;
+      case 2:
+        curStoreData = state.selectionPaper
+        break;
+      case 3:
+        curStoreData = state.selectionApproveDoc
+        break;
+      case 4:
+        curStoreData = state.selectionApprovePaper
+        break;
+      case 5:
+        curStoreData = state.selectionApproveDir
+        break;
+    }
+    // console.log('setSelection-store-curStoreData', curStoreData)
+    // return
+
+
+    let cur = curStoreData.find(v => v.id === data.id)
+    if (!cur) return
+    let file = cur.file
+    let manaullyFile = cur.manaullyFile
+    let updatedData = data.updated
+
+    for (let k in updatedData) {
+      let curFile = file.find(f => f.id === +k)
+      if (!curFile) continue
+      let curManaullyFile = manaullyFile.find(f => f.id === +k)
+
+      for (let statusKey in updatedData[k]) {
+        if (data.type === 1 || data.type === 2 || statusKey !== 'auditStatus') {
+          curFile[statusKey] = updatedData[k][statusKey]
+          curManaullyFile && (curManaullyFile[statusKey] = updatedData[k][statusKey])
+        }
+      }
+    }
+
+  },
+  // 取消选择 -- 清空已选文件
+  clearSelection(state, data) {
+    // 退出登录
+    if (!data) {
+      state.selectionProjectDoc = []
+      state.selectionPaper = []
+      state.selectionApproveDoc = []
+      state.selectionApprovePaper = []
+      return
+    }
+    let curStoreData = []
+    switch (data.type) {
+      case 1:
+        curStoreData = state.selectionProjectDoc
+        break;
+      case 2:
+        curStoreData = state.selectionPaper
+        break;
+      case 3:
+        curStoreData = state.selectionApproveDoc
+        break;
+      case 4:
+        curStoreData = state.selectionApprovePaper
+        break;
+      case 5:
+        curStoreData = state.selectionApproveDir
+        break;
+    }
+
+    // 删除当前项目所存储数据
+    let curIdx = curStoreData.findIndex(v => v.id === data.id)
+    curIdx > -1 && curStoreData.splice(curIdx, 1)
+    // 更新选中文件数量
+    state.selectedNum = 0
+
+  },
+  setFrontProjectRole(state, data) {
+    state.frontProjectRole = data;
+  },
+  setBehiendProjectRole(state, data) {
+    state.behiendProjectRole = data;
+  },
+
+  setBehindRoleAuth(state, data) {
+    state.behindRoleAuth = data;
+  },
+  setAsidCollapse(state, data) {
+    state.asidCollapse = data;
+  },
+  setMessageIcon(state, data) {
+    state.asideMessageIcon = data;
+  },
+  setSelectedNum(state, data) {
+    state.selectedNum = data
+  },
+  cancelSelection(state, data) {
+
+    let curStoreData = []
+    switch (data.type) {
+      case 1:
+        curStoreData = state.selectionProjectDoc
+        break;
+      case 2:
+        curStoreData = state.selectionPaper
+        break;
+      case 3:
+        curStoreData = state.selectionApproveDoc
+        break;
+      case 4:
+        curStoreData = state.selectionApprovePaper
+        break;
+      case 5:
+        curStoreData = state.selectionApproveDir
+        break;
+    }
+
+    // 取出当前项目所存储数据
+    // console.log('cancelSelection-store-curStoreData', curStoreData)
+    let cur = curStoreData.find(v => v.id === data.id)
+
+    // 如果没有找到存储的数据，将已选文件数量清空
+    if (!cur) {
+      // 更新选中文件数量
+      state.selectedNum = 0
+      return
+    }
+
+    let cancelFile = data.file
+    let cancelDir = data.dir
+
+    // 移除文件
+    if (cancelFile.length && cur.file.length) {
+      cancelFile.forEach(v => {
+        // 移除文件列表中存储的文件
+        let idx = cur.file.findIndex(f => f.id === v)
+        idx > -1 && cur.file.splice(idx, 1)
+        // 移除手动选择列表中存储的文件
+        let mIdx = cur.manaullyFile.findIndex(f => f.id === v)
+        mIdx > -1 && cur.manaullyFile.splice(mIdx, 1)
+      })
+    }
+
+
+
+    // 移除目录
+    if (cancelDir.length && cur.dir.length) {
+      cancelDir.forEach(v => {
+        let idx = cur.dir.findIndex(d => d.id === v)
+        idx > -1 && cur.dir.splice(idx, 1)
+        // 移除手动选择列表中存储的文件
+        let mIdx = cur.childrenDir.findIndex(f => f.id === v)
+        mIdx > -1 && cur.childrenDir.splice(mIdx, 1)
+      })
+    }
+
+    // 更新选中文件数量
+    state.selectedNum = data.type === 5 ? cur.childrenDir.length : cur.file.length
+
+
+  },
+
+  setSelection(state, data) {
+    console.log(124, data)
+    let curStoreData = []
+    switch (data.type) {
+      case 1:
+        curStoreData = state.selectionProjectDoc
+        break;
+      case 2:
+        curStoreData = state.selectionPaper
+        break;
+      case 3:
+        curStoreData = state.selectionApproveDoc
+        break;
+      case 4:
+        curStoreData = state.selectionApprovePaper
+        break;
+      case 5:
+        curStoreData = state.selectionApproveDir
+        break;
+    }
+    // console.log('setSelection-store-curStoreData', curStoreData)
+    // return
+
+
+    let cur = curStoreData.find(v => v.id === data.id)
+    let uniqFile = data.file ? $utils.uniqBy(data.file, 'id', true) : []
+    let uniqDir = data.childrenDir ? $utils.uniqBy(data.childrenDir, 'id', true) : []
+
+
+    // 如果之前没有储存过选中数据
+    if (!cur) {
+      // 储存选中数据
+      curStoreData.push({
+        id: data.id,
+        dir: data.dir ? $utils.uniqBy(data.dir, 'id', true) : [],
+        childrenDir: uniqDir,
+        file: uniqFile,
+        manaullyFile: data.manaullyFile ? $utils.uniqBy(data.manaullyFile, 'id', true) : []
+      })
+
+      // 更新选中文件数量
+      state.selectedNum = data.type === 5 ? uniqDir.length : uniqFile.length
+      return
+    }
+
+
+    // 更新之前存储的数据
+    cur.dir = $utils.uniqBy([...cur.dir, ...data.dir], 'id', true)
+    cur.file = $utils.uniqBy([...cur.file, ...data.file], 'id', true)
+    cur.manaullyFile = $utils.uniqBy([...cur.manaullyFile, ...data.manaullyFile], 'id', true)
+    // cur.childrenDir = $utils.uniqBy([...cur.childrenDir, ...data.childrenDir], 'id', true)
+
+    // 更新选中文件数量
+    state.selectedNum = data.type === 5 ? cur.childrenDir.length : cur.file.length
+
+  },
+  setThemeColor(state, themeColor) {  // 改变主题颜色
+    state.oldThemeColor = state.themeColor
+    state.themeColor = themeColor
+    sessionStorage.setItem('themeColor', state.themeColor)
+    sessionStorage.setItem('oldThemeColor', state.oldThemeColor)
+  },
+  setCurMenu(state, data) {
+    state.curMenu = data
+  },
+  setStage(state, data) {
+    state.stage = data
+  },
+  setUploadStatus(state, data) {
+    state.isUpload = data
+  },
+  closeUploadDialog(state, data) {
+    state.isCloseUploadDialog = data
+  },
+
+  setPcFlag(state, data) {
+    state.isPC = data
+  },
+  // 底稿记录已选文件列表or检索status
+  setSelectList(state, data) {
+    state.isSelectList = data;
+  },
+
+  // 设置模块权限
+  setModulePerm(state, data) {
+    state.modulePerm = data
+  },
+  // 设置系统权限
+  setSystemPerm(state, data) {
+    state.systemPerm = data
+    // //根据系统权限判断模块权限：底稿管理、客户管理
+    // if(data && data.length){
+    //   state.modulePerm.customer_manage = data.indexOf('crm_manage')>-1
+    //   state.modulePerm.paper_manage = data.indexOf('paper_mange')>-1
+    // }else{
+    //   state.modulePerm.customer_manage = false
+    //   state.modulePerm.paper_manage = false
+    // }
+  },
+  // 设置项目权限
+  setProjectPerm(state, data) {
+    state.projectPerm = data
+    // //根据项目权限判断模块权限: 项目会议、项目投票
+    // if(data && data.length){
+    //   state.modulePerm.project_meeting = data.indexOf('project_meet')>-1
+    //   state.modulePerm.project_vote = data.indexOf('project_vote')>-1
+    // } else {
+    //   state.modulePerm.project_meeting = false
+    //   state.modulePerm.project_vote = false
+    // }
+  },
+  setDirTemplate(state, data) {
+    state.behindDirTemplate = data
+  },
+  setRoleModule(state, data) {
+    state.roleModulePerm = data
+  },
+  setModule(state, data) {
+    state.modulePerm = data
+  },
+  curPath(state, data) {
+    state.curPath = data
+  },
+  preview: (state, data) => {
+    state.previewData = data
+    state.previewData.projectId = data.projectId || state.projectMsg.pro_id
+    state.showPreview = true
+  },
+  closePreview: (state) => {
+    state.showPreview = false
+  },
+  topdataid: (state, topdataid) => { //同上
+    state.projectMsgs.topdataid = topdataid;
+  },
+  datas: (state, datas) => { //同上
+    state.projectMsgs.datas = datas;
+  },
+  pro_id: (state, pro_id) => { //同上
+    state.projectMsg.pro_id = pro_id;
+  },
+  lzstatus: (state, lzstatus) => { //同上
+    state.projectMsg.lzstatus = lzstatus;
+  },
+  Task_exports: (state, Task_exports) => {     //同上
+    state.projectstat.Task_exports = Task_exports;
+  },
+  isCurrentPages: (state, isCurrentPages) => {     //同上
+    state.projectstat.isCurrentPages = isCurrentPages;
+  },
+  isref: (state, isref) => {     //同上
+    state.projectstat.isref = isref;
+  },
+  isCanImportTpl: (state, useTplId) => {     //配置模板成功后显示导入任务模板按钮
+    state.projectMsg.projectMsg.useTplId = useTplId
+  },
+  projectMsgname: (state, projectMsgname) => {     //同上
+    state.projectstat.projectMsgname = projectMsgname;
+  },
+  hideProject: (state, hideProIds) => {     //同上
+    state.projectMsg.hideProjectId = hideProIds;
+  },
+  projectstatinfo: (state, projectstatinfo) => {     //同上
+    state.projectstat.projectstatinfo = projectstatinfo;
+  },
+  pzhistate: (state, pzhistate) => {     //同上
+    state.projectstat.pzhistate = pzhistate;
+  },
+  pzhistates: (state, pzhistates) => {     //同上
+    state.projectstat.pzhistates = pzhistates;
+  },
+  setdatas: (state, setdatas) => {     //同上
+    state.projectstat.setdatas = setdatas;
+  },
+  states: (state, states) => {     //同上
+    state.projectstat.states = states;
+  },
+  keyData: (state, keyCode) => {     //同上
+    state.loginObject.keyCode = keyCode;
+  },
+  loginData: (state, loginData) => {     //同上
+    state.loginObject.loginData = loginData;
+  },
+  userToken: (state, userToken) => {     //同上
+    state.loginObject.userToken = userToken;
+  },
+  userId: (state, userId) => {     //同上
+    state.loginObject.userId = userId;
+  },
+  userName: (state, userName) => {     //同上
+    state.loginObject.userName = userName;
+  },
+  userNameAccn: (state, userName) => {     //同上
+    state.loginObject.userNameAccn = userName;
+  },
+  isSuperUser: (state, isSuperUser) => {     //同上
+    state.loginObject.isSuperUser = isSuperUser;
+  },
+  projectId: (state, proId) => {   //项目id
+    state.projectMsg.pro_id = proId;
+  },
+  stopProjectId: (state, proId) => {   //终止库项目id
+    state.projectMsg.stopProjectId = proId;
+  },
+  projectMsg: (state, data) => {   //项目信息
+    state.projectMsg.projectMsg = data || {};
+  },
+  increment: (state, n) => {
+    state.Management.statedate = n;
+  },
+  proChatIsShow: (state, proChatIsShow) => {   //是否显示项目聊天菜单
+    state.proChatIsShow = proChatIsShow;
+  },
+  projectHide: (state, projectHide) => {   //是否显示项目审批菜单
+    state.projectHide = projectHide;
+  },
+  approvalComment: (state, item) => {
+    state.approvalIsShow = true
+    state.approvalData = item
+    console.log(state, item, 36666)
+  },
+  //  下载方法
+  download: (state, arr) => {
+    // console.log('download',arr)
+    // return
+    var index = 0;
+    if (!arr || arr.length == 0) {
+      return;
+    }
+    if (state.isPC) {
+      window.ChromeMain.CS_Main_DownloadFile(JSON.stringify(arr))
+      return
+    }
+    var fn = function () {
+      if (index <= arr.length - 1) {
+        var id = arr[index].id;
+        var name = arr[index].name;
+        index++;
+        if (!id) {
+          return;
+        } else {
+          let url = ''
+          if (arr[0].flag === 'preview') {
+            url = arr[0].url
+          } else {
+            url = $utils.getDownloadUrl(id);
+          }
+          if ($("#download_iframe")) {
+            effective(url, name);
+          } else {
+            $("#download_iframe").remove();
+            effective(url, name);
+          }
+        }
+      } else {
+        return;
+      }
+    };
+    //  判断请求路径是否有效以及后续操作
+    var effective = function (url, name) {
+      let browser = $utils.checkBrowser()
+      if (browser === "IE" || browser === "Edge") {
+        let oPop = window.open(url);
+        for (; oPop.document.readyState != "complete";) {
+          if (oPop.document.readyState == "complete")
+            break;
+        }
+        oPop.document.execCommand("SaveAs");
+        oPop.close();
+      } else if (['QQ', '搜狗'].includes(browser)) {
+        window.open(url, '_blank');
+      } else {
+        var eleLink = document.createElement('a');
+        eleLink.style.display = 'none';
+        eleLink.download = name;
+        eleLink.href = url;
+        document.body.appendChild(eleLink);
+        eleLink.click();
+
+        setTimeout(() => {
+          document.body.removeChild(eleLink);
+          // 循环下载
+          fn();
+        }, 1000)
+      }
+    }
+    fn();
+  },
+  /**
+   * pc其他下载
+   * @param {Object} item {docId docName}
+   */
+  pcOtherDownload: (state, item) => {
+    this.a.commit('download', [{
+      docId: item.docId,
+      docType: 0,
+      id: 0,
+      docName: item.docName,
+      source: 4, // 文件源： 1底稿 0项目文档 2客户文档 4其他
+      parentId: 0,
+      projectId: 0,
+      parentName: 0
+    }])
+  },
+  //  下载方法
+  downloadRfs: (state, arr) => {
+    var index = 0;
+    if (!arr || arr.length == 0) {
+      return;
+    }
+    if (state.isPC) {
+      window.ChromeMain.CS_Main_ExportFile(state.url.E_IP + "/rfs/downloadVersion/" + arr[0].id + '/' + arr[0].docId, '', '')
+      return
+    }
+    var fn = function () {
+      if (index <= arr.length - 1) {
+        var id = arr[index].id;
+        var docId = arr[index].docId;
+        var name = arr[index].name;
+        index++;
+        if (!id) {
+          return;
+        } else {
+          var url = state.url.E_IP + "/rfs/downloadVersion/" + id + '/' + docId;
+          if ($("#download_iframe")) {
+            effective(url, name);
+          } else {
+            $("#download_iframe").remove();
+            effective(url, name);
+          }
+        }
+      } else {
+        return;
+      }
+    };
+    //  判断请求路径是否有效以及后续操作
+    var effective = function (url, name) {
+      $.ajax({
+        type: 'get',
+        url: url,
+        async: false,
+        complete: function (data) {
+          if (data.status == 200) {
+            var iframeDom = $('<iframe style="display: none;" src="' + url + '" id="download_iframe"></iframe>');
+            $("body").append(iframeDom);
+            setTimeout(() => {
+              $("#download_iframe").remove();
+              fn();
+            }, 1000)
+          } else {
+            alert(name + "文件不存在");
+            fn();
+          }
+        }
+      });
+    }
+    fn();
+  },
+  //项目文档复制剪切粘贴方法
+  projectDocPaste: (state, data) => {
+    state.projectDocCopy.ids = data.ids;
+    state.projectDocCopy.projId = data.projId;
+    state.projectDocCopy.sourceProjId = data.sourceProjId;
+    state.projectDocCopy.parentId = data.parentId;
+    state.projectDocCopy.copyOrCut = data.copyOrCut;
+    state.projectDocCopy.hasCutOrCopy = data.hasCutOrCopy;
+    state.projectDocCopy.seleFileIds = data.seleFileIds;
+    state.projectDocCopy.seleFolderIds = data.seleFolderIds;
+    state.projectDocCopy.docSource = data.docSource;
+  },
+  clearCopyFn: (state, data) => {
+    state.projectDocCopy.hasCutOrCopy = false;
+  },
+  manuscriptCopyFn: (state, data) => {
+    state.manuscriptCopy.ids = data.ids
+    state.manuscriptCopy.oldProjId = data.oldProjId
+    state.manuscriptCopy.newProjId = data.newProjId
+    state.manuscriptCopy.copyData = data.copyData
+    state.manuscriptCopy.copyType = data.copyType
+  },
+  behindTaskSearchFn: (state, data) => {
+    console.log('要存', data)
+    state.behindTaskSearch.starTime = data.starTime
+    state.behindTaskSearch.endTime = data.endTime
+    state.behindTaskSearch.creater = data.creater
+    state.behindTaskSearch.createByIds = data.createByIds
+    state.behindTaskSearch.createrList = data.createrList
+    state.behindTaskSearch.copypeople = data.copypeople
+    state.behindTaskSearch.financingName = data.financingName
+    state.behindTaskSearch.financingList = data.financingList
+    state.behindTaskSearch.mouleName = data.mouleName
+  },
+  //项目文档搜索结果页搜索条件
+  proDocSearchFn: (state, data) => {
+    state.proDocSearchList.searchList.titleKey = data.searchList.titleKey;
+    state.proDocSearchList.searchList.conKey = data.searchList.conKey;
+    state.proDocSearchList.searchList.proStage = data.searchList.proStage;
+    state.proDocSearchList.searchList.dirStateSel = data.searchList.dirStateSel;
+    state.proDocSearchList.searchList.fileStateSel = data.searchList.fileStateSel;
+    state.proDocSearchList.searchList.fileTypesSel = data.searchList.fileTypesSel;
+    state.proDocSearchList.searchList.starTime = data.searchList.starTime;
+    state.proDocSearchList.searchList.endTime = data.searchList.endTime;
+  },
+  proDocSearchProFn: (state, data) => {
+    state.proDocSearchProData.projectId = data.projectId;
+    state.proDocSearchProData.projectName = data.projectName;
+    state.proDocSearchProData.processName = data.processName;
+    state.proDocSearchProData.processId = data.processId;
+    state.proDocSearchProData.docParentId = data.docParentId;
+    state.proDocSearchProData.pathNameList = data.pathNameList;
+    state.proDocSearchProData.projectCreatBy = data.projectCreatBy;
+  },
+
+  allFloatingFn: (state, data) => { //设置全局浮窗
+
+    state.allFloatingObj.allFloatingFromUrl = data.allFloatingFromUrl
+    state.allFloatingObj.allFloatingFlage = data.allFloatingFlage
+  },
+  chatMessageFn: (state, data) => { //设置聊天信息
+    state.chatMessageObj = data
+  },
+  chatProjectFn: (state, data) => { //设置聊天信息
+    state.chatProjectObj.projectId = data
+  },
+  //预览所有方法
+  previewAllFn: (state, data) => {
+    let canVievTypeList = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'gif', 'bmp', 'png', 'psd', 'pdf'];
+    if (data.docName == undefined || data.docName == '' || data.docName == null) {
+      data.docName = '投行';
+    }
+    const photoType = data.photoType.toLowerCase()
+    data.headTitle = data.isPaperIndexDoc == true ? data.paperIndexCatalog : '预览';
+    store.commit('preview', data)
+    $utils.savePreviewHistory();
+    if (canVievTypeList.indexOf(photoType) == -1) {
+      window.msg.$message.warning("该文件类型暂不支持预览，请下载查看！")
+      return;
+    }
+    // http://39.106.254.225/#/previewImg?rfsId=ab2cd1620623447dbd682b331ac43607&docId=269395&sourceType=projectDoc&
+    // viewImgSrc=http%3A%2F%2F39.106.254.225%2F%2Frfs%2Fdownload%2F269395
+    // http://localhost:8080/#/previewImg?rfsId=ab2cd1620623447dbd682b331ac43607&docId=269395&sourceType=projectDoc&
+    // viewImgSrc=http%3A%2F%2F39.106.254.225%2F%2Frfs%2Fdownload%2FlJBwbrAzM%2Fp%2BZwV4%2FYvuIw%3D%3D
+
+    // 图片预览
+    if (photoType === 'jpg'
+      || photoType === 'jpeg'
+      || photoType === 'gif'
+      || photoType === 'bmp'
+      || photoType === 'png'
+      || photoType === 'psd') {
+      // pc 图片预添加放大效果 调用新方法
+      if (state.isPC) {
+        let params = {
+          docId: data.docId,
+          fileName: data.docName
+        }
+        window.ChromeMain.CS_Main_PreviewPicture(JSON.stringify(params))
+        return
+      }
+
+      // let viewImgSrc = `${state.url.E_IP}/rfs/download/${data.docId}` // 这个可以预览到
+      // { rfsId: data.rfsId, docId: data.docId, sourceType: data.sourceType, viewImgSrc: viewImgSrc}
+      let routes = window.msg.$router.resolve({
+        path: "/previewImg"
+      });
+      window.open(routes.href, "_blank");
+    } else {
+      // query: { rfsId: data.rfsId, docId: data.docId, sourceType: data.sourceType}   
+      let routes = window.msg.$router.resolve({
+        path: "/preview"
+      });
+      window.open(routes.href, "_blank");
+    }
+
+  },
+
+
+
+
+  //  导出方法
+  /*
+   *  param  Object   {url: ""， data: []}  必传参数
+   * 王雁鹏负责
+   */
+  export: (state, param) => {
+    if (state.isPC) {
+      if (param.data == null || param.data == undefined) {
+        param.data = '';
+      }
+      let data = {
+        token: state.loginObject.userToken,
+        userId: state.loginObject.userId,
+        projectId: param.projectIdFlag ? param.projectIdFlag : state.projectMsg.pro_id,
+        loginType: 'pc',
+        data: param.data
+      };
+      // /sys/exportPaperChangeLog 这个接口单独处理
+      if (param.url == '/sys/exportPaperChangeLog') {
+        data.data = { data: param.data.data };
+      }
+      window.ChromeMain.CS_Main_ExportFile(!!param.noSpliceUrl ? param.url : state.url.E_IP + param.url, JSON.stringify(data), '')
+      return
+    }
+    let url = param.url;
+    let urlArr = [state.url.E_IP + '/sys/exportPaperChangeLog']
+    if (param.url == '/rfs/export/task/exportTaskTplByStage') {
+      urlArr = [state.url.E_IP + '/rfs/export/task/exportTaskTplByStage']
+    }
+    if (param.url == '/rfs/files/downloadDocsZip') {
+      urlArr = [state.url.E_IP + '/rfs/files/downloadDocsZip']
+    }
+    if (param.url == '/rfs/downloadDocsZip') {
+      urlArr = [state.url.E_IP + '/rfs/downloadDocsZip']
+    }
+    param.url = state.url.E_IP + param.url;
+
+    //导出参数数据
+    let dataValue = {
+      token: state.loginObject.userToken,
+      userId: state.loginObject.userId,
+      projectId: param.projectIdFlag ? param.projectIdFlag : state.projectMsg.pro_id,
+      // data:JSON.stringify(param.data)
+    }
+
+    const params = new URLSearchParams();
+    let formData = param.data
+
+    //判断是否为导出系统日志，修改参数格式
+    params.append('token', state.loginObject.userToken)
+    params.append('userId', state.loginObject.userId)
+    params.append('projectId', param.projectIdFlag ? param.projectIdFlag : state.projectMsg.pro_id)
+    // debugger
+    let i = 0;
+
+    //声明i值以防止死循环
+
+
+    //导出文档方法
+    let exportForm = function () {
+      var form = $("<form></form>");
+      form.attr("method", "post");
+      form.attr("action", param.url);
+      form.attr("Content-Type", "application/json;charset=UTF-8");
+      form.attr("dataType", "json");
+      form.attr("target", "stop");
+      var input1 = $('<input name="token" style="opacity:0"/>');
+      input1.val(state.loginObject.userToken);
+      var input2 = $('<input name="userId" style="opacity:0"/>');
+      input2.val(state.loginObject.userId);
+      var input4 = $('<input name="projectId" style="opacity:0"/>');
+      input4.val(param.projectIdFlag ? param.projectIdFlag : state.projectMsg.pro_id);
+      form.append(input1);
+      form.append(input2);
+      form.append(input4);
+      if (param.data) {
+        var input3 = $('<input name="data" style="opacity:0"/>');
+        input3.val(JSON.stringify(formData));
+        form.append(input3);
+      }
+      $("body").append(form);
+      form.submit().remove();
+
+      $("#iframestop").on('load', function () {
+        var iframeWindow = $("#iframestop")[0].contentWindow;
+        var text = $(iframeWindow.document.getElementsByTagName("pre")[0]).text();
+        if (!text) return
+        var msgObj = $.parseJSON(text);
+        msgObj.code != 0 ? Message.error(msgObj.msg) : Message.success(msgObj.msg)
+        //  console.log(msgObj)
+      })
+
+    }
+
+    let header = {
+      //   'content-type':'application/json;'
+      'content-type': 'application/x-www-form-urlencoded',
+    }
+
+    let exportAxios = function (exportRes) {
+
+      axios.post(param.url, exportRes, {
+        headers: header,
+        // responseType:'blob'
+      }).then((res) => {
+
+        //判断code是否为-501或-520
+        if (typeof res.data.code !== 'undefined' && res.data.code !== -501 && res.data.code !== -520) {
+          window.msg.$message({
+            message: res.data.msg,
+            type: "error"
+          });
+        } else {
+
+
+          /***
+           *
+           * 若返回code为-501则为空指针，因data参数为空
+           * 使用i防止死循环，
+           * 对params新增data值，
+           * 调用exportForm下载方法，
+           * 若code值再次为-501则message弹窗弹出
+           *
+           */
+          if (i == 0) {
+
+            //第一次为权限验证使用i参数进行控制
+            i = 1;
+
+            // 更改第二次要发送请求的抬头
+            header = {
+
+              //   'content-type':'application/json;'
+              'content-type': 'application/x-www-form-urlencoded',
+            }
+
+            // 重新插入私有请求参数
+            console.log(448, param.data)
+            params.append('data', JSON.stringify(param.data))
+            // 验证权限通过，调用下载请求
+
+            exportForm()
+
+          } else {
+            window.msg.$message({
+              message: res.data.msg || '文档导出错误',
+              type: "error"
+            });
+          }
+        }
+      }).catch((error) => {
+        throw error
+      });
+    }
+    if (urlArr.indexOf(param.url) !== -1) {
+      params.append('data', JSON.stringify(param.data))
+      exportForm()
+    } else {
+      exportAxios(params)
+    }
+  },
+  voteprojId: (state, v) => {
+    state.voteprojId = v
+  },
+  newThat(state, res) {
+    console.log(res)
+    state.that = { fn: res.fn }
+  },
+  customObj(state, obj) {
+    state.customObj = obj;
+  },
+  approvalCommentsFn(state, data) {
+    console.log(state, data, 26655)
+    store.commit('approvalComment', data)
+    let routes = window.msg.$router.resolve({
+      path: "/approvalComments",
+      query: {
+        projectId: data.projectId, // 项目Id
+        docSource: data.docSource, // 来源文档1 底稿2
+        attach: data.attach, // 文件id
+        isLimit: data.isLimit, //权限判断
+        isDir: !!data.isDir,
+        sourceName: data.sourceName,
+        projectName: data.projectName
+      }
+    });
+    window.open(routes.href, "_blank");
+  },
+  jumpLoginApprovalId(state, data) {
+    state.jumpLoginApprovalId = data;
+  },
+  // 判断当前项目状态 是否是已终止状态 endFlag 为1 时 已终止
+  projectStatusTips(state, data) {
+    // if(state.projectMsg.projectMsg.endFlag && state.projectMsg.projectMsg.endFlag === 1){
+    Message.error({
+      message: '当前项目已终止，不可进行此操作'
+    })
+    // }
+  }
+}
+
+// 解决异步操作
+const actions = {
+  keyData: (context, keyCode) => {   //自定义mutations里函数的方法，context与store实例具有相同的方法和属性
+    context.commit("keyCode", keyCode);
+  },
+  loginData: (context, loginData) => {
+    context.commit("loginData", loginData);
+  },
+  userToken: (context, userToken) => {
+    context.commit("userToken", userToken);
+  },
+  userId: (context, userId) => {
+    context.commit("userId", userId);
+  },
+  userName: (context, userName) => {
+    context.commit("userName", userName);
+  },
+
+}
+
+
+const store = new Vuex.Store({
+  state,
+  getters,
+  mutations,
+  actions,
+  plugins: [vuexLocal.plugin]
+})
+
+export default store;

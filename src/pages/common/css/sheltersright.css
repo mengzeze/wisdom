@@ -1,0 +1,184 @@
+/* 右边的样式 */
+.rightShelter{
+    margin-left: 20px;
+}
+.rightShelter .attentionMatters,
+.rightShelter .relatedFile,
+.rightShelter .surveyTool,
+.rightShelter .associatedContent{
+    margin-top: 30px;
+}
+
+
+.rightShelter .attentionMatters .addMatt,
+.rightShelter .relatedFile .addRelate,
+.rightShelter .surveyTool .addHref,
+.rightShelter .associatedContent .addContent{
+    border:1px solid #D9D9D9;
+    width: 460px;
+    height: 32px;
+    border-radius: 3px;
+    text-align: center;
+    line-height: 32px;
+}
+.rightShelter .attentionMatters .addMatt i,
+.rightShelter .attentionMatters .addMatt span,
+.rightShelter .relatedFile .addRelate i,
+.rightShelter .relatedFile .addRelate span,
+.rightShelter .surveyTool .addHref i,
+.rightShelter .surveyTool .addHref span,
+.rightShelter .associatedContent .addContent i,
+.rightShelter .associatedContent .addContent span{
+    position: relative;
+    top: -2px;
+}  
+.rightShelter .attentionMatters .mattersDetail,
+.rightShelter .relatedFile .relateDetail,
+.rightShelter .surveyTool .surveyDetail,
+.rightShelter .associatedContent .associatedDetail{
+    margin-top: 20px;
+    
+} 
+.rightShelter .attentionMatters .mattersDetail li{
+    border-radius: 3px;
+    width: 460px;
+    line-height: 20px;
+    border:1px solid #D9D9D9;
+    height: auto;
+    text-align: left!important;
+    padding-bottom: 10px;
+}
+.rightShelter .attentionMatters .mattersDetail h4,
+.rightShelter .attentionMatters .mattersDetail h5{
+    margin-top: 10px;
+    margin-left: 15px;
+    margin-right: 10px;
+}
+
+/* 相关文件和调查工具和关联内容的一部分样式 */
+.rightShelter .relatedFile .relateDetail,
+.rightShelter .surveyTool .surveyDetail,
+.rightShelter .associatedContent .associatedDetail{
+    border:1px solid #D9D9D9;
+}
+.rightShelter .relatedFile .relateDetail h3,
+.rightShelter .surveyTool .surveyDetail h3,
+.rightShelter .associatedContent .associatedDetail h3{
+    color: #333;
+    font-size: 14px;
+    margin-top:15px;
+    margin-left: 15px;
+    text-align: left!important;
+}
+.rightShelter .relatedFile .relateDetail .relateLi,
+.rightShelter .surveyTool .surveyDetail .surveyLi,
+.rightShelter .associatedContent .associatedDetail .associatedLi{
+     margin-top:15px;
+    margin-left: 15px;
+    margin-bottom: 10px;
+}
+.rightShelter .surveyTool .surveyDetail .surveyLi{
+    text-align: left;
+}
+.rightShelter .surveyTool .surveyDetail .surveyLi span:nth-child(1){
+    width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rightShelter .surveyTool .surveyDetail .surveyLi span:nth-child(2){
+    width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: lef;
+}
+.rightShelter .relatedFile .relateDetail .relateLi em,
+.rightShelter .surveyTool .surveyDetail .surveyLi em{
+    margin-right: 10px;
+    color: #0061A9;
+}
+
+/* 关联内容 */
+.rightShelter .associatedContent .associatedDetail .associatedLi em{
+    margin-right: 10px;
+    color:#0061A9;
+}
+
+/* 任务动态 */
+.rightShelter .dynamicTask{
+    height: 560px;
+    overflow-y: auto;
+    border-bottom: 1px solid #d9d9d9;
+}
+.rightShelter .dynamicTask h4{
+    color: #333333;
+    font-size: 14px;
+    text-align: left!important;
+    margin-bottom: 15px;
+}
+.rightShelter .dynamicTask h5{
+    color: #999999;
+    text-align: left!important;
+    margin-bottom: 15px;
+
+}
+.rightShelter .dynamicTask .dynamicUl li{
+   
+    margin-bottom: 15px;
+}
+.rightShelter .dynamicTask .dynamicUl li p{
+    margin-bottom: 10px;
+}
+.rightShelter .dynamicTask .dynamicUl li p span,
+.rightShelter .dynamicTask .dynamicUl li p em
+
+{
+     color: #999;
+}
+.rightShelter .dynamicTask .dynamicUl li p span .downFiles{
+    color: #0061A9!important;
+    margin-left: 5px;;
+}
+
+/* 底下发布 */
+.dialogOthers{
+
+}
+.dialogOthers textarea{
+    width: 98%;
+    height: 100px;
+    border: 0px;
+    padding-top: 10px;
+}
+.dialogOthers .release{
+
+}
+.dialogOthers .release img{
+    width: 24px;
+    height: 24px;
+}
+.dialogOthers .release span{
+    color:#0061A9;
+}
+
+
+/* 关联内容弹框中的样式 */
+/* .el-checkbox:last-child{
+    margin-right: 30px!important;
+} */
+
+.contentTab .taskNames{
+    text-align: left;
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    margin-top: 5px;
+
+}
+.contentTab .el-checkbox__label img{
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+}

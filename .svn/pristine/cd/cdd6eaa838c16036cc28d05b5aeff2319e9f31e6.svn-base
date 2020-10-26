@@ -1,0 +1,146 @@
+
+.a1{
+  color: #CC0000;
+}
+#app .color-primary{
+  color: #CC0000;
+}
+#app .background-primary{
+  background-color:#CC0000;
+}
+#app .color-light3{
+  color:#db4d4d;
+}
+#app .bgcolor-light5{
+  background-color:#e68080;
+}
+#app .color-light5{
+  color:#e68080;
+}
+.head_top_qian{
+  background:#CC0000;
+}
+#app .el-aside .el-menu-item.is-active{
+  background-color: #fae6e6;
+}
+#app .projectrole .personObj_list.is-active{
+  background-color: #fae6e6;
+}
+#app .fc-state-active {
+  border: 1px solid #CC0000;
+}
+
+#app .user-info-box:hover {
+  background: #eb9999;
+}
+#app .stage-tips .past{
+  background:#CC0000;
+}
+#app .stage-tips .current-stage{
+  background:#e68080;
+}
+#app .stage-list a.active{
+  background:#CC0000;
+}
+#app .stage-list a.cur{
+  background:#e68080;
+}
+
+#app .pro-doc-operation-item:hover{
+  background: #CC0000;
+}
+#app .newremind .el-button:focus, 
+#app .newremind .el-button:hover{
+  border-color: #CC0000;
+  background: #CC0000;
+}
+
+#app .operation_chunk:hover{
+  background: #CC0000;
+}
+
+#app .stripTag {
+  border-color: #CC0000;
+}
+
+#app .icon-operate-btn:hover{
+  color: #fff;
+  background-color: #CC0000;
+}
+
+#app .operate-btn-header:hover{
+  color: #CC0000;
+}
+
+#app .equityBusiness .eqContent li p span:nth-child(3):hover{
+  color: #CC0000;
+}
+
+#app .color-primary-hover:hover{
+  color: #CC0000;
+}
+
+#app .bgcolor-primary-hover:hover{
+  background-color: #CC0000;
+}
+
+#app .border-primary{
+  border-color: #CC0000;
+}
+#app .border-primary-hover:hover{
+  border-color: #CC0000;
+}
+.el-breadcrumb .el-breadcrumb__item:not([aria-current=page]) .el-breadcrumb__inner:not([class~=is-link]){
+  color: #db4d4d;
+}
+.el-breadcrumb .el-breadcrumb__item:not([aria-current=page]) .el-breadcrumb__inner[class~=is-link]{
+  color: #CC0000;
+  font-weight: 400;
+  transition: none;
+}
+.el-breadcrumb .el-breadcrumb__item:not([aria-current=page]) .el-breadcrumb__inner[class~=is-link]:hover{
+  color: #db4d4d;
+}
+
+#app .el-tree .el-checkbox__input.is-disabled.is-checked .el-checkbox__inner {
+  background-color: #CC0000;
+  border-color: #CC0000; 
+}
+
+/* 站内信底部按钮 */
+#app .app_msg_foot .app_btn{
+  background: #CC0000;
+  border-color: #CC0000;
+}
+
+#app .app_msg_foot .app_btn:hover{
+  background: #d63333;
+  border-color: #d63333;
+}
+
+#app .app_msg_foot .app_sure:hover{
+  color: #CC0000;
+  border-color: #f0b3b3;
+  background-color: #fae6e6;
+}
+
+#app .all_recov_msg .app_hint_close:hover{
+  color: #CC0000;
+}
+
+/* 索引列表中的目录点击 */
+#app #project-index-lists p:hover {
+  color: #CC0000;
+}
+/* 导航收起展开 */
+.asides .left-menu-btn .el-radio-button__inner:hover,.backaside .left-menu-btn .el-radio-button__inner:hover{
+  background-color: #CC0000;
+  color: #fff;
+}
+
+#app .project-chat .aitNameActive {
+  color: #CC0000;
+}
+#app .project-chat .aitNameActiveAll {
+  color: #CC0000;
+}

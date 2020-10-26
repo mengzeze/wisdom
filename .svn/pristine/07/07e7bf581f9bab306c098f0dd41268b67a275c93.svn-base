@@ -1,0 +1,12 @@
+
+<div ng-controller="KisBpmMultiInstanceSelectCtrl">
+<!--    <select ng-model="selectedValue" ng-change="multiInstanceSelectChanged(selectedValue)">-->
+<!--        <option ng-repeat="x in property.options track by $index"  value="{{x.value}}" >{{property.value}}{{x.name}}{{x.value}}</option>-->
+<!--    </select>-->
+
+  <select ng-model="property.value" ng-change="multiInstanceSelectChanged()">
+    <option value="1" >会签</option>
+    <option value="2" >或签</option>
+  </select>
+</div>
+

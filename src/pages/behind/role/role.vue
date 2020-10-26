@@ -1,0 +1,1726 @@
+<template>
+  <div class="rolebox role"
+       id="rolebox">
+    <!--        <div class="rolebox_header">-->
+    <!--            <p style="width: 64px;">角色权限</p>-->
+    <!--            <h3 style="font-weight: bold;">角色权限</h3>-->
+    <!--        </div>-->
+    <div class="page-wrapper">
+      <el-breadcrumb separator="/"
+                     class="page-breadcrumb">
+        <el-breadcrumb-item>角色权限</el-breadcrumb-item>
+      </el-breadcrumb>
+      <h3 class="page-title">角色权限</h3>
+    </div>
+
+    <div class="clearfix rolebox_content">
+
+      <div class="rolebox_left">
+        <div class="rolebox_left_btn pl-10 pt-10">
+          <div>
+            <!-- icon="el-icon-plus" -->
+            <el-button v-if="$utils.checkSystemPermission('bask_add_role')"
+                       type="primary"
+                       size="small"
+                       @click="addhighest">添加</el-button>
+          </div>
+          <div>
+            <el-button @click="copyRole"
+                       type="primary"
+                       size="small">复制
+            </el-button>
+            <el-button @click="pasteRole"
+                       type="primary"
+                       size="small">粘贴
+            </el-button>
+          </div>
+
+        </div>
+
+        <div class="role_list_box">
+          <el-scrollbar style="height:100%">
+            <div class="rolebox_left_trees">
+              <div class="all_sel">
+                <el-checkbox style="font-weight:bold"
+                             :value="checkAll"
+                             :indeterminate="isIndeterminate"
+                             @change="rolePermCheckAll">全选</el-checkbox>
+              </div>
+              <div @click="roles(item,index)"
+                   ref="lefts"
+                   v-for="(item,index) in listData"
+                   :key="index"
+                   :class="['role_item',{'div_bag':index == 0}]">
+                <div class="center role_item_l">
+                  <el-checkbox @click.stop.native="rolePermCheck(item,$event)"
+                               v-model="item.isSel"></el-checkbox>
+                  <span class="role_item_avatar">
+                    <img src="../../../assets/image/people.png"
+                         alt="">
+                  </span>
+                  <span class="rolebox_left_trees_name ellipsis1"
+                        :title="item.roleName">{{item.roleName}}</span>
+                </div>
+                <div style="width:42px">
+                  <i v-if="$utils.checkSystemPermission('bask_del_role')"
+                     @click="deletes(item)"
+                     class="el-icon-delete role_item_icon"></i>
+                  <i v-if="$utils.checkSystemPermission('bask_edit_role')"
+                     @click="edit(item)"
+                     class="el-icon-edit-outline role_item_icon"></i>
+                </div>
+              </div>
+            </div>
+          </el-scrollbar>
+          <div class="msg_box">已选 <span class="color-primary">{{personCheckList.length}}</span> 项</div>
+        </div>
+      </div>
+
+      <div style="position: absolute;right:30px;top:5px;z-index:100;"
+           v-if="$utils.checkSystemPermission('permission_role_configure')">
+        <el-button @click="btnclick"
+                   size="small"
+                   style="height:30px;line-height:1;"
+                   v-if="seen7"
+                   type="primary"><i class="el-icon-tickets"></i>&nbsp;保存</el-button>
+        <el-button @click="save(1)"
+                   size="small"
+                   style="height:30px;line-height:1;"
+                   v-else-if="!seen7 && solute_save"
+                   type="primary"><i class="el-icon-tickets"></i>&nbsp;保存</el-button>
+        <el-button @click="save(2)"
+                   size="small"
+                   style="height:30px;line-height:1;"
+                   v-else-if="!seen7 && solute_saves"
+                   type="primary"><i class="el-icon-tickets"></i>&nbsp;保存</el-button>
+      </div>
+      <div class="rolebox_right">
+        <el-tabs type="border-card"
+                 @tab-click="handleClick">
+          <el-tab-pane label="可操作功能">
+            <div id="el_tab_pane_fn">
+              <el-scrollbar style="height:100%">
+                <div class="clearfix contnet_operation">
+                  <h4 class="select_all_box code-wrapper">
+                    <el-checkbox @change="allChecks"
+                               v-model="checkFlag">全选</el-checkbox>
+                  </h4>
+                </div>
+                <div class="clearfix contnet_operation"
+                     v-for="(it,i) in check" :key="it.id">
+                  <h4 class="code-wrapper">
+                    <el-checkbox @change="isTitleChecks4(it,$event,i)"
+                               v-model="it.checked">{{it.permissionDescribe}}</el-checkbox>
+                  </h4>
+                  <div class="contnet_operation_chunk">
+                    <div id="contnet_operation1"
+                         v-for="(item,index) in it.children" :key='item.id'>
+                      <p class="contnet_operationp">
+                        <span>
+                          <el-checkbox @change="isTitleChecks(item,$event,index)"
+                               v-model="item.checked">{{item.permissionDescribe}}</el-checkbox>
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </el-scrollbar>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="可访问数据">
+            <div id="el_tab_pane_data">
+              <div class="loading_shade"
+                   v-show="loadingShow">
+                <i class="el-icon-loading loading_icon"></i>
+              </div>
+              <el-scrollbar style="height:100%">
+                <div class="visit">
+                  <p class="btn-group">
+                    <el-button size="small"
+                               :type="curBtn === 'pro' ? 'primary' : ''"
+                               @click="customer_data(0)">项目数据</el-button>
+                    <el-button v-if="$utils.m('customer_manage')"
+                               size="small"
+                               :type="curBtn === 'cus' ? 'primary' : ''"
+                               @click="customer_data(1)">客户数据</el-button>
+                  </p>
+                  <div v-if="project_data"
+                       class="visit_content">
+                    <div class="visit_content_department visit_content_chunk">
+                      <p class="visit_content_department_title">
+                        <i style="color:#EA9C20"
+                           class="iconfont bumen1"></i>
+                        <span>部门</span>
+                      </p>
+                      <div class="visit_content_department_tree">
+                        <el-scrollbar style="height:100%">
+                          <!-- default-expand-all -->
+                          <el-tree :data="tree"
+                                   @check="checks"
+                                   node-key="labelId"
+                                   ref="tree"
+                                   :show-checkbox="true"
+                                   :default-checked-keys="treeChecked"
+                                   :default-expanded-keys="departExpandedList"
+                                   highlight-current
+                                   :props="defaultProps"
+                                   class="visit_content_department_el_tree">
+                          </el-tree>
+                        </el-scrollbar>
+                      </div>
+
+                    </div>
+                    <div class="visit_content_department visit_content_chunk"
+                         v-if="financing">
+                      <p class="visit_content_department_title">
+                        <i style="color:#DA687C"
+                           class="iconfont type"></i>
+                        <span>业务类型</span>
+                      </p>
+                      <div class="visit_content_department_tree">
+                        <el-scrollbar style="height:100%">
+                          <!-- default-expand-all -->
+                          <el-tree :data="treeDate"
+                                   :show-checkbox="true"
+                                   @check="checks2"
+                                   node-key="id"
+                                   ref="tree2"
+                                   :default-checked-keys="treeDateChecked"
+                                   :default-expanded-keys="businessExpandedList"
+                                   highlight-current
+                                   :props="defaultProps"
+                                   class="visit_content_department_el_tree">
+                          </el-tree>
+                        </el-scrollbar>
+                      </div>
+                    </div>
+                    <div class="visit_content_chunk"
+                         v-if="dataResone">
+                      <p class="visit_content_department_title">
+                        <i style="display:inline-block;color:#3A9BD9;"
+                           class="el-icon-s-data"></i>
+                        <span>数据源</span>
+                      </p>
+                      <div class="visit_content_dataOrigin">
+                        <el-scrollbar style="height:100%">
+                          <div class="nav-li-footers">
+                            <p v-if="dataType == '1'">
+                              <el-radio v-model="allProjRadio"
+                                        @change="proChang('1')"
+                                        label="1">全部项目</el-radio>
+                            </p>
+                            <p v-if="dataType == '1'">
+                              <el-radio v-model="allProjRadio"
+                                        @change="proChang('2')"
+                                        label="2">项目</el-radio>
+                            </p>
+                            <div class="checkboxs">
+                              <div v-for="(item,idx) in watchAllProjData"
+                                   :key="idx">
+                                <el-checkbox v-model="item.checked"
+                                             :disabled="item.disabled"></el-checkbox>
+                                <span :title="item.name" class="ellipsis1">{{item.name}}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </el-scrollbar>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </el-scrollbar>
+            </div>
+
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import { setTimeout } from 'timers';
+export default {
+  data () {
+    return {
+      curBtn: 'pro', // 当前高亮得按钮
+      dataResone: true,
+      checkFlag: false,
+      arr1: [],
+      arr2: [],
+      arr3: [],
+      arr4: [],
+      projectType: [],
+      checkAll: false,
+      isIndeterminate: false,
+      seen7: true,
+      isTitleChecks1: [],
+      isTitleChecks2s: [],
+      isTitleChecks4s: [],
+      roleName: '',
+      newarr: [],
+      newarr2: [],
+      newarr3: [],
+      roleids: '',
+      toparr: [],
+      seenseen: '',
+      solute_saves: false,
+      solute_save: true,
+      check: [],
+      financing: true,
+      project_data: true,
+      checked: true,
+      treeDate: [],
+      tree: [],
+      listData: [],
+      defaultProps: {
+        children: 'children',
+        label: 'label',
+        treeData: [],//tree数据
+        expandedKey: [],//展开节点
+        checkedID: '',//选中节点,
+        arrs: [],
+      },
+      watchAllProjData: [],//全部项目
+      allProjRadio: '1', //项目单选框
+      dataType: '1',
+      treeChecked: [],
+      departExpandedList: [],//部门数据默认展开的key
+      treeDateChecked: [],
+      businessExpandedList: [],//业务类型数据默认展开的key
+      arrData: [],
+      arrDatas: [],
+      treeprojectData: [],
+      clickTab: 1, //点击tab
+      deptIds: [],
+      userIds: [],
+      projectTypes: [],
+      stageIds: [],
+      loadingShow: false,
+      personCheckList: [], // 已选人员列表
+      projectLoadTimer: '',//加载项目数据定时器
+      dataCheck:[]
+    }
+  },
+  created () {
+    this.lefts()
+  },
+  mounted () {
+    setTimeout(() => {
+      $(".rolebox_right").css("height", $(window).height() - 180)
+      $(".rolebox_left").css("height", $(".rolebox_right").height());
+      this.getViewPortHeight();
+      var dom = $(".contnet_operation");
+      $(".split_line").first().remove();
+      // 限制输入长度
+      $(".el-message-box .el-message-box__content .el-message-box__input .el-input__inner").attr('maxlength', '20')
+    }, 0)
+
+  },
+  methods: {
+    // 复制功能
+    copyRole () {
+      if (this.personCheckList.length == 0) {
+        this.$message.warning('请至少选择一条数据')
+        return
+      }
+      this.$store.commit('setBehindRoleAuth', this.personCheckList.map(v => v.id))
+      this.rolePermCheckAll(false)
+      this.$message.success('选中角色已复制，请选择需要粘贴的角色')
+    },
+    // 粘贴
+    pasteRole () {
+      const copyRoleIds = this.$store.state.behindRoleAuth
+      if (copyRoleIds.length == 0) {
+        this.$message.warning('请先复制角色权限')
+        return
+      }
+      if (this.personCheckList.length == 0) {
+        if (!this.$utils.checkSystemPermission('bask_add_role')) {
+          this.$message.warning('您没有添加角色权限')
+          return
+        }
+      }
+      this.$post('/sys/rolePaste', {
+        data: {
+          copyRoleIds,
+          pasteRoleIds: this.personCheckList.map(v => v.id)
+        }
+      }).then(res => {
+        if (res.code != this.code.codeNum.SUCCESS) {
+          this.$message.error(res.msg);
+          return
+        }
+        this.$message.success('粘贴成功')
+        // 新建角色情况
+        if (this.personCheckList.length == 0) {
+          this.lefts()
+          return
+        }
+        // 无需新建角色
+        // 只更新当前选中的并且有勾选粘贴操作的项目角色权限
+        this.personCheckList.forEach(item => {
+          if (item.id == this.roleids) {
+            this.role1(item.id)
+          }
+        })
+        this.rolePermCheckAll(false)
+      }).catch(err => { console.log(err) })
+    },
+    // 人员全选
+    rolePermCheckAll (val) {
+      this.listData.forEach(v => v.isSel = val)
+      this.updateRolePermList()
+    },
+    // 更新人员选择列表
+    updateRolePermList () {
+      setTimeout(() => {
+        this.personCheckList = this.listData.filter(v => v.isSel)
+        this.allCheckStatus()
+      })
+    },
+    // 全选按钮半选状态更新
+    allCheckStatus () {
+      this.checkAll = this.personCheckList.length === this.listData.length;
+      this.isIndeterminate = this.personCheckList.length > 0 && this.personCheckList.length < this.listData.length;
+    },
+    // 项目选择
+    rolePermCheck (item, e) {
+      // 防止多次触发
+      if (e.target.className === 'el-checkbox__original') return
+      this.updateRolePermList()
+    },
+    getViewPortHeight () {
+      var heig = document.documentElement.clientHeight || document.body.clientHeight;
+      document.getElementById("el_tab_pane_fn").style.height = (heig - 217) + "px";
+      document.getElementById("el_tab_pane_data").style.height = (heig - 217) + "px";
+    },
+    //全选
+    allChecks () {
+      if (this.checkFlag) {
+        var arr = this.check;
+        for (var i = 0; i < arr.length; i++) {
+          arr[i].status = 1
+          arr[i].checked = true
+          this.isTitleChecks4s.push(arr[i].id);
+          if (arr[i].children != null) {
+            for (var j = 0; j < arr[i].children.length; j++) {
+              arr[i].children[j].status = 1
+              arr[i].children[j].checked = true
+              this.isTitleChecks4s.push(arr[i].children[j].id);
+            }
+          }
+        }
+      } else {
+        console.log(this.check);
+        var arr = this.check;
+        this.isTitleChecks4s = [];
+        for (var i = 0; i < arr.length; i++) {
+          arr[i].status = 0
+          arr[i].checked = false
+        
+          if (arr[i].children != null) {
+            for (var j = 0; j < arr[i].children.length; j++) {
+              arr[i].children[j].status = 0
+              arr[i].children[j].checked = false
+            }
+          }
+        }
+      }
+      this.$forceUpdate();
+    },
+    handleClick (tab, event) {
+      if (tab.index == 0) {
+        this.seen7 = true
+        this.getViewPortHeight();
+      } else {
+        this.seen7 = false;
+        this.clickTab = 2;
+        this.getViewPortHeight();
+        this.getProjectData();
+        this.financings();
+      }
+    },
+    // 数据回显
+    isTitleCheck (item) {
+      if (item.status == 1) {
+        return true
+      }
+    },
+    isTitleCheck2 (item) {
+      if (item.status == 1) {
+        return true
+      }
+    },
+    isTitleCheck3 (item) {
+      if (item.status == 1) {
+        return true
+      }
+    },
+    isTitleCheck4 (item) {
+      if (item.status == 1) {
+        return true
+      }
+    },
+    // 角色权限全选控制
+    roleCheckFlag(){
+      let _this = this;
+      _this.isTitleChecks4s = [];
+      _this.check = this.dataCheck[0].children;
+      let total = 0
+      var arr = this.dataCheck[0].children;
+      for (var i = 0; i < arr.length; i++) {
+        total ++
+        this.$set(arr[i], 'checked', false)
+        if (arr[i].parentId == -1) {
+          _this.toparr.push(arr[i].id);
+        }
+        if (arr[i].status == 1) {
+          this.$set(arr[i], 'checked', true)
+          _this.isTitleChecks4s.push(arr[i].id);
+        }
+        if (arr[i].children != null) {
+          for (var j = 0; j < arr[i].children.length; j++) {
+            total ++
+            this.$set(arr[i].children[j], 'checked', false)
+            if (arr[i].children[j].status == 1) {
+              this.$set(arr[i].children[j], 'checked', true)
+              _this.isTitleChecks4s.push(arr[i].children[j].id);
+            }
+          }
+        }
+      }
+      _this.checkFlag = total=== _this.isTitleChecks4s.length 
+      console.log(_this.checkFlag+'checkflag'+ total +'total'+ _this.isTitleChecks4s.length+ '*********')
+    },
+    //父集
+    isTitleChecks4 (item, checked, index) {
+      console.log(1, item, checked, index)
+      var arr = item.children
+      if (checked) {
+        item.status = 1
+        this.isTitleChecks4s.push(item.id);
+        if (arr != null) {
+          for (let i = 0; i < arr.length; i++) {
+            this.isTitleChecks4s.push(arr[i].id)
+            arr[i].status = 1;
+            arr[i].checked = true
+          }
+        }
+        this.roleCheckFlag()
+      } else {
+        item.status = 0;
+        this.checkFlag = false
+        for (var i = 0; i < this.isTitleChecks4s.length; i++) {
+          if (item.id == this.isTitleChecks4s[i]) {
+            this.isTitleChecks4s.splice(i, 1);
+          }
+        }
+        if (arr == null) {
+          return;
+        }
+        for (let i = 0; i < arr.length; i++) {
+          arr[i].status = 0;
+          arr[i].checked = false
+          for (var j = 0; j < this.isTitleChecks4s.length; j++) {
+            if (arr[i].id == this.isTitleChecks4s[j]) {
+              this.isTitleChecks4s.splice(j, 1);
+            }
+          }
+        }
+      }
+    },
+    //第三级
+    isTitleChecks2 (item, el) {
+      item.status = 1
+      var arr = item.children
+      if (arr != null) {
+        var arr = item.children
+        if (el.target.checked == true) {
+          this.isTitleChecks2s.push(item.id)
+          for (let i = 0; i < arr.length; i++) {
+            arr[i].status = 1
+            this.isTitleChecks2s.push(arr[i].id)
+          }
+        } else {
+          this.newarr3.push(item.id)
+          for (let i = 0; i < arr.length; i++) {
+            arr[i].status = 0
+            this.newarr3.push(arr[i].id)
+          }
+        }
+        for (let i = 0; i < this.isTitleChecks2s.length; i++) {
+          for (let j = 0; j < this.newarr3.length; j++) {
+            if (this.isTitleChecks2s[i] == this.newarr3[j]) {
+              this.isTitleChecks2s.splice(i, 1)
+            }
+          }
+        }
+      }
+    },
+    // 子集
+    isTitleChecks (item, checked, index) {
+      console.log(item, checked, index)
+      if (checked) {
+        item.status = 1
+        // item.checked = true
+        this.isTitleChecks4s.push(item.id);
+        this.roleCheckFlag()
+        for (var i = 0; i < this.check.length; i++) {
+          if (item.parentId == this.check[i].id) {
+            this.check[i].status = 1;
+            this.check[i].checked = true
+            this.isTitleChecks4s.push(this.check[i].id);
+          }
+        }
+      } else {
+        item.status = 0;
+        item.checked = false
+        this.checkFlag = false
+        console.log('&&&&&')
+        for (var i = 0; i < this.isTitleChecks4s.length; i++) {
+          if (item.id == this.isTitleChecks4s[i]) {
+            this.isTitleChecks4s.splice(i, 1);
+          }
+        }
+      }
+    },
+    jiequ (id, arrs) {
+      for (let j = 0; j < arrs.length; j++) {
+        if (id == arrs[j]) {
+          arrs.splice(j, 1)
+          j = j - 1
+        }
+      }
+      return arrs
+    },
+    jiequ2 (arr, arrs) {
+      console.log(arr)
+      console.log(arrs)
+      for (let i = 0; i < arr.length; i++) {
+        for (let j = 0; j < arrs.length; j++) {
+          if (arr[i] == arrs[j]) {
+            arr.splice(j, 1)
+            j = j - 1
+          }
+        }
+      }
+      //  return arr\
+      // console.log(arr)
+    },
+    Selectall (el) {
+      if (el.target.checked == true) {
+        this.seenseen = true
+      } else {
+        this.seenseen = false
+      }
+    },
+    Selectal () {
+      console.log(this.seenseen)
+      return this.seenseen
+    },
+    proChang (key) {
+      this.watchAllProjData.forEach(item => {
+        item.disabled = key==='1'  
+        key==='1' && (item.checked = false);
+      })
+    },
+    save (type) { //保持提交
+      var deptData = this.getDeptChecked(type)
+      if (type == 1) {
+        var financingData = this.getFinancingChecked()
+      } else {
+        var financingData = []
+      }
+      var projectData = this.getProjectChecked(type)
+      var data = {};
+      if (this.dataType == "1") {
+        data = {
+          token: this.$store.state.loginObject.userToken,
+          userId: this.$store.state.loginObject.userId,
+          data: {
+            deptList: deptData.length != 0 ? deptData : [],
+            projectList: financingData.length != 0 ? financingData : [],
+            relationList: projectData.length != 0 ? projectData : [],
+            roleId: this.roleids
+          }
+        }
+      } else {
+        data = {
+          token: this.$store.state.loginObject.userToken,
+          userId: this.$store.state.loginObject.userId,
+          data: {
+            deptList: deptData.length != 0 ? deptData : [],
+            projectList: financingData.length != 0 ? financingData : [],
+            relationList: projectData.length != 0 ? projectData : [],
+            roleId: this.roleids
+          }
+        }
+      }
+      var _this = this
+      this.$post('/sys/updateRoleLookDate', data)
+        .then((res) => {
+          // _this.Project_data()
+          // _this.financings()
+          res.code == 0 ? this.$message.success(res.msg) : this.$message.error(res.msg)
+          // todo 模块化 -- 角色权限--可访问数据变更
+          this.$utils.getSysPermissionFn()
+        }).catch(function (error) {
+          console.log(error);
+        });
+    },
+    getDeptChecked (type) { //处理部门数据ckecked选中
+      var deptTreeData = this.$refs.tree.getCheckedNodes();
+      var deptData = deptTreeData.map((item, id) => {
+        if (item.userId) {
+          item.userId = item.userId
+          item.deptUser = 2
+        } else {
+          item.userId = ''
+          item.deptUser = 1
+        }
+        return {
+          deptId: item.id ? item.id : item.deptId,
+          userId: item.userId,
+          deptUser: item.deptUser,
+          type: this.dataType,
+        }
+      })
+      return deptData;
+    },
+    getFinancingChecked () { //处理融资类型checked选中
+      var financingTreeData = this.$refs.tree2.getCheckedNodes();
+      var financingData = financingTreeData.map((item, id) => {
+        console.log(item.stageId);
+        return {
+          projectType: item.stageId ? item.financingId : item.id,
+          stageId: item.stageId ? item.stageId : '',
+          type: item.stageId ? 2 : 1,
+          financingId: item.financingId,
+        }
+      })
+      return financingData;
+    },
+    getProjectChecked (type) { //处理项目checked选中
+      var projData = []
+      this.watchAllProjData.map((item, idx) => {
+        if (item.checked) {
+          projData.push({
+            relationId: item.id,
+            type: 1,
+          })
+        }
+      })
+      return projData
+    },
+    checks (data, event) { //处理部门check选中
+      this.deptIds = []
+      this.userIds = []
+      var array = this.$refs.tree.getCheckedNodes()
+      array.map((item, idx) => {
+        if (item.userId) {
+          this.deptIds.push(item.deptId)
+          this.userIds.push(item.userId)
+        } else {
+          this.deptIds.push(item.id)
+        }
+
+      })
+      this.rights()
+
+    },
+    checks2 (data, event) {
+      this.projectTypes = []
+      this.stageIds = []
+      var array = this.$refs.tree2.getCheckedNodes()
+
+      array.map((item, idx) => {
+        console.log(item.label, '\\')
+        if (item.stageId) {
+          this.projectTypes.push(item.financingId)
+          this.stageIds.push(item.stageId)
+        } else {
+          this.projectTypes.push(item.id)
+        }
+
+      })
+      this.rights()
+    },
+    rights () {
+      if (this.deptIds.length != 0) {
+        var deptIds = Array.from(new Set(this.deptIds))
+        var deptIdsStr = deptIds.join(',')
+      }
+      if (this.userIds.length != 0) {
+        var userIds = Array.from(new Set(this.userIds))
+        var userIdsStr = userIds.join(',')
+      }
+      if (this.projectTypes.length != 0) {
+        var projectTypes = Array.from(new Set(this.projectTypes))
+        var projectTypesStr = projectTypes.join(',')
+      }
+      if (this.stageIds.length != 0) {
+        var stageIds = Array.from(new Set(this.stageIds))
+        var stageIdsStr = stageIds.join(',')
+      }
+      var deptData = this.getDeptChecked()
+      var deptIds = []
+      var userIds = []
+      for (var i = 0; i < deptData.length; i++) {
+        if (deptData[i].deptUser == "1") {
+          deptIds.push(deptData[i].deptId)
+        } else {
+          userIds.push(deptData[i].userId)
+        }
+      }
+      var temp = [];   //数组去重
+      for (var i = 0; i < deptIds.length; i++) {
+        if (temp.indexOf(deptIds[i]) == -1) {
+          temp.push(deptIds[i]);
+        }
+      }
+      var temps = [];   //数组去重
+      for (var i = 0; i < userIds.length; i++) {
+        if (temps.indexOf(userIds[i]) == -1) {
+          temps.push(userIds[i]);
+        }
+      }
+      deptIds = temp.join(",")
+      userIds = temps.join(",")
+      var data = {
+        token: this.$store.state.loginObject.userToken,
+        userId: this.$store.state.loginObject.userId,
+        data: {
+          deptIds: deptIds,
+          userIds: userIds,
+          projectType: projectTypesStr ? projectTypesStr : '',
+          stageIds: stageIdsStr ? stageIdsStr : '',
+          roleId: this.roleids
+        }
+      }
+      var _this = this;
+      if (this.dataType == "1") {
+        this.watchAllProjData = []
+        if(this.projectLoadTimer != ''){
+          this.watchAllProjData = []
+          clearInterval(this.projectLoadTimer)
+        }
+        this.loadingShow = true;
+        this.$post('/sys/getRoleDataSource', data)
+          .then((res) => {
+            var arr = []
+            res.data.map((item) => {
+              item.disabled = false;
+              if (item.checked) {
+                arr.push(item.id)
+              }
+            })
+            // setTimeout(() => {
+              console.log('1______')
+              this.loadingShow = false;
+              if (arr.length === 0) {
+                this.allProjRadio = '1'
+                res.data.map((item) => {
+                  item.disabled = true;
+                })
+                this.$forceUpdate()
+              } else {
+                this.allProjRadio = '2'
+              }
+            // })
+            let data = res.data;
+            // this.watchAllProjData = res.data
+            let chunk1 = data.splice(0,100)
+            this.watchAllProjData = chunk1
+            this.projectLoadTimer = setInterval(()=>{
+              if(!data.length) {
+                clearInterval(this.projectLoadTimer)
+              }
+              let chunk = data.splice(0,1000)
+            this.watchAllProjData = [...this.watchAllProjData, ...chunk]
+            },1000)
+          }).catch(function (error) {
+            console.log(error);
+          });
+      } else if (this.dataType == "2") {
+        this.$post('/sys/getRoleDataSource', data)
+          .then((res) => {
+
+          }).catch(function (error) {
+            console.log(error);
+          });
+      }
+    },
+    getProjectData () {
+      this.departExpandedList = [];
+      this.$post('/sys/getRoleOrganization', {
+        data: {
+          roleId: this.roleids,
+          type: this.dataType
+        }
+      })
+        .then((response) => {
+          this.tree = response.data;
+          this.examineFilterData(response.data)
+          this.treeChecked = Array.from(new Set(this.arrData))
+          this.departExpandedList.push(this.tree[0].labelId);
+        })
+        .catch(err => console.error(err));
+    },
+    financings () {
+      var data = {
+        token: this.$store.state.loginObject.userToken,
+        userId: this.$store.state.loginObject.userId,
+        data: {
+          id: this.roleids,
+          // type: this.dataType
+        }
+      }
+      var _this = this
+      this.$post('/sys/getRoleprojectType', data).then((response) => {
+        _this.businessExpandedList = [];
+        var array = [];
+        array.push(response.data)
+        _this.treeDate = Array.from(new Set(array))
+        _this.arrDatas = []
+        _this.examineFilterDatas(_this.treeDate)
+        _this.treeDateChecked = Array.from(new Set(_this.arrDatas))
+        console.log(123, this.treeDateChecked)
+        setTimeout(() => {
+          _this.rights()
+        }, 1000);
+        _this.businessExpandedList.push(array[0].id)
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    allFilterData (node, parentNode = null) {
+      // var  arrData = [];
+      if (!node || !node.length) {
+        // return; 中断执行
+        return;
+      }
+
+      for (var i in node) {
+        var item = node[i]
+        if (item.checked == true) {
+          this.treeprojectData.push(item)
+          if (item.children) {
+            this.allFilterData(item.children)
+          }
+        } else {
+          this.allFilterData(item.children)
+        }
+      }
+      return this.treeprojectData;
+    },
+    examineFilterData (node, parentNode = null) {
+      // var  arrData = [];
+      if (!node || !node.length) {
+        // return; 中断执行
+        return;
+      }
+
+      for (var i in node) {
+        var item = node[i]
+        if (item.checked == true) {
+          this.arrData.push(item.labelId)
+          if (item.userId) {
+            this.deptIds.push(item.deptId)
+            this.userIds.push(item.userId)
+          } else {
+            this.deptIds.push(item.id)
+          }
+          if (item.children) {
+            this.examineFilterData(item.children)
+          }
+        } else {
+          this.arrData.map((items, idx) => {
+            if (items == item.labelId) {
+              this.arrData.splice(idx, 1)
+            }
+          })
+          this.examineFilterData(item.children, item)
+        }
+      }
+      return this.arrData;
+      
+    },
+    examineFilterDatas (node, parentNode = null) {
+      // var  arrData = [];
+      if (!node || !node.length) {
+        // return; 中断执行
+        return;
+      }
+      for (var i in node) {
+        var item = node[i]
+        if (item.checked == true) {
+          this.arrDatas.push(item.id)
+          if (item.stageId) {
+            this.projectTypes.push(item.financingId)
+            this.stageIds.push(item.stageId)
+          } else {
+            this.projectTypes.push(item.id)
+          }
+          if (item.children) {
+            this.examineFilterDatas(item.children)
+          }
+        } else {
+          this.arrDatas.map((items, idx) => {
+            if (items == item.id) {
+              this.arrDatas.splice(idx, 1)
+            }
+          })
+          this.examineFilterDatas(item.children, item)
+        }
+      }
+      return this.arrDatas;
+    },
+    //角色
+    lefts () {
+      this.$post('/sys/getQueryRole').then(res => {
+        if (res.code != this.code.codeNum.SUCCESS) {
+          this.$message.error(res.msg);
+          return
+        }
+        this.listData = res.data.map(item => {
+          item.isSel = false
+          return item
+        });
+        this.role1(res.data[0].id)
+        this.roleids = res.data[0].id
+        this.roleName = res.data[0].roleName
+        this.toggleSelState(0)
+        this.updateRolePermList()
+      }).catch(err => { console.log(err) });
+    },
+    //添加权限
+    btnclick () {
+      if (this.isTitleChecks4s.length == 0) {
+        this.$message.error("请选择权限");
+        return;
+      }
+      var temp = [];   //数组去重
+      for (var i = 0; i < this.isTitleChecks4s.length; i++) {
+        if (temp.indexOf(this.isTitleChecks4s[i]) == -1) {
+          temp.push(this.isTitleChecks4s[i]);
+        }
+      }
+      var data = {
+        token: this.$store.state.loginObject.userToken,
+        userId: this.$store.state.loginObject.userId,
+        "data": {
+          "roleId": this.roleids,
+          userId: this.$store.state.loginObject.userId,
+          roleName: this.roleName,
+          permissionIds: temp
+        }
+      }
+      var _this = this
+      this.$post('/sys/updateRolePermission', data).then((response) => {
+        if (response.code == _this.code.codeNum.SUCCESS) {
+          this.$message.success(response.msg);
+          // todo 模块化--角色权限--可操作权限变更
+          this.$utils.getSysPermissionFn()
+
+          // setTimeout(function(){
+          //     this.$router.push({path:'/role'});
+          // },100);
+          // setTimeout(function(){
+          //     var backstg = JSON.parse(sessionStorage.getItem("systemPerm"));
+          //     var flag = true;
+          //     for(var i=0;i<backstg.length;i++){
+          //         if(backstg[i] == "backstage"){
+          //             this.$router.push({path:'/maindeskindex'});
+          //         }
+          //     }
+          // },1000)
+          // _this.role1(_this.roleids)
+        } else {
+          _this.$message({
+            type: 'warning',
+            message: response.msg
+          });
+        }
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    //可操作功能渲染
+    role1 (id) {
+      this.treeChecked = []
+      this.treeDateChecked = []
+      this.arrData = []
+      this.arrDatas = []
+      var data = {
+        data: {
+          roleId: id
+        }
+      }
+      var _this = this
+      this.$post('/sys/getPermission', data).then((response) => {
+        var data = response.data;
+        this.dataCheck = response.data;
+        if (response.code == _this.code.codeNum.SUCCESS) {
+          _this.isTitleChecks4s = [];
+          _this.check = data[0].children;
+          let total = 0
+          var arr = data[0].children;
+          for (var i = 0; i < arr.length; i++) {
+            total ++
+            this.$set(arr[i], 'checked', false)
+            if (arr[i].parentId == -1) {
+              _this.toparr.push(arr[i].id);
+            }
+            if (arr[i].status == 1) {
+              this.$set(arr[i], 'checked', true)
+              _this.isTitleChecks4s.push(arr[i].id);
+            }
+            if (arr[i].children != null) {
+              for (var j = 0; j < arr[i].children.length; j++) {
+                total ++
+                this.$set(arr[i].children[j], 'checked', false)
+                if (arr[i].children[j].status == 1) {
+                  this.$set(arr[i].children[j], 'checked', true)
+                  _this.isTitleChecks4s.push(arr[i].children[j].id);
+                }
+              }
+            }
+          }
+          _this.checkFlag = total=== _this.isTitleChecks4s.length 
+          console.log(_this.checkFlag+'checkflag'+ total +'total'+ _this.isTitleChecks4s.length)
+        } else {
+          _this.$message.error(response.msg);
+        }
+      }).catch(function (error) {
+        console.log(error);
+      });
+    },
+    //左边添加
+    addhighest () {
+      this.$prompt('请输入角色名称', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputValidator: (val)=>{ 
+          if(val != null){
+            return val.length<21
+          }
+          return true;
+        },
+        inputErrorMessage: '角色名称不能超过20个字符',
+        beforeClose: this.beforeClose
+      }).then(({ value }) => {
+        this.$post('/sys/addRole', {
+          data: {
+            roleName: value
+          }
+        }).then((response) => {
+          if (response.code != 0) {
+            this.$message.warning(response.msg)
+            return
+          }
+          this.$message.success(response.msg)
+          this.lefts()
+        }).catch(function (error) {
+          console.log(error);
+        });
+      }).catch(() => {
+        // this.$message({
+        //   type: 'info',
+        //   message: '取消输入'
+        // });
+      });
+    },
+    //左边删除
+    deletes (item) {
+      this.$confirm('是否删除该角色, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        var data = {
+          token: this.$store.state.loginObject.userToken,
+          userId: this.$store.state.loginObject.userId,
+          "data": {
+            id: item.id,
+            "roleName": item.roleName,
+          }
+        }
+        var _this = this
+        this.$post('/sys/delRole', data).then((response) => {
+          if (response.code == _this.code.codeNum.SUCCESS) {
+            _this.$message({
+              type: 'success',
+              message: response.msg
+            });
+            _this.lefts()
+          } else if (response.code == -3300) {
+            _this.$message({
+              _type: 'warning',
+              message: response.msg
+            });
+          } else {
+            _this.$message(response.msg);
+          }
+        })
+          .catch(function (error) {
+            console.log(error);
+          });
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
+    },
+    //  关闭弹框前方法的调用
+    beforeClose (action, instance, done) {
+      console.log(action)
+      // 只有点击确定才会校验
+      if (!instance.inputValue && action == 'confirm') {
+        this.$message.error('请输入角色名称')
+        return
+      }
+      if(instance.inputValue != null){
+        if(instance.inputValue.match(/^[ ]+$/) && action == 'confirm') {
+          this.$message.error('请输入正确的角色名称')
+          return;
+        }
+      }
+      done()
+    },
+    //左边编辑
+    edit (item) {
+      this.$prompt('请输入角色名称', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputValue: item.roleName,
+        inputValidator: (val)=>{ return val.length<21},
+        inputErrorMessage: '角色名称不能超过20个字符',
+        beforeClose: this.beforeClose
+      }).then(({ value }) => {
+        var data = {
+          token: this.$store.state.loginObject.userToken,
+          userId: this.$store.state.loginObject.userId,
+          "data": {
+            "roleName": value,
+            id: item.id
+          }
+        }
+        var _this = this
+        this.$post('/sys/updateRole', data).then((response) => {
+          if (response.code == _this.code.codeNum.SUCCESS) {
+            _this.$message({
+              type: 'success',
+              message: response.msg
+            });
+            _this.lefts()
+          } else {
+            _this.$message(response.msg);
+          }
+        }).catch(function (error) {
+          console.log(error);
+        });
+      }).catch(() => {
+        // this.$message({
+        //   type: 'info',
+        //   message: '取消输入'
+        // });
+      });
+    },
+    // 切换选中状态
+    toggleSelState (index) {
+      this.$nextTick(() => {
+        const list = Array.from(this.$refs.lefts);
+        list.forEach(v => v.classList.remove('div_bag'))
+        list[index].classList.add('div_bag')
+      })
+    },
+    //可操作功能
+    roles (item, index) {
+      this.role1(item.id)
+      this.roleids = item.id
+      this.roleName = item.roleName;
+      this.loadingShow = false;
+      if (this.clickTab == 2) {
+        this.deptIds = [],
+          this.userIds = [],
+          this.projectTypes = [],
+          this.stageIds = [],
+          this.allProjRadio = '1'
+        this.getProjectData()
+        this.financings()
+      }
+      this.toggleSelState(index)
+    },
+    customer_data (index, el) {
+
+      if (index == 0) {
+        this.curBtn = 'pro'
+        this.dataResone = true
+        this.project_data = true
+        this.financing = true
+        this.solute_save = true
+        this.solute_saves = false
+        this.dataType = '1'
+      } else {
+        this.curBtn = 'cus'
+        this.dataResone = false
+        this.solute_save = false
+        this.financing = false
+        this.solute_saves =
+          this.dataType = '2'
+      }
+      this.getProjectData();
+    }
+  }
+}
+</script>
+<style lang="scss" scoped>
+.code-wrapper{
+  text-align: left;
+  margin-left: 10px;
+}
+.riheader {
+  width: 100%;
+  height: 96px;
+  padding: 0 8px;
+  background: rgba(255, 255, 255, 1);
+  overflow: hidden;
+  .el-breadcrumb {
+    line-height: 46px;
+  }
+  .finance_tit {
+    position: relative;
+    padding: 15px 5px;
+    margin-top: 10px;
+    span {
+      color: #333;
+      font-size: 20px;
+      font-weight: 600;
+      position: absolute;
+      left: 0px;
+      bottom: 2px;
+    }
+  }
+}
+.rolebox_left_trees {
+  .role_item {
+    height: 34px;
+    padding-left: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    .rolebox_left_trees_name {
+      display: inline-block;
+      margin-left: 6px;
+      font-weight: bold;
+    }
+    &:hover {
+      background: #f7f7f7;
+      .role_item_icon {
+        display: inline-block;
+      }
+    }
+    &_icon {
+      display: none;
+      line-height: 20px;
+      margin-right: 2px;
+      flex-shrink: 0;
+    }
+    .el-icon-delete {
+      color: #d22c2c;
+    }
+    .el-icon-edit-outline {
+      color: #1561a4;
+    }
+    &_avatar {
+      padding-left: 6px;
+      width: 14px;
+      flex-shrink: 0;
+      img {
+        width: 100%;
+        display: table-cell;
+        vertical-align: middle;
+      }
+    }
+    &_l {
+      max-width: 60%;
+      max-width: -moz-calc(100% - 42px);
+      max-width: -webkit-calc(100% - 42px);
+      max-width: calc(100% - 42px);
+    }
+  }
+  .all_sel {
+    line-height: 34px;
+    padding-left: 15px;
+    text-align: left;
+  }
+  .div_bag {
+    background: #f7f7f7;
+  }
+}
+.el-tabs--border-card {
+  background: #fff;
+  border: 1px solid #dcdfe6;
+  -webkit-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12),
+    0 0 6px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: none;
+  border: none;
+}
+.rolebox {
+  width: 100%;
+  height: 100%;
+  // background: #E7F2FF;
+}
+.rolebox_header {
+  height: 94px;
+  text-align: left;
+  background: white;
+  padding-left: 10px;
+  // margin-left: 14px;
+  overflow: hidden;
+  p {
+    line-height: 46px;
+    height: 46px;
+  }
+  h3 {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 5px 0 19px;
+  }
+}
+.rolebox_content {
+  margin-top: 12px;
+  position: relative;
+  // background: #E7F2FF;
+  // padding: 12px;
+}
+.rolebox_content {
+  display: flex;
+  .rolebox_left {
+    width: 20%;
+    height: 100%;
+    margin-right: 14px;
+    background: rgba(255, 255, 255, 1);
+    border-radius: 3px;
+    // margin-left: 12px;
+    overflow: auto;
+    li {
+      width: 52px;
+      line-height: 27px;
+      float: left;
+      background: rgba(242, 243, 245, 1);
+      border: 1px solid rgba(231, 231, 231, 1);
+      border-radius: 4px;
+      line-height: 28px;
+      margin-left: 5%;
+      margin-top: 5%;
+      padding-left: 5px;
+      padding-right: 5px;
+      font-size: 11px;
+      background: rgba(242, 243, 245, 1);
+    }
+    .rolebox_left_tree {
+      margin-left: 10%;
+      padding-top: 10px;
+    }
+    .role_list_box {
+      height: 85%;
+      height: -moz-calc(100% - 85px);
+      height: -webkit-calc(100% - 85px);
+      height: calc(100% - 85px);
+      .msg_box {
+        height: 30px;
+        line-height: 30px;
+        padding-right: 10px;
+        text-align: right;
+      }
+    }
+    .rolebox_left_btn {
+      margin: 0 10px 10px 0;
+      display: flex;
+      justify-content: space-between;
+      /deep/ .el-button {
+        margin: 0;
+      }
+    }
+  }
+
+  .rolebox_right {
+    flex: 1;
+    background: rgba(255, 255, 255, 1);
+    border: 1px solid rgba(216, 220, 228, 1);
+    border-radius: 3px;
+    position: relative;
+    .loading_shade {
+      position: absolute;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .loading_icon {
+        z-index: 400;
+        color: skyblue;
+        font-size: 50px;
+      }
+    }
+    .rolebox_rights {
+      width: 100%;
+      height: 100%;
+      .rolebox_rightsul {
+        float: left;
+        margin-left: 2%;
+      }
+      ul {
+        li {
+          margin-top: 10%;
+        }
+        span {
+          font-size: 13px;
+          font-family: MicrosoftYaHei;
+          color: rgba(51, 51, 51, 1);
+          font-weight: 400;
+        }
+        input {
+          width: 310px;
+          height: 36px;
+          background: rgba(255, 255, 255, 1);
+          border: 1px solid rgba(231, 231, 231, 1);
+          border-radius: 2px;
+        }
+      }
+      p {
+        width: 52px;
+        line-height: 27px;
+        float: left;
+        background: rgba(242, 243, 245, 1);
+        border: 1px solid rgba(231, 231, 231, 1);
+        border-radius: 4px;
+        line-height: 28px;
+        margin-left: 5%;
+        margin-top: 70px;
+        padding-left: 5px;
+        padding-right: 5px;
+        font-size: 11px;
+        background: rgba(242, 243, 245, 1);
+        margin-left: 21px;
+      }
+    }
+    .contnet_operation {
+      display: flex;
+      flex-direction: column;
+      height: auto;
+      overflow: hidden;
+      background: #fff;
+      border-bottom: 1px solid #eaeaea;
+      h4 {
+        height: 30px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+        input {
+          margin: 0 6px 0 10px;
+        }
+        span {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      }
+      .select_all_box {
+        label {
+          display: flex;
+          align-items: center;
+        }
+        height: 40px;
+        background: #fff;
+      }
+      .contnet_operation_chunk {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+        #contnet_operation1 {
+          background: #fff;
+          display: flex;
+          align-items: center;
+          .contnet_operationp {
+            margin: 4px 0 0 10px;
+            span {
+              color: #333;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              input {
+                margin-right: 6px;
+              }
+              span {
+                display: inline-block;
+              }
+            }
+          }
+        }
+      }
+
+      li {
+        /*float: left;*/
+        /*width: 14%;*/
+        margin-top: -6px;
+        margin-top: 10px;
+        margin-left: 30px;
+        height: auto;
+        p {
+          margin-top: 7px;
+          margin-left: -15px;
+          span {
+            margin-left: 5px;
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+}
+.el-checkbox {
+  color: #606266;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  margin-right: 3px;
+}
+.visit {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  header {
+    width: 100%;
+    margin: 20px 0 0 0;
+    display: flex;
+    justify-content: start;
+    .visitp {
+      margin-left: 5px;
+    }
+  }
+  .visit_content {
+    width: 100%;
+    height: 629px;
+    margin-top: 27px;
+    display: flex;
+
+    .visit_content_chunk {
+      width: 260px;
+      height: 600px;
+      border-radius: 3px;
+      border: 1px solid #cccccc;
+      box-shadow: #cccccc 0px 0px 1px;
+      border-bottom: none;
+      display: flex;
+      flex-direction: column;
+      margin: 0 2% 0 2%;
+
+      .visit_content_department_title {
+        width: 100%;
+        height: 5%;
+        display: flex;
+        font-size: 14px;
+        border-bottom: 1px solid #ccc;
+        background: #f6f7fa;
+        align-items: center;
+        i {
+          margin-left: 10px;
+        }
+        span {
+          display: inline-block;
+          margin-left: 10px;
+        }
+      }
+      .visit_content_department_tree {
+        width: 100%;
+        height: 95%;
+      }
+      .visit_content_dataOrigin {
+        width: 100%;
+        height: 95%;
+        display: flex;
+        flex-direction: column;
+        .nav-li-footers {
+          display: flex;
+          flex-direction: column;
+          p {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-left: 20px;
+            height: 30px;
+            margin-top: 10px;
+          }
+          .checkboxs {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            div {
+              width: 100%;
+              display: flex;
+              justify-content: start;
+              align-content: center;
+              .el-checkbox {
+                margin-left: 20px;
+              }
+              span {
+                display: inline-block;
+                margin-left: 10px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+.visitp {
+  width: 85px;
+  height: 28px;
+  border-radius: 2px;
+  // font-size: 3px;
+  color: #275aa6;
+  background: white;
+  border: 1px solid #0061a9;
+  button {
+    background: #0061a9;
+    color: white;
+  }
+}
+</style>
+
+<style lang="scss">
+.role .el-tabs--border-card > .el-tabs__content {
+  padding: 0 !important;
+}
+.visit_content_department_el_tree {
+  width: 100%;
+}
+.visit_content_department_el_tree .el-tree-node__label {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.btn-group {
+  text-align: left;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+</style>

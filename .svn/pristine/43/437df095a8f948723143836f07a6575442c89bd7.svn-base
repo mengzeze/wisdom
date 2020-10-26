@@ -1,0 +1,1698 @@
+<template>
+  <div class="backstagedirectory">
+    <div class="backstagedirectory_contenti_headers">
+      <el-breadcrumb separator="/" style="height:46px;line-height:46px">
+          <el-breadcrumb-item>底稿管理</el-breadcrumb-item>
+          <el-breadcrumb-item :to="{path:'/backstagedirectorylist'}">目录管理</el-breadcrumb-item>
+          <el-breadcrumb-item :title="parent_docName">{{parent_docName}}</el-breadcrumb-item>
+      </el-breadcrumb>
+      <h3 class="headers_clearFix">
+        <span class="headers_clearFix_title">目录管理</span>
+      </h3>
+    </div>
+    <div class="contenti_container" >
+      <div class="left" id="left">
+        <div class="left_header">
+          <el-input
+            placeholder="输入要搜索的目录"
+            clearable
+            v-model="search_form.name"
+            @keyup.enter.native="searchFn"
+          >
+            <el-button slot="append" icon="el-icon-search" @click.stop="searchFn"></el-button>
+          </el-input>
+        </div>
+        <!-- 原本样式 已优化 -->
+        <!-- <div class="left_header" v-on:keyup.enter="searchFn">
+           
+          <el-input v-model="search_form.name" class="search_input" placeholder="输入要搜索的目录"></el-input>
+          <el-button size="medium"  @click="searchFn">
+            <i class="el-icon-search"></i>
+            <span>查询</span>
+          </el-button>
+        </div> -->
+        <div class="left_tree_box">
+            <el-scrollbar style="height:100%">
+                <el-tree
+                ref="tree"
+                node-key="id"
+                :props="defaultProps"
+                lazy
+                :load="handleNodeData"
+                @node-click="handleNodeClick"
+                :default-expanded-keys = "defaultExpandedKeys"
+                :filter-node-method="filterTreeNode"
+                :render-content="renderContent"
+                v-if="reset"
+                ></el-tree>
+            </el-scrollbar>
+
+        </div>
+      </div>
+      <div class="right">
+        <div id="right_box">
+        <div class="right_header" v-show="!isedit">
+          <div class="right_header_l">
+            <p class="right_header_title ellipsis1 bold" :title="parent_docName">{{parent_docName}}</p>
+            <p class="right_header_title ellipsis1" :title="financingName">业务类型：{{financingName}}</p>
+            <div class="right_header_mark">
+              <div :title="parent_remarks">
+                  <span class="solt">备注：</span>
+                  <span class="mess ellipsis1">{{parent_remarks}}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="right_header_r">
+            <el-button v-if="$utils.checkSystemPermission('bask_edit_atalog')" type="primary" @click="iseditFn">
+                <i class="el-icon-edit-outline"></i>
+                <span>编辑</span>
+            </el-button>
+          </div>
+        </div>
+        <!-- 编辑状态 -->
+
+        <div class="right_header_edit" v-show="isedit">
+          <el-row>
+            <el-col :span="2">
+              <div class="edit_title">目录名称：</div>
+            </el-col>
+            <el-col :span="7">
+              <el-input v-model="save_parent_data.docName" maxlength="1000"></el-input>
+            </el-col>
+            <el-col :offset="9" :span="6" style="text-align:right">
+              <el-button type="primary" @click="saveParentDataFn">保存</el-button>
+              <el-button @click="cancleParentDataFn">取消</el-button>
+            </el-col>
+          </el-row>
+          <el-row style="margin-top:10px;">
+            <el-col :span="2">
+              <div class="edit_title">业务类型：</div>
+            </el-col>
+            <el-col :span="7">
+              <div class="choose-input">
+                <el-input
+                  :value="businessData.label || financingName"
+                  placeholder="请选择业务类型"
+                  disabled
+                ></el-input>
+                <div><el-button @click="businessTypeClick" type="primary">选择</el-button></div>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row class="right_header_edit_bottom">
+            <el-col :span="2">
+              <div class="edit_title">备注：</div>
+            </el-col>
+            <el-col :span="22">
+              <el-input style="width:100%" type="textarea" placeholder="请输入备注" v-model="save_parent_data.remarks" resize="none" maxlength="400"></el-input>
+            </el-col>
+          </el-row>
+        </div>
+        </div>
+        <div class="right_header_second">
+          <p class="right_header_second_title">
+            <i class="el-icon-location"></i>
+            <span :title="leftTreeSelectData.docName">{{leftTreeSelectData.docName}}</span>
+          </p>
+          <div class="right_header_second_opa">
+            <el-button
+              v-if="$utils.checkSystemPermission('bask_add_atalog')"
+                type="primary"
+                @click="addChildrenDirectionFn"
+            >
+                <i class="el-icon-plus"></i>
+                <span>增加子目录</span>
+            </el-button>
+            <el-button
+              v-if="$utils.checkSystemPermission('bask_del_atalog')"
+                type="primary"
+                @click="delChildrenDirectionFn"
+            >
+                <i class="el-icon-delete"></i>
+                <span>删除</span>
+            </el-button>
+          </div>
+
+        </div>
+        <el-row :gutter="0" class="right_header_third">
+          <el-col :span="2" class="check_col">
+            <el-checkbox @change="checkallChangeFn" v-model="allchecked" label="序号"></el-checkbox>
+          </el-col>
+          <el-col :span="18">子目录名称</el-col>
+          <el-col :span="3">操作</el-col>
+        </el-row>
+        <div  id="right_content">
+
+            <el-scrollbar style="height:100%" >
+                <el-row
+                    :gutter="0"
+                    v-if="right_direct_tbdata.length == 0"
+                    class="nodatacontainer"
+                >
+                    <el-col :span="24" style="margin-top:20px;">
+                        <span>暂无数据</span>
+                    </el-col>
+                </el-row>
+                <el-row
+                    :gutter="0"
+                    class="tb_row"
+                    v-for="(item,index) in right_direct_tbdata"
+                    :key="index"
+                    v-if="right_direct_tbdata.length != 0"
+                >
+                    <el-col :span="2" class="check_col">
+                    <el-checkbox :label="index+1" v-model="item.checked" @change="chekcsChange"></el-checkbox>
+                    </el-col>
+                    <el-col :span="18" class="name_col" :title="item.docName">
+                    <p class="namr_col_name">{{item.names}}</p>
+                    </el-col>
+                    <el-col :span="3" class="operating_box">
+                    <div class="opera_btn_box">
+                        <div class="icon-operate-btn iconfont bianji2-copy" title="编辑" @click="editSonName(item, index)">
+                        <!-- <i class="el-icon-edit-outline"></i> -->
+                        </div>
+                        <div class="icon-operate-btn iconfont shangjiantou" title="上移" @click="upMove(item,index)">
+                        <!-- <i class="el-icon-back"></i> -->
+                        </div>
+                        <div class="icon-operate-btn iconfont xiajiantou" title="下移" @click="downMove(item,index)">
+                        <!-- <i class="el-icon-back"></i> -->
+                        </div>
+
+                    </div>
+                    </el-col>
+                </el-row>
+                <el-row :gutter="0" class="tb_row add_row">
+                    <el-col :span="3" class="check_col">
+                        <el-checkbox :label="right_direct_tbdata.length+1"></el-checkbox>
+                    </el-col>
+                    <el-col :span="16" class="name_col">
+                        <input
+                        type="text"
+                        class="add_name_input"
+                        placeholder="请输入目录名称"
+                        maxlength="1000"
+                        @blur="addDocNameBlurFn" @keyup.enter = "addDocNameBlurFn"
+                        >
+                    </el-col>
+                </el-row>
+            </el-scrollbar>
+        </div>
+      </div>
+        <!-- 暂时不上 -->
+        <!-- <div class="icon_box" title="模板管理" @click="openModuleManage(item)">
+            <i class="el-icon-tickets"></i>
+        </div> -->
+        <!-- <el-dialog
+            class="add_box temp_box"
+            title="模板管理"
+            :visible.sync="dialogVisible"
+            width="500px"
+        >
+            <div>
+                <el-scrollbar style="height:100%">
+                    <el-form ref="form" :model="add_form" label-width="100px">
+                    <el-form-item label="目录名称：">
+                        <el-input v-model="right_click_data.docName" readonly placeholder="请输入目录名称"></el-input>
+                    </el-form-item>
+                    <el-form-item label="模板文件：">
+                        <p class="add_file" @click="uploadModel">
+                        <img src="../../../../assets/image/directorylist/upload_file.png" alt>
+                        <span>添加附件</span>
+                        </p>
+                    </el-form-item>
+                    <el-form-item label=" ">
+
+                            <div class="temp_chunk">
+                                <el-scrollbar style="height:100%">
+                                    <el-row v-for="(item,index) in add_template_file_list" :key="index" class="temp_item">
+                                        <el-col :span="14" class="filename_col" :title="item.docName">{{item.docName}}</el-col>
+                                        <el-col :span="10" class="oper_col">
+                                            <span @click="temp_download(item)">下载</span>
+                                            <span @click="temp_delete(item)">删除</span>
+                                            <span @click="temp_attention(item)">注意事项</span>
+                                        </el-col>
+                                    </el-row>
+                                    <el-row v-for="(item,index) in template_file_list" :key="index" class="temp_item">
+                                        <el-col :span="14" class="filename_col" :title="item.fileName">{{item.fileName}}</el-col>
+                                        <el-col :span="10" class="oper_col">
+                                            <span @click="temp_download(item)">下载</span>
+                                            <span @click="temp_delete(item)">删除</span>
+                                            <span @click="temp_attention(item)">注意事项</span>
+                                        </el-col>
+                                    </el-row>
+                                </el-scrollbar>
+                            </div>
+
+                    </el-form-item>
+                    </el-form>
+                </el-scrollbar>
+            </div>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="saveMsg">保存</el-button>
+            </span>
+        </el-dialog> -->
+      <el-dialog class="add_box" title="删除目录" :close-on-click-modal="false" :visible.sync="del_dialogVisible" width="320px">
+        <div style="height:80px;">
+          <el-scrollbar style="height:100%">删除后，将删除该目录下的所有子目录,是否确认删除？</el-scrollbar>
+        </div>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="del_dialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="delDirectoryFn">删除</el-button>
+        </span>
+      </el-dialog>
+      <el-dialog class="add_box" title="注意事项" :close-on-click-modal="false" :visible.sync="acction_dialogVisible" width="500px">
+        <div style="height:150px;">
+          <el-scrollbar style="height:100%">
+            <el-input
+              type="textarea"
+              id="acction"
+              placeholder="请输入注意事项,最多输入200字"
+              resize="none"
+              v-model="acction_content"
+              style="width:100%;height:100px;"
+              maxlength="200"
+              :autosize="{ minRows: 6, maxRows: 4}"
+            ></el-input>
+          </el-scrollbar>
+        </div>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="acction_dialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="saveacction">保 存</el-button>
+        </span>
+      </el-dialog>
+      <el-input type="file" id="fileBtn" style="display:none;"></el-input>
+      <upload-add-doc
+        v-if="addDoc"
+        :uploadDocAddIsShow="uploadDocAddIsShow"
+        :uploadOtherData="uploadData"
+        :isUploadSuccess="isUploadSuccess"
+        @sendValueToParent="uploadAddDocClose"
+        @docUpload="docUpload"
+        ref="uploadref"
+        v-on:docUploadAllsucess="docUploadAllsucess"
+      ></upload-add-doc>
+          <!-- 业务类型选择 -->
+        <project-type
+          v-if="isShowProjectType"
+          :singleSele="1"
+          :isProcessengineClick="false"
+          :typeObj="businessTypeData"
+          :state="1"
+          @typeProject="projectTypeCallback"
+          @sendValueToParent="isShowProjectType=false"
+          :optState="{ value: 2 }"
+          :hasSelect="businessData.id == ''?[]:[businessData]"
+        ></project-type>
+    </div>
+  </div>
+</template>
+
+<script>
+// import { constants } from "fs";
+// import { valid } from "semver";
+import uploadAddDoc from "@/components/file/uploadAddDoc_zdy";
+import { wisdom_doc } from "@/pages/common/js/doc.main";
+import { setTimeout } from "timers";
+import { constants } from "fs";
+import projectType from "@/components/dialogcommon/projecttype"
+
+export default {
+  data() {
+    return {
+      token: this.$store.state.loginObject.userToken,
+      userId: this.$store.state.loginObject.userId,
+      pro_id: this.$store.state.projectMsg.pro_id,
+      parent_id: "",
+      parent_docName: "",
+      parent_remarks: "",
+      search_form: {
+        name: ""
+      },
+      search_list: [], //查询返回结果
+      // 左侧目录树数据
+      left_direct_tbdata: [],
+      // 左侧树默认配置数据
+      defaultProps: {
+        children: "children",
+        label: "docName",
+        isLeaf: this.isLeafFn()
+      },
+      //  左侧树选取数据
+      leftTreeSelectData: {},
+      // 右侧目录列表数据
+      right_direct_tbdata: [],
+      total: 0, // 总条数
+      pageNum: 0, // 第几页
+      pageSize: 9999, // 每页显示的数量
+      currentPage: 1,
+      dialogVisible: false,
+      add_form: {
+        name: "",
+        mark: ""
+      },
+      save_parent_data: {}, // 保存主目录名称及备注数据
+      allchecked: false, // 右侧目录全选
+      isedit: false, //  是否编辑主目录名称
+      del_dialogVisible: false,
+      success_code: "",
+      reset: true,
+      right_click_data: {}, //点击右侧行获取点击数据
+      templateData: {}, //模板数据
+      template_file_list: [], //模板管理文件列表数据
+      add_template_file_list: [], //添加模板文件列表数据
+      acction_dialogVisible: false, //是否显示模板注意事项
+      acction_select_data: {}, //选取的模板数据
+      readonly: true, //模板注意事项文本域是否可编辑
+      acction_content: "", //模板注意事项内容
+      uploadDocAddIsShow: false,
+      addDoc: false,
+      uploadData: {},
+      isUploadSuccess: false,
+      node: '',
+      resolve: [],
+      defaultExpandedKeys: [],
+      isShowProjectType:false,
+      businessData:{
+        label: '',
+        id: ''
+      }
+    };
+  },
+  components: {
+    uploadAddDoc,
+    projectType
+  },
+  methods: {
+    pageHeight() {
+      this.$nextTick(() => {
+        document.getElementById("left").style.height = (this.getViewPortHeight() - 60 - 116) + "px";
+        document.querySelector(".right").style.height = (this.getViewPortHeight() - 60 - 116) + "px";
+        document.getElementById('right_content').style.height = (document.querySelector(".right").clientHeight - document.getElementById('right_box').clientHeight - 91) + "px";
+        // document.getElementById('right_content').style.height = (document.getElementById('right_box').clientHeight - 60 - 96 - 20 - 85 - 51 - 66) + "px";
+      })
+    },
+    // 业务类型选择点击 上传目录弹框
+    businessTypeClick() {
+      this.$post("/info/project/getUsableFinanceType")
+        .then(res => {
+          if (res.code != this.success_code) {
+            this.$message.warning(res.msg)
+            return
+          }
+          this.isShowProjectType = true
+          this.businessTypeData = res.data
+          this.businessData.id == '' && (this.businessData = {id:this.financingId,label:this.financingName})
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
+    // 选择业务类型弹框
+    projectTypeCallback(data) {
+      if(data.length === 0) {
+        this.businessData = {
+          label: '',
+          id:''
+        }
+        return
+      }
+      this.businessData = {
+        label: data[0].label,
+        id: data[0].id
+      }
+    },
+    renderContent(h, { node, data, store }) {
+        if(node.expanded) {
+            return (
+                <span class="custom-tree-node">
+                    <i class='open'></i>
+                    <p style="margin-left:5px; width:100%;">{node.label}</p>
+                </span>
+            );
+        } else {
+            return (
+                <span class="custom-tree-node">
+                    <i class='close'></i>
+                    <p style="margin-left:0px; width:100%;">{node.label}</p>
+                </span>
+            );
+        }
+
+    },
+    getViewPortHeight() {
+        return document.documentElement.clientHeight || document.body.clientHeight;
+    },
+    //  全选全不选
+    checkallChangeFn() {
+      for (var i = 0; i < this.right_direct_tbdata.length; i++) {
+        if (this.allchecked) {
+          this.right_direct_tbdata[i]["checked"] = true;
+        } else {
+          this.right_direct_tbdata[i]["checked"] = false;
+        }
+      }
+    },
+    chekcsChange() {
+      for (var i = 0; i < this.right_direct_tbdata.length; i++) {
+        if (!this.right_direct_tbdata[i]["checked"]) {
+          this.allchecked = false;
+        }
+      }
+    },
+    searchFn() {
+      // this.$refs.tree.filter(this.search_form.name);
+      var _this = this;
+      if (this.search_form.name == "") {
+        this.resetFn();
+      } else {
+        var data = {
+          token: this.token,
+          userId: this.userId,
+          data: {
+            catalogId: this.parent_id,
+            docName: this.search_form.name
+          }
+        };
+        this.$post("/doc/paper/getSysCatalogsByDocName", data)
+          .then((response)=> {
+            if (_this.success_code == response.code) {
+              _this.search_list = response.data;
+              _this.resetFn();
+            } else {
+              _this.$message({
+                message: response.msg,
+                type: "error"
+              });
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+    },
+    //  打开上传模板
+    uploadModel() {
+      this.addDoc = true;
+      this.uploadDocAddIsShow = true;
+      this.uploadData = {
+        parentId: 0
+      };
+    },
+    //  关闭上传弹框
+    uploadAddDocClose() {
+      this.uploadDocAddIsShow = false;
+      this.addDoc = false;
+      this.$refs.uploadref.destroy();
+    },
+    //文件上传
+    docUpload(uploadData) {
+      let _this = this;
+      var uploadData = uploadData.uploadData;
+      this.add_template_file_list.push({
+        docName: uploadData.docName,
+        catalogId: this.parent_id,
+        parentId: this.right_click_data.id,
+        docId: uploadData.docId,
+        attention: ""
+      });
+      this.$refs.uploadref.uploadComplete();
+    },
+    // 下载模板文件
+    temp_download(data) {
+      var _this = this;
+      var send = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          docName: data.fileName
+        }
+      };
+      this.$post("/doc/paper/docTemplateDownLogRecord", send)
+        .then((response)=> {
+          window.open(
+            this.$utils.getDownloadUrl(data.docId)
+          );
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+      // window.open(this.$store.state.url.E_IP + "/rfs/downloadRfs/" + data.docVersionRfs)
+    },
+    //  模板文件删除
+    temp_delete(data) {
+      var _this = this;
+      this.acction_select_data = data;
+      if (!data.id) {
+        for (var i = 0; i < this.add_template_file_list.length; i++) {
+          if (data.docId == this.add_template_file_list[i].docId) {
+            this.add_template_file_list.splice(i, 1);
+          }
+        }
+      } else {
+        var send_data = {
+          token: this.token,
+          userId: this.userId,
+          data: {
+            ids: this.acction_select_data.id
+          }
+        };
+        this.$post("/doc/paper/batchDeleteSystemTemplate", send_data)
+          .then((response)=> {
+            if (_this.success_code == response.code) {
+              _this.$message({
+                message: "删除成功",
+                type: "success"
+              });
+              _this.acction_select_data = {};
+              _this.getTempDataFn();
+            } else {
+              _this.$message({
+                message: response.msg,
+                type: "error"
+              });
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+    },
+    //  模板注意事项
+    temp_attention(data) {
+      this.acction_select_data = data;
+      this.acction_dialogVisible = true;
+      this.acction_content = data.attention;
+    },
+    //  保存模板注意事项
+    saveacction() {
+      var _this = this;
+      if (!this.acction_select_data.id) {
+        for (var i = 0; i < this.add_template_file_list.length; i++) {
+          if (this.acction_select_data.docId == this.add_template_file_list[i].docId) {
+            this.add_template_file_list[i]["attention"] = this.acction_content;
+          }
+        }
+      } else {
+        var send_data = {
+          token: this.token,
+          userId: this.userId,
+          data: {
+            id: this.acction_select_data.id,
+            attention: this.acction_content
+          }
+        };
+        this.$post("/doc/paper/updateSystemTemplate", send_data)
+          .then((response)=> {
+            if (_this.success_code == response.code) {
+              _this.acction_dialogVisible = false;
+              _this.add_template_file_list = [];
+              _this.getTempDataFn();
+            } else {
+              _this.$message({
+                message: response.msg,
+                type: "error"
+              });
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+      this.acction_content = "";
+      this.acction_dialogVisible = false;
+    },
+    //  编辑主目录名称及备注
+    iseditFn() {
+      this.isedit = true;
+      this.save_parent_data = {
+        docName: this.parent_docName,
+        remarks: this.parent_remarks
+      };
+      this.pageHeight()
+    },
+    //  获取左侧数据
+    getLeftData() {
+      var _this = this;
+      var send_data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          parentId: this.parent_id
+        }
+      };
+      this.$post("/doc/paper/getSysCatalogsByParentId", send_data)
+        .then((response)=> {
+          if (_this.success_code == response.code) {
+            _this.left_direct_tbdata = response.data;
+            _this.leftTreeSelectData = _this.left_direct_tbdata[0];
+            _this.getRightData(_this.left_direct_tbdata[0].id);
+          } else {
+            _this.$message({
+              message: response.msg,
+              type: "error"
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    isLeafFn(data, node) {
+
+    },
+    //  懒加载左侧目录树数据
+    handleNodeData(node, resolve) {
+      var _this = this;
+      _this.node = node
+      _this.resolve = resolve;
+      if (this.search_list.length > 0) {
+        node.level = 0;
+        var search_lists = this.search_list;
+        $(".el-tree-node").remove();
+        this.search_list = [];
+        resolve(search_lists);
+        setTimeout(() => {
+          var domlist = $(".el-tree-node__label");
+          for (var i = 0; i < domlist.length; i++) {
+            var text = domlist.eq(i).text();
+            if (text.indexOf(_this.search_form.name) != -1) {
+              domlist
+                .eq(i)
+                .html(
+                  text.replace(
+                    _this.search_form.name,
+                    '<span style="background:yellow">' +
+                      _this.search_form.name +
+                      "</span>"
+                  )
+                );
+            }
+          }
+        }, 300);
+        return;
+      } else {
+        if (node.level == 0) {
+          $(".el-tree-node").remove();
+          var arr = [
+            {
+              docName: _this.parent_docName,
+              remarks: _this.parent_remarks,
+              id: _this.parent_id,
+              expanded: true
+            }
+          ];
+          _this.defaultExpandedKeys = arr
+          _this.leftTreeSelectData = arr[0];
+          _this.getRightData(arr[0].id);
+          return resolve(arr);
+        } else {
+          var send_data = {
+            token: this.token,
+            userId: this.userId,
+            data: {
+              parentId: node.data.id
+            }
+          };
+          this.$post("/doc/paper/getSysCatalogsByParentId", send_data)
+            .then((response)=> {
+              if (_this.success_code == response.code) {
+                return resolve(response.data);
+              } else {
+                if (response.code == -504) {
+                } else {
+                  _this.$message({
+                    message: response.msg,
+                    type: "error"
+                  });
+                }
+                resolve([]);
+              }
+            })
+            .catch(function(error) {
+              console.log(error);
+            });
+        }
+      }
+
+    },
+    //  获取左侧目录树点击数据
+    handleNodeClick(data,node) {
+      this.node = node
+      this.leftTreeSelectData = data;
+      this.getRightData(data.id);
+      $(".add_row").hide();
+      $(".add_name_input").val("");
+    },
+
+    //刷新树
+    updateLazyTree(node) {
+        var send_data = {
+            token: this.token,
+            userId: this.userId,
+            data: {
+                parentId: node.data.id
+            }
+        };
+        this.$post("/doc/paper/getSysCatalogsByParentId", send_data)
+        .then((res) => {
+            if (this.success_code == res.code) {
+                this.refreshLazyTree(node,res.data)
+            } else {
+                if (res.code == -504) {
+                    this.refreshLazyTree(node,[])
+                } else {
+                    this.$message({
+                        message: res.msg,
+                        type: "error"
+                    });
+                }
+            }
+        })
+        .catch(function(error) {
+            console.log(error);
+        });
+    },
+    refreshLazyTree(node, children) {
+        var theChildren = node.childNodes
+        theChildren.splice(0, theChildren.length)
+        node.doCreateChildren(children)
+    },
+
+    updateKeyChildren(key,data) {
+        console.log(key,data,'____')
+    },
+    //  搜索过滤左侧树
+    filterTreeNode(value, data) {
+      // if (!value) return true;
+      // return data.docName.indexOf(value) !== -1;
+    },
+    //  获取右侧数据
+    getRightData(id) {
+      var _this = this;
+      if (!id) {
+        return;
+      } else {
+        var send_data = {
+          token: this.token,
+          userId: this.userId,
+          pageSize: this.pageSize,
+          pageNo: this.pageNum,
+          data: {
+            parentId: id
+          }
+        };
+        this.$post("/doc/paper/getSysCatalogsByParentIdPage", send_data)
+          .then((response)=> {
+            if (_this.success_code == response.code) {
+              for (var i = 0; i < response.data.list.length; i++) {
+                response.data.list[i]["checked"] = false;
+                if (response.data.list[i].docName.length > 40) {
+                  response.data.list[i]["names"] =
+                    response.data.list[i].docName.substr(0, 40) + "...";
+                } else {
+                  response.data.list[i]["names"] =
+                    response.data.list[i].docName;
+                }
+              }
+              _this.right_direct_tbdata = response.data.list;
+              _this.total = response.data.total;
+            } else {
+              _this.$message({
+                message: response.msg,
+                type: "error"
+              });
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+    },
+    //  分页
+    exchangeCurrentPage() {
+      this.right_direct_tbdata = [];
+      this.getRightData(this.leftTreeSelectData.id);
+    },
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this.getRightData(this.leftTreeSelectData.id);
+    },
+    //  取消保存主目录名称及备注
+    cancleParentDataFn() {
+      this.isedit = false;
+      this.businessData = {
+        label: '',
+        id: ''
+      }
+      $("#app .bask_edit_atalog").show();
+      this.pageHeight()
+    },
+    //  保存主目录名称及备注
+    saveParentDataFn() {
+      if(!this.save_parent_data.docName.trim()) {
+        this.$message.warning('输入内容不能为空')
+        return
+      }
+      let reg = /[\\/:*?"<>|]/g;
+      if(reg.test(this.save_parent_data.docName)){
+          this.$message.warning('不能包含特殊字符\/:*?"<>|');
+          return;
+      }
+      // 更新目录业务类型
+      if(this.businessData.id != '' && this.businessData.id != this.financingId) {
+          this.$post('/doc/paper/upSysCatalogFinancingById',{
+          data: {
+            financingId: this.businessData.id,
+            id: this.parent_id
+          }
+        }).then(res => {
+          if (this.success_code != res.code) {
+            this.$message.error(res.msg);
+            return
+          }
+          this.financingId = this.businessData.id
+          this.financingName = this.businessData.label
+        }).catch(err => {console.log(err)})
+      }
+      this.$post("/doc/paper/upSysCatalogNameById", {
+        data: {
+          id: this.parent_id,
+          updateBy: this.userId,
+          docName: this.save_parent_data.docName,
+          remarks: this.save_parent_data.remarks,
+          parentId: this.parent_id
+        }
+      }).then((response)=> {
+          if (this.success_code != response.code) {
+            this.$message.error(response.msg);
+            return
+          }
+          this.parent_docName = this.save_parent_data.docName;
+          this.parent_remarks = this.save_parent_data.remarks;
+          this.isedit = false;
+          $("#app .bask_edit_atalog").show();
+          this.pageHeight()
+        }).catch(err => {console.log(err)});
+    },
+    //  编辑右侧表格目录名称
+    editSonName(itemValue, index) {
+        console.log(itemValue,'+++')
+      if ($(".edit_name_input").length >= 1) {
+        return;
+      }
+      var _this = this;
+      var str = itemValue.docName
+        console.log(str,'___')
+      $(".name_col")
+        .eq(index)
+        .children()
+        .css("display", "none");
+      var dom = $(
+        "<input class='edit_name_input' maxlength=1000 type='text' value='" + str + "' />"
+      );
+      $(".name_col")
+        .eq(index)
+        .append(dom);
+      $(".edit_name_input").on("blur", function() {
+        var that = this;
+        var strs = $(this).val();
+        if (str == strs) {
+          $(that)
+            .parent()
+            .children()
+            .css("display", "block");
+          // .text(strs);
+          $(that).remove();
+        } else {
+            if(!strs.trim()) {
+              _this.$message.warning('输入内容不能为空')
+              return
+            }
+            let reg = /[\\/:*?"<>|]/g;
+            if(reg.test(strs)){
+                _this.$message.warning('不能包含特殊字符\/:*?"<>|');
+                return;
+            }
+            if(strs == '') {
+                $(that)
+                    .parent()
+                    .children()
+                    .css("display", "block");
+                $(that).remove();
+            } else {
+                 var send_data = {
+                    token: _this.token,
+                    userId: _this.userId,
+                    data: {
+                    id: itemValue.id,
+                    parentId: _this.parent_id,
+                    docName: strs
+                    // updateBy: _this.userId
+                    }
+                };
+             _this
+                .$post("/doc/paper/upSysCatalogNameById", send_data)
+                .then((response)=> {
+                    if (_this.success_code == response.code) {
+                        $(that)
+                        .parent()
+                        .children()
+                        .css("display", "block");
+                        $(that).remove();
+                        _this.getRightData(_this.leftTreeSelectData.id);
+                        _this.updateLazyTree(_this.node);
+                    } else {
+                        _this.$message({
+                        message: response.msg,
+                        type: "error"
+                        });
+                    }
+                })
+                .catch(function(error) {
+                    console.log(error);
+                });
+            }
+        }
+      });
+    },
+    //  右侧表格新增目录
+    addChildrenDirectionFn() {
+      if (this.right_direct_tbdata.length == 0) {
+        $(".nodatacontainer").hide();
+      }
+      $(".add_row").show();
+    },
+    //  右侧表格新增目录失焦事件
+    addDocNameBlurFn() {
+      var _this = this;
+      var str = $(".add_row .add_name_input").val();
+      str = this.trim(str)
+      if (str == "") {
+        $(".add_row").hide();
+        return;
+      } else {
+        let reg = /[\\/:*?"<>|]/g;
+        if(reg.test(str)){
+            this.$message.warning('不能包含特殊字符\/:*?"<>|');
+            return;
+        }
+        var send_data = {
+          token: this.token,
+          userId: this.userId,
+          data: {
+            catalogId: this.parent_id,
+            parentId: this.leftTreeSelectData.id,
+            docName: str
+          }
+        };
+        this.$post("/doc/paper/addCatalog", send_data)
+          .then((response)=> {
+            if (_this.success_code == response.code) {
+              _this.$message({
+                message: "添加成功",
+                type: "success"
+              });
+              $(".add_row .add_name_input").val("");
+              $(".add_row").hide();
+              _this.getRightData(_this.leftTreeSelectData.id);
+              _this.updateLazyTree(_this.node);
+              // _this.resetFn();
+            } else {
+              _this.$message({
+                message: response.msg,
+                type: "error"
+              });
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+    },
+    //  右侧表格删除目录弹框
+    delChildrenDirectionFn() {
+      var arr = [];
+      var _this = this;
+      for (var i = 0; i < this.right_direct_tbdata.length; i++) {
+        if (this.right_direct_tbdata[i]["checked"]) {
+          arr.push(this.right_direct_tbdata[i]);
+        }
+      }
+      if (arr.length == 0) {
+        this.$message("请选择一条数据");
+        return;
+      } else {
+        this.$confirm(
+          "删除后，将删除该目录下的所有子目录,是否确认删除？",
+          "提示",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+          }
+        )
+          .then(() => {
+            this.delDirectoryFn();
+          })
+          .catch(() => {
+            this.$message({
+              type: "info",
+              message: "已取消删除"
+            });
+          });
+      }
+    },
+    //  右侧表格删除目录
+    delDirectoryFn() {
+      var _this = this;
+      var arr = [];
+      for (var i = 0; i < this.right_direct_tbdata.length; i++) {
+        if (this.right_direct_tbdata[i]["checked"]) {
+          arr.push(this.right_direct_tbdata[i].id);
+        }
+      }
+      var send_data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          ids: arr.join(",")
+        }
+      };
+      this.$post("/doc/paper/deleteCatalog", send_data)
+        .then((response)=> {
+          if (_this.success_code == response.code) {
+            _this.$message({
+              message: "删除成功",
+              type: "success"
+            });
+            _this.del_dialogVisible = false;
+            _this.currentPage = 1;
+            _this.pageNum = 1;
+            _this.getRightData(_this.leftTreeSelectData.id);
+            _this.updateLazyTree(_this.node)
+          } else {
+            _this.$message({
+              message: response.msg,
+              type: "error"
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //  上移
+    upMove(data, index) {
+      if (index == 0) {
+        return;
+      }
+      var _this = this;
+      var send_data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          upperId: this.right_direct_tbdata[index].id,
+          upperOrderBy: this.right_direct_tbdata[index - 1].orderBy,
+          downId: this.right_direct_tbdata[index - 1].id,
+          downOrderBy: this.right_direct_tbdata[index].orderBy
+        }
+      };
+      this.moveFn(send_data);
+    },
+    //  下移
+    downMove(data, index) {
+      if (index == this.right_direct_tbdata.length - 1) {
+        return;
+      }
+      var send_data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          upperId: this.right_direct_tbdata[index + 1].id,
+          upperOrderBy: this.right_direct_tbdata[index].orderBy,
+          downId: this.right_direct_tbdata[index].id,
+          downOrderBy: this.right_direct_tbdata[index + 1].orderBy
+        }
+      };
+      this.moveFn(send_data);
+    },
+    //  移动接口方法
+    moveFn(data) {
+      var _this = this;
+      this.$post("/doc/paper/swapSysCatalogs", data)
+        .then((response)=> {
+          if (response.code == _this.success_code) {
+            _this.getRightData(_this.leftTreeSelectData.id);
+            _this.updateLazyTree(_this.node)
+          } else {
+            _this.$message({
+              message: response.msg,
+              type: "warning"
+            });
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //  打开模板管理弹框
+    openModuleManage(data) {
+        var proId =  this.pro_id
+        var jurisdiction = rightSysPermissionFn(proId,'bask_template_op')
+        if(jurisdiction) {
+            this.right_click_data = data;
+            this.add_template_file_list = [];
+            this.getTempDataFn();
+            this.dialogVisible = true;
+        } else {
+            this.$message({
+                message: '当前无权限',
+                type: "warning"
+            });
+        }
+    },
+    //  获取模板管理数据
+    getTempDataFn() {
+      var _this = this;
+      var send_data = {
+        token: this.token,
+        userId: this.userId,
+        data: {
+          // catalogId: this.right_click_data.id,
+          // parentId:
+          // catalogId: this.leftTreeSelectData.id
+          //   ? this.leftTreeSelectData.id
+          //   : "0",
+          catalogId: this.parent_id,
+          parentId: this.right_click_data.id
+        }
+      };
+      this.$post("/doc/paper/getDocSysTemplateByCatalogId", send_data)
+        .then((response)=> {
+          if (response.code == _this.success_code) {
+            _this.template_file_list = response.data;
+          } else {
+            _this.$message({
+              message: response.msg,
+              type: "warning"
+            });
+            _this.template_file_list = [];
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    //  保存模板数据
+    saveMsg() {
+      var _this = this;
+      var send_data = {
+        token: this.token,
+        userId: this.userId,
+        data: this.add_template_file_list
+      };
+      if (this.add_template_file_list.length == 0) {
+        _this.getTempDataFn();
+        _this.$message({
+            message: "保存成功",
+            type: "success"
+        });
+      } else {
+        this.$post("/doc/paper/batchAddSystemTemplate", send_data)
+          .then((response)=> {
+            if (response.code == _this.success_code) {
+            _this.add_template_file_list = [];
+            _this.getTempDataFn();
+            _this.$message({
+                message: "保存成功",
+                type: "success"
+            });
+            } else {
+            _this.$message({
+                message: response.msg,
+                type: "warning"
+            });
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+    },
+    //  强制刷新左侧树
+    resetFn() {
+      this.reset = false;
+      this.$nextTick(() => {
+        this.reset = true;
+      });
+    },
+    // 整体上传成功之后的回调
+    docUploadAllsucess(){
+      this.uploadDocAddIsShow = false;
+      this.addDoc = false;
+    },
+    trim(str){
+        return str.replace(/^(\s|\xA0)+|(\s|\xA0)+$/g, '');
+    }
+  },
+    created() {
+        this.parent_id = this.$route.query.id;
+        this.parent_docName = this.$route.query.docName;
+        this.parent_remarks = this.$route.query.remarks;
+        this.financingId = this.$route.query.financingId;
+        this.financingName = this.$route.query.financingName;
+        this.success_code = this.code.codeNum.SUCCESS;
+        // this.getLeftData();
+    },
+    mounted(){
+      this.pageHeight()
+    },
+    beforeRouteLeave(to, from, next) {
+        to.meta.keepAlive = false;
+        next();
+},
+    watch: {
+        currentPage(newV, oldV) {
+            this.pageNum = newV;
+            this.exchangeCurrentPage();
+        },
+        acction_dialogVisible() {
+            if (!this.acction_dialogVisible) {
+                this.readonly = true;
+                this.acction_content = "";
+            }
+        }
+    // dialogVisible() {
+    //   if (!dialogVisible) {
+    //     this.right_click_data = {};
+    //   }
+    // }
+    }
+};
+</script>
+
+<style lang="scss" scoped>
+.backstagedirectory .backstagedirectory_contenti_headers {
+  padding: 0 10px;
+  margin: auto;
+  height: 96px;
+  overflow: hidden;
+  background-color: #fff;
+  text-align: left;
+
+  .headers_break {
+    height: 46px;
+    line-height: 46px;
+    display: flex;
+    align-items: center;
+    .headers_break_three{
+        width: 500px;
+        display: inline-block;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+    }
+  }
+
+  .headers_clearFix {
+    margin: 5px 0 19px;
+
+    .headers_clearFix_title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+  }
+}
+.backstagedirectory .contenti_container {
+  margin: 10px 0 0 0;
+  display: flex;
+  justify-content: space-between;
+  .left,
+  .right {
+    background-color: #fff;
+  }
+  .left {
+    width: 20%;
+    margin-right: 10px;
+    .left_header {
+        width: 100%;
+        height: 10%;
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        padding:10px 15px;
+    }
+    .left_tree_box {
+        width: 100%;
+        height: 90%;
+        border-top: solid 1px #e7e7e7;
+
+    }
+  }
+  .right {
+    flex: 1;
+    .right_header {
+      border-bottom: solid 1px #e7e7e7;
+      padding: 12px 20px;
+      line-height: 2;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      .right_header_title {
+        width: 550px;
+      }
+      .bold {
+        font-weight: bold;
+      }
+      .right_header_mark {
+        display: flex;
+        justify-content: space-between;
+        div{
+            display: flex;
+            align-items: center;
+            .solt {
+                width: 7%;
+                display: inline-block;
+            }
+            .mess {
+                width: 630px;
+            }
+        }
+      }
+
+    }
+    .right_header_edit {
+      padding: 15px 20px;
+      border-bottom: solid 1px #e7e7e7;
+      .edit_title {
+        line-height: 40px;
+        text-align: left;
+      }
+      .right_header_edit_bottom {
+        margin-top: 15px;
+      }
+    }
+    .right_header_second {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        height: 50px;
+        border-bottom: solid 1px #e7e7e7;
+        .right_header_second_title{
+            margin-left: 20px;
+            display: flex;
+            align-items: center;
+            i{
+                color: #f95a21;
+            }
+            span{
+                display: inline-block;
+                font-weight: bold;
+                width: 500px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                text-align: left;
+                margin-left: 5px;
+            }
+        }
+        .right_header_second_opa{
+            display: flex;
+            margin-right: 20px;
+        }
+    //   p {
+    //     line-height: 50px;
+    //     text-align: left;
+    //   }
+
+    //   .el-icon-location {
+    //     color: #f95a21;
+    //     margin-right: 5px;
+    //   }
+    //   span {
+    //     font-weight: bold;
+    //   }
+
+    //   .last_btn {
+    //     top: 6px;
+    //     right: 20px;
+    //   }
+    //   .first_btn {
+    //     top: 6px;
+    //     right: 120px;
+    //   }
+    }
+    .right_header_third {
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      border-bottom: solid 1px #f4f7f9;
+      background-color: #fafafa;
+      .check_col{
+          label{
+              display: inline-block;
+              width: 100%;
+              text-align: left;
+              padding-left: 10px;
+          }
+      }
+    }
+    .tb_row {
+      height: 45px;
+      line-height: 45px;
+      border-bottom: solid 1px #e7e7e7;
+      .name_col{
+          .namr_col_name{
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+      }
+      .check_col{
+          label{
+              display: inline-block;
+              width: 100%;
+              text-align: left;
+              padding-left: 10px;
+          }
+      }
+    }
+    .tb_row:hover {
+      background-color: #f7f7f7;
+      .icon_box:nth-child(1):hover {
+        background-color: #015fa9;
+        color: #fff;
+      }
+      .icon_box:nth-child(2):hover {
+        background-color: #015fa9;
+        color: #fff;
+      }
+      .icon_box:nth-child(3):hover {
+        background-color: #015fa9;
+        color: #fff;
+      }
+      .icon_box:nth-child(4):hover {
+        background-color: #015fa9;
+        color: #fff;
+      }
+    }
+    .operating_box {
+      .opera_btn_box {
+        height: 45px;
+        margin: auto;
+        width: 100%;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+
+      .icon_box {
+        height: 30px;
+        width: 30px;
+        text-align: center;
+        line-height: 33px;
+        border-radius: 50%;
+        background-color: #f2f3f5;
+        border: solid 1px #eceded;
+        cursor: pointer;
+      }
+      .icon_box:nth-child(2) i {
+        transform: rotate(90deg);
+      }
+      .icon_box:nth-child(3) i {
+        transform: rotate(-90deg);
+      }
+      p {
+        color: #1a5fa4;
+        cursor: pointer;
+      }
+    }
+
+    .add_row {
+      display: none;
+      .el-input {
+        width: 50%;
+      }
+    }
+    .add_name_input {
+      -webkit-appearance: none;
+      background-color: #fff;
+      background-image: none;
+      border-radius: 4px;
+      border: 1px solid #dcdfe6;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+      color: #606266;
+      display: inline-block;
+      font-size: inherit;
+      height: 35px;
+      line-height: 35px;
+      outline: 0;
+      padding: 0 15px;
+      -webkit-transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+      transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+      width: 50%;
+    }
+  }
+  .text_overflow {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .pages {
+    padding: 30px 40px 30px 30px;
+    text-align: right;
+  }
+  .temp_chunk{
+      height: 200px;
+      overflow-x: hidden;
+  }
+  .temp_item:hover{
+      background:#f7f9fb;
+  }
+  .oper_col {
+    span {
+      cursor: pointer;
+      display: inline-block;
+      margin: 0 3px;
+      font-size: 14px;
+    }
+    span:hover {
+      cursor: pointer;
+      display: inline-block;
+      margin: 0 3px;
+      font-size: 14px;
+      color: #5e9df8;
+    }
+  }
+  .filename_col {
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.backstagedirectory .temp_box {
+  .add_file {
+    text-align: left;
+    color: #0b6aac;
+    cursor: pointer;
+  }
+}
+.aa{
+    width: 18px;
+    height: 14px;
+    margin-top: 10px;
+    background: url("../../../../assets/project_doc/treeopen.png") no-repeat 0 0;
+}
+</style>
+
+<style lang="scss">
+.backstagedirectory {
+  .left_tree_box {
+    .el-scrollbar__wrap {
+      overflow-x:auto !important;
+    }
+  }
+
+  .open{
+    width: 30px;
+    height: 14px;
+    background: url("../../../../assets/project_doc/treeopen.png") no-repeat 0 0;
+    display: inline-block;
+  }
+  .contenti_container .close{
+    width: 30px;
+    height: 15px;
+    background: url("../../../../assets/project_doc/treenoopen.png") no-repeat 0 0;
+    display: inline-block;
+    &::before {
+      content: '';
+    }
+  }
+  .custom-tree-node{
+      display: flex;
+      align-items: center;
+  }
+  .el-tree-node>.el-tree-node__children{
+      overflow: visible;
+  }
+
+  .el-tree-node__expand-icon.is-leaf {
+    background: none;
+  }
+  .el-tree-node__expand-icon.expanded {
+    transform: none;
+  }
+  .left_tree_box .el-icon-caret-right:before {
+    content: "";
+  }
+}
+.backstagedirectory .left .el-input__inner {
+  border-radius: 0;
+  outline: none;
+}
+.backstagedirectory .right .edit_name_input {
+  -webkit-appearance: none;
+  background-color: #fff;
+  background-image: none;
+  border-radius: 4px;
+  border: 1px solid #dcdfe6;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #606266;
+  display: inline-block;
+  font-size: inherit;
+  height: 35px;
+  line-height: 35px;
+  outline: 0;
+  padding: 0 15px;
+  -webkit-transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 50%;
+}
+.backstagedirectory .add_box {
+  .el-dialog__header {
+    text-align: center;
+    border-bottom: solid 1px #ccc;
+  }
+  .el-dialog__body {
+    padding: 20px 40px 10px 20px;
+    color: #606266;
+    font-size: 14px;
+    text-align: left;
+  }
+  .el-form-item {
+    width: 100%;
+    margin-bottom: 0;
+    .el-textarea {
+      width: 100%;
+    }
+  }
+}
+</style>
+

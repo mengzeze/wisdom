@@ -1,0 +1,1103 @@
+<template>
+    <div class="vote-details">
+        <el-dialog :title="title" :visible.sync="isShow" :close-on-click-modal="false" width="700px" @close="closeFn">
+            <div style="text-align: left;" :class="{autoHeight:autoHeight}">
+            <el-scrollbar style="height:100%">
+                    <el-button class="button_bj" v-if="handleType == 1 && handleVote.voteStatus != 2 && handleVote.voteStatus != 3" type="primary" @click="bj_butn" size="mini">编辑</el-button>
+                    <!-- <el-scrollbar style="height:100%"> -->
+                    <el-form ref="form" v-model="msgObj" label-width="123px" class="form_boxadd clearfix" align="left">
+                        <el-form-item label="所属项目："  :rules="[{required: true}]" v-if="handleType == 3 && voteType == 1">
+                            <!-- 我的投票 -->
+                            <select-lazy 
+                                v-model="myvoteyproj" 
+                                :disabled="chack_bule" 
+                                filterable 
+                                placeholder="请选择项目" 
+                                @change="changeProject" 
+                                :list='myvoteproj'></select-lazy>
+                            <!-- <el-select v-model="myvoteyproj" :disabled="chack_bule" filterable placeholder="请选择项目" @change="changeProject">
+                                <el-option
+                                v-for="item in myvoteproj"
+                                :key="item.id"
+                                :label="item.name"
+                                :value="item.id"
+                                ></el-option>
+                            </el-select> -->
+                        </el-form-item>
+                        <el-form-item label="投票名称：" :rules="[{required: true}]">
+                            <el-input :disabled="chack_bule" v-model="msgObj.pro_name" placeholder="请填写投票名称" :maxlength="20"></el-input>
+                        </el-form-item>
+                        <el-form-item label="投票类型：" :rules="[{required: true}]">
+                            <!-- {{msgObj.pro_state}} -->
+                            <el-select v-model="msgObj.pro_state" placeholder="请选择投票类型" :disabled="handleType == 1 || handleType == 2">
+                                <el-option v-for="item in select_type" :key="item.id" :label="item.typeName" :value="item.typeName"></el-option>
+                            </el-select>
+                            <!-- {{setr_id}} -->
+                        </el-form-item>
+                        <el-form-item label="投票时间：" :rules="[{required: true}]">
+                            <el-date-picker @focus="$utils.handleTimeFocus" :disabled="startTimeDisabled || isDetailsHandle" v-model="msgObj.pro_time1" type="datetime" value-format="yyyy-MM-dd HH:mm"  format="yyyy-MM-dd HH:mm" placeholder="选择开始日期时间"></el-date-picker>
+                            <!-- <el-date-picker @focus="$utils.handleTimeFocus" @change="endinfo" :disabled="endTimeDisabled || isDetailsHandle" v-model="msgObj.pro_time2" type="datetime" value-format="yyyy-MM-dd HH:mm"  format="yyyy-MM-dd HH:mm" placeholder="选择结束日期时间" :picker-options="pickerOptions"></el-date-picker> -->
+                            <el-date-picker @focus="$utils.handleTimeFocus" :disabled="endTimeDisabled || isDetailsHandle" v-model="msgObj.pro_time2" type="datetime" value-format="yyyy-MM-dd HH:mm"  format="yyyy-MM-dd HH:mm" placeholder="选择结束日期时间"></el-date-picker>
+                        </el-form-item>
+                        <el-form-item label="提醒：">
+                        <!-- {{msgObj.remindType}} -->
+                        <el-select v-model="msgObj.remindType" placeholder="无提醒" :disabled="chack_bule">
+                            <el-option v-for="item in selectremind" :key="item.value" :label="item.name" :value="item.id"></el-option>
+                        </el-select>
+                        <!-- {{msgObj.pro_mode}} -->
+                        <el-select v-model="msgObj.pro_mode" v-if="msgObj.remindType!==0" multiple placeholder="请选择" :disabled="chack_bule">
+                            <el-option v-for="item in modelist" :key="item.id" :label="item.name" :value="item.id"></el-option>
+                        </el-select>
+                        </el-form-item>
+                    </el-form>
+                    <ul align="left" class="riwjn_we">
+                        <li class="usernanmestlt"><i style="color:#f56c6c;position:relative;right:4px;">*</i>投票人员：</li>
+                        <li class="usernanmes">
+                            <el-tag v-for="(item,index) in deployObj" :key="index" class="userbtn" @close="handle_Close(index,0)" :closable="!chack_bule">
+                                {{item.name}}
+                            </el-tag>
+                            <span v-if="deployObj.length>0">&nbsp;&nbsp;</span>
+                            <el-button type="primary" :disabled="chack_bule" @click="optPrinFn(1)" size="mini" style="margin-top:3px;">选择人员</el-button>
+                        </li>
+                    </ul>
+                    <p style="text-align:left;padding-left:136px;color:#999999" v-if="remindVayss.length>0">
+                        该投票需要角色:<span v-for="(item,index) in remindVayss" :key="index">{{item.roleName}},不少于{{item.count}};</span>
+                    </p>
+                    <!-- {{remindVayss}} -->
+                    <ul align="left" class="riwjn_we" style="margin-top:10px">
+                        <li class="usernanmestlt">抄送人员：</li>
+                        <li class="usernanmes">
+                            <el-tag v-for="(item,index) in ccObj" :key="index" class="userbtn" @close="handle_Close(index,1)" :closable="!chack_bule">
+                                {{item.name}}
+                            </el-tag>
+                            <span v-if="ccObj.length>0">&nbsp;&nbsp;</span>
+                            <el-button type="primary" :disabled="chack_bule" @click="optPrinFn(2)" size="mini" style="margin-top:3px;">抄送人员</el-button>
+                        </li>
+                    </ul>
+                    <el-form label-width="123px" class="form_box clearfix" align="left" style="padding-top:0px;">
+                        <el-form-item label="附件：" style="margin-top:-2px;margin-bottom:0; float: none; margin-right: 0">
+                            <add-attachment ref="attachmentEdit"
+                                            :projectId="projId"
+                                            :disabled="attachmentDisabled"
+                                            @select="$utils.handleSelect(arguments, selectedFileListEdit)"></add-attachment>
+                            <ul class="doc-list-box">
+                                <li v-for="(item,index) in selectedFileListEdit" :key="index">
+                                    <p class="attachemnt-list-doc">
+                                        <span class="doc-name" @click="$utils.handleUploadFilePreview(item, {projectId:projId,sourceName: title, projectName: handleVote.projName})" :title="item.docName">{{item.docName}}</span>
+                                        <span>
+                                        <el-button v-if="item.addSource!==1" type="text" @click="$utils.handleDownLoadSelected(item)">下载</el-button>
+                                        <el-button type="text" @click="$utils.handleDeleteSelected(selectedFileListEdit,item)">删除</el-button>
+                                        </span>
+                                    </p>
+                                </li>
+                                <li v-for="(item,index) in getFileListEdit" :key="index">
+                                    <p class="attachemnt-list-doc">
+                                        <span :class="`doc-name ${item.delFlag == 1?'del-file':''}`" @click="seeFile(item)" :title="item.docName">
+                                            {{item.docName}}
+                                        </span>
+                                        <span>
+                                            <el-button type="text" @click="$utils.handleDownLoadSelected(item)">下载</el-button>
+                                        </span>
+                                    </p>
+                                </li>
+                            </ul>
+                        </el-form-item>
+                    </el-form>
+            </el-scrollbar>
+             </div>
+            <span slot="footer" class="dialog-footer" v-if="handleType == 3">
+                <el-button size="medium" @click="cancel_Close">取 消</el-button>
+                <el-button size="medium" type="primary" @click="addCvote">提交</el-button>
+            </span>
+            <span slot="footer" class="dialog-footer" v-else>
+                <el-button size="medium" @click="closeFn">取 消</el-button>
+                <el-button type="primary" size="medium" @click="editSave" v-if="editCanSave || handleType == 2">保存</el-button>
+            </span>
+        </el-dialog>
+        <!-- 选择人员 -->
+        <!--:findUserObj="user_num === 1 ? findUserObj : findUserObjM"-->
+        <findall-deptuser  :findFlagShow.sync="findFlag" v-on:findAllUser="findAllUser"
+              :findUserObj="user_num === 1 ? findUserObj : findUserObjM"
+              :findState="findState" :checkState="checkState"></findall-deptuser>
+    </div>
+</template>
+
+<script>
+//选择人员
+import findallDeptuser from "@/components/select_box/findAllDeptUserMultipleNew";
+export default {
+    name: 'voteDetails',
+    components: {
+       findallDeptuser
+    },
+    props: [
+      'title',
+      'voteDetaVisible',
+      'voteType',//1我的投票2项目投票
+      'handleType',//操作类型1详情，2编辑，3新增  
+      'handleVote',//当前操作的投票
+      'flag'  //判断当前的是哪个tab
+    ],
+    data () {
+        return { 
+            client: window.client,
+            token: '',
+            userId: '',
+            projId: "", //项目id
+            success_code: '',
+            newProjectVoteTimer: "", //草稿定时器 
+            isShow: true,
+            editCanSave: false,//保存按钮可见
+            msgObj: {
+                id: "",
+                pro_name: "",
+                abb_name: "",
+                pro_type: "",
+                pro_state: "",
+                pro_time1: "",
+                pro_time2: "",
+                pro_legal: "",
+                pro_person: "",
+                remindType: 0,
+                pro_mode: "",
+                checkList: [],
+                ruleList: []
+            },
+            deployObj: [], //添加投票人员
+            oldDeployObj: [],
+            ccObj: [], //添加抄送人员
+            deployUserids1: [], ////添加投票人员id集
+            deployUserids: [], ////添加投票人员id集
+            deployUserids_t: [], ////添加投票人员id集
+            ccUserids: [], //添加抄送人员id集
+            ccUserids_c: [], //添加抄送人员id集
+            chack_bule: false,//是否为编辑状态
+            startTimeDisabled:false, //投票开始时间
+            endTimeDisabled:false, //投票截止时间
+            attachmentDisabled: false,//附件是否可编辑
+            isDetailsHandle: false,//是否是查看详情操作
+            select_type: [],//投票类型列表
+            //提醒
+            selectremind: [
+                {
+                id: 0,
+                name: "不提醒"
+                },
+                {
+                id: 1,
+                name: "截止前15分钟"
+                },
+                {
+                id: 2,
+                name: "截止前1小时"
+                },
+                {
+                id: 3,
+                name: "截止前3小时"
+                },
+                {
+                id: 4,
+                name: "截止前1天"
+                }
+            ],
+            //提醒方式
+            modelist: [
+                {
+                id: "0",
+                name: "站内信"
+                 }
+                // {
+                //   id: "1",
+                //   name: "邮件"
+                // },
+                
+            ],
+            //新增选择人员
+            findFlag: false,
+            findState: {},
+            checkState: {},
+            user_num: "", //选择人员标识
+            findUserObjM: [],
+            findUserObj: [],
+            selectedFileListEdit:[],//附件
+            getFileListEdit: [],//附件
+
+            Strategyid: '',//当前投票id
+            typenamid: "",
+            elid_start_Time: "", //编辑返回的开始时间
+            elid_entil_Time: "", //编辑返回的结束时间
+            isUpdate: false, //编辑修改标识
+            //startDatePicker: this.beginDate(),
+            xitiTime:"",
+            timsg:"",
+            pickerOptions: {
+                disabledDate(time) {
+                    return time.getTime() < Date.now() - 1000*3600*24//开始时间不选时，结束时间最大值大于等于当天
+                }
+            },
+            //查看所属项目
+            myvoteproj: [],
+            myvoteyproj: "",
+            queryDocProjectId: '',
+
+            timeEnd:'',//投票截止时间的判断
+            autoHeight:false,
+        }
+    },
+    mounted(){
+        this.token = this.$store.state.loginObject.userToken;
+        this.userId = this.$store.state.loginObject.userId;
+        this.projId = this.handleType != 3 ? this.handleVote.projId : this.$store.state.projectMsg.pro_id;
+        this.success_code = this.code.codeNum.SUCCESS;  
+        this.handleType != 3 && this.cvoteEdit()
+        this.handleType == 3 && this.getDraft()
+        this.voteType == 1 && this.getProList()
+        this.typeList();
+        this.isDetailsHandle = this.handleType == 1;
+        this.getPromptType()
+    },
+    created(){
+
+    },
+    methods:{
+            // 获取提醒方式
+    getPromptType() {
+      this.$post("/sys/getNoticeWayConfig")
+        .then(res => {
+          if (this.code.codeNum.SUCCESS == res.code) {
+              console.log(res.data.email)
+              if(res.data.email == 1){
+                  this.modelist.push(
+                       {
+                          id: "1",
+                          name: "邮件"
+                        }
+                  )
+              }
+              if(res.data.sms == 1){
+                  this.modelist.push(
+                        {
+                            id:"2",
+                            name:'短信'
+                        },
+                  )
+              }
+            return;
+          }
+          this.$message.error("通知方式获取失败");
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+ 
+        //查询所属项目
+        getProList() {
+            var dataObj = {
+                token: this.token,
+                userId: this.userId,
+                data: {}
+            };
+            var that = this;
+            this.$post("info/project/getSimpleProjectList", dataObj)
+                .then((response)=> {
+                    if (response.code == that.code.codeNum.SUCCESS) {
+                         that.myvoteproj = response.data;
+                    }
+                })
+                .catch(function(error) {
+        
+                });
+        },
+        changeProject(){
+            this.projId = this.myvoteyproj;
+        },
+        getDraft(){
+            // 取出保存的草稿
+            let draft = this.$utils.getDraft('projectVote', false);
+            // 如果没有草稿，设置定时器，返回
+            if (!draft) {
+                this.setTimer()
+                return
+            }
+            // 有草稿，展示提示弹窗
+            this.$confirm('是否载入上次保存的草稿?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                // 回显草稿数据
+                this.msgObj = { ...this.msgObj, ...draft };
+                this.setTimer()
+            }).catch(() => {
+                this.setTimer()
+            });
+            this.clear_data();
+        },
+        //新增投票
+        addCvote () {
+            var _this = this;
+            if (this.voteType == 1 && this.myvoteyproj == '') {
+                this.$message.error("请选择项目");
+                return;
+            }
+            if (this.msgObj.pro_name == "") {
+                this.$message.error("投票名称不能为空");
+                return;
+            }
+            if (this.msgObj.pro_state == "") {
+                this.$message.error("投票类型不能为空");
+                return;
+            }
+            if (this.deployObj == "") {
+                this.$message.error("投票人不能为空");
+                return;
+            }
+            if (this.deployObj !== "") {
+                var deploy = [];
+                this.deployObj.forEach(function (c) {
+                if (c.userId) {
+                    deploy.push(c.userId);
+                }
+                });
+                this.deployUserids = Array.from(new Set(deploy));
+            } else {
+                return;
+            }
+            if (this.deployUserids.length == 0) {
+                this.$message.error("投票人不能为空");
+                return;
+            }
+            if (this.ccObj !== "") {
+                var ccUser = [];
+                this.ccObj.forEach(function (c) {
+                if (c.userId) {
+                    ccUser.push(c.userId);
+                }
+                });
+                this.ccUserids = Array.from(new Set(ccUser));
+            }
+            if (this.msgObj.remindType == 0) {
+                this.msgObj.pro_mode = [];
+            }
+            console.log(this.msgObj.pro_time1)
+            if (!this.msgObj.pro_time1) {
+                this.$message.error("请选择开始时间");
+                return;
+            }
+            if (!this.msgObj.pro_time2) {
+                this.$message.error("请选择结束时间");
+                return;
+            }
+            var oDate1 = new Date(this.msgObj.pro_time1);
+            var oDate2 = new Date(this.msgObj.pro_time2);
+            if (oDate1.getTime() > oDate2.getTime()) {
+                this.$message.error("开始时间不能大于结束时间");
+                return;
+            }
+            if (oDate1.getTime() === oDate2.getTime()) {
+                this.$message.error("开始时间不能等于结束时间");
+                return;
+            }
+            if (oDate2.getTime() < this.$moment().add(1, "hours")) {
+                this.$message.error("结束时间需大于当前时间1小时");
+                return;
+            }
+            if (this.msgObj.remindType != 0 && this.msgObj.pro_mode.join(",").length == 0) {
+                this.$message.error("请选择提醒方式");
+                return;
+            }
+            
+
+            if(this.$store.state.isUpload) {
+                this.$message.warning('有文件正在上传，请稍后操作')
+                return;
+            }
+
+            let localAttach = []
+            let projectRelev = []
+
+            this.selectedFileListEdit.forEach(v=>{
+                v.addSource===1 ? localAttach.push(v.docId) : projectRelev.push(v.docId)
+            })
+  
+             let endTime = this.msgObj.pro_time2.length == 16 ? this.msgObj.pro_time2 + ':00' : this.msgObj.pro_time2
+            let startTime = this.msgObj.pro_time1.length == 16 ? this.msgObj.pro_time1 + ':00' : this.msgObj.pro_time1
+            
+            var data = {
+                token: this.token,
+                userId: this.userId,
+                projectId: this.projId,
+                data: {
+                    projId: this.projId,
+                    name: this.msgObj.pro_name, //投票名称",
+                    typeId: this.setr_id, //leixinag
+                    startTime: startTime, //"2019-04-25 16:00:00",
+                    endTime: endTime, //"2019-04-26 16:00:00",
+                    remindType: this.msgObj.remindType, //"【0：不提醒，1：截止前15分钟，2：截止前1小时，3：截止前3小时，4：截止前1天】",
+                    remindWay: this.msgObj.pro_mode.join(","), //"【0:站内信，1:邮件，2:短信】 拼接：0,1,2",
+                    voteUser: this.deployUserids.join(","), //"1,2,3",//投票人id this.deployUserids
+                    localAttach: localAttach.join(","), //"【本地上传文件id】 1,2,3",join(",")
+                    projectRelev: projectRelev.join(","), //"【关联项目文档】 1,2,3",
+                    carbonUser: this.ccUserids.join(",") //"【抄送人id】 1,2,3"}}this.ccUserids
+                }
+            };
+            var _this = this;
+            this.$post("/info/project/addProjectVote", data)
+                .then((response) => {
+                if (response.code == _this.code.codeNum.SUCCESS) {
+                    _this.$message.success(response.msg);
+                    (_this.msgObj.pro_name = ""),
+                    (_this.msgObj.pro_time1 = ""),
+                    (_this.msgObj.pro_time2 = ""),
+                    (_this.msgObj.remindType = 0),
+                    // (_this.msgObj.pro_mode = ""),
+                    (_this.deployObj = []),
+                    (_this.ccObj = []),
+                    (_this.deployUserids = []),
+                    (_this.msgObj.pro_state = ""),            
+                    _this.closeFn();//关闭弹窗
+                    _this.findUserObj = []
+                    _this.findUserObjM = []
+                    clearInterval(_this.newProjectVoteTimer);
+                    // 保存成功，清空草稿数据
+                    _this.$utils.removeDraft('projectVote', false);
+                    _this.$emit('editSucess');
+                } else {
+                    _this.$message.error(response.msg);
+                }
+                })
+                .catch(function (error) {
+                console.log(error);
+                });
+        },
+        // 投票编辑
+        cvoteEdit () {
+            this.selectedFileListEdit = [];
+            this.getFileListEdit = [];
+            console.log('数据',this.handleVote)
+            console.log(this.flag)
+            // if(this.flag == 1 || this.flag == 2){
+            //     this.disabled = true
+            // }else if(this.flag == 0){
+            //     this.disabled = false
+            // }
+            console.log(this.handleVote.createBy)
+            console.log(this.userId, this.isDetailsHandle)
+            //
+            if(this.handleVote.createBy == this.userId && this.handleVote.voteStatus == 0){ //当创建人和当前用户相等的时候并且状态为未进行
+                this.startTimeDisabled = false; //投票开始时间
+                this.endTimeDisabled = false;//投票结束时间
+            }else if(this.handleVote.createBy == this.userId && this.handleVote.voteStatus == 1){//当创建人和当前用户相等的时候并且状态为进行中
+                this.startTimeDisabled = true;
+                this.endTimeDisabled = false;
+            }else if(this.handleVote.createBy != this.userId ){//当创建人和当前用户不相等的时候
+                this.startTimeDisabled = true;
+                this.endTimeDisabled = true;
+            }
+            this.Strategyid = this.handleVote.id;           
+            // this.chack_bule = this.handleType == 2 && (this.handleVote.voteStatus == 1);
+            // this.chack_bule = this.handleType == 1;
+            if(this.handleType == 2 && this.handleVote.voteStatus == 0){
+                this.chack_bule = false;
+            } else {
+                this.chack_bule = true;
+            }
+            this.attachmentDisabled = this.handleType == 1;//只有详情弹窗附件不可编辑
+            console.log('投票状态',this.handleVote.voteStatus)    
+            console.log('编辑状态',this.chack_bule) 
+            var dataObj = {
+                token: this.token,
+                userId: this.userId,
+                data: {
+                    id: this.Strategyid
+                }
+            };
+            var that = this;
+            this.$post("/info/project/findProjectVoteOne", dataObj)
+                .then((response) => {
+                    console.log(response.data)
+                that.msgObj.pro_name = response.data.name;
+                that.typenamid = response.data.typeId;
+                that.msgObj.pro_time1 = response.data.startTime;
+                that.elid_start_Time = response.data.startTime; //编辑返回的开始时间
+                that.msgObj.pro_time2 = response.data.endTime;
+                that.elid_entil_Time = response.data.endTime; //编辑返回的结束时间
+                that.timeEnd = response.data.endTime;
+                that.msgObj.remindType = response.data.remindType;
+                that.projId = response.data.projId
+                this.getFileListEdit = response.data.voteActtachList || [];
+                if(this.getFileListEdit && this.getFileListEdit.length) {
+                    this.getFileListEdit = this.getFileListEdit.map(item=>{
+                        return {
+                            docName: item.docName,
+                            docId: item.docId,
+                            name: item.docName,
+                            id: item.docId,
+                            rfsId: item.docVersionRfs,
+                            delFlag: item.delFlag,
+                            type: item.docType
+                        }
+                    })
+                }
+                console.log(this.getFileListEdit)
+                // if(this.getFileListEdit.length>0){
+                //     this.autoHeight = true;
+                // }
+
+                that.msgObj.pro_state = response.data.typeName;
+                if (that.msgObj.remindType == 0) {
+                    that.msgObj.pro_mode = [];
+                } else {
+                    that.msgObj.pro_mode = response.data.remindWay.split(",");
+                }
+                that.deployObj = response.data.voteUserList.map(function (item) {
+                    return {
+                        name: item.name,
+                        userId: item.userId
+                    };
+                });
+                response.data.voteUserList.map(item =>{
+                    that.oldDeployObj.push(item.userId);
+                });
+                if (response.data.voteCarbonList != null) {
+                    that.ccObj = response.data.voteCarbonList.map(function (item) {
+                        return {
+                            name: item.name,
+                            userId: item.userId
+                        };
+                    });
+                }              
+                if (response.code == that.code.codeNum.SUCCESS) {
+
+                } else {
+                    that.$message.error(response.msg);
+                }
+                that.dialogVisible = true;
+                })
+                .catch(function (error) {
+                console.log(error);
+                });
+        },
+        // 投票编辑保存
+        editSave () {
+            var _this = this;
+            if (this.msgObj.pro_name == "") {
+                this.$message.error("投票名称内容不能为空");
+                return;
+            }
+            if (this.deployObj !== "") {
+                var deploy = [];
+                this.deployObj.forEach(function (c) {
+                if (c.userId) {
+                    deploy.push(c.userId);
+                }
+                });
+                this.deployUserids = Array.from(new Set(deploy));
+            } else {
+                this.$message.error("投票人不能为空");
+                return;
+            }
+            if(this.deployUserids.length == 0){
+                this.$message.error("投票人不能为空");
+                return;
+            }
+            if (this.ccObj !== "") {
+                var ccUser = [];
+                this.ccObj.forEach(function (c) {
+                if (c.userId) {
+                    ccUser.push(c.userId);
+                }
+                });
+                this.ccUserids = Array.from(new Set(ccUser));
+            }
+
+            if (!this.msgObj.pro_time1) {
+                this.$message.error("请选择开始时间");
+                return;
+            }
+            if (!this.msgObj.pro_time2) {
+                this.$message.error("请选择结束时间");
+                return;
+            }
+            var oDate1 = new Date(this.msgObj.pro_time1);
+            var oDate2 = new Date(this.msgObj.pro_time2);
+            if (oDate1.getTime() > oDate2.getTime()) {
+                this.$message.error("开始时间不能大于结束时间");
+                return;
+            }
+            if (oDate1.getTime() === oDate2.getTime()) {
+                this.$message.error("开始时间不能等于结束时间");
+                return;
+            }
+            console.log(this.timeEnd)
+            console.log(this.msgObj.pro_time2)
+            //return
+            if(this.timeEnd != this.msgObj.pro_time2){
+                 if (oDate2.getTime() < this.$moment().add(1, "hours")) {
+                    this.$message.error("结束时间需大于当前时间1小时");
+                    return;
+                }
+            }
+           
+            if (this.msgObj.remindType != 0 && this.msgObj.pro_mode.join(",").length == 0) {
+                this.$message.error("请选择提醒方式");
+                return;
+            }
+            if (this.msgObj.remindType == 0) {
+                this.msgObj.pro_mode = [];
+            }
+            if (this.msgObj.pro_time1 !== this.elid_start_Time) {
+                this.isUpdate = true;
+            }
+            if (this.msgObj.pro_time2 !== this.elid_entil_Time) {
+                this.isUpdate = true;
+            }
+            if(this.deployUserids.length > this.oldDeployObj.length){
+                this.isUpdate = true;
+            }
+            this.deployUserids.forEach(v=>{
+                if(this.oldDeployObj.findIndex(m=>m==v) == -1){
+                    this.isUpdate = true;
+                }
+            })
+            this.deployUserids_t = Array.from(new Set(this.deployUserids));
+            this.ccUserids_c = Array.from(new Set(this.ccUserids));
+            if(this.$store.state.isUpload) {
+                this.$message.error('有文件正在上传，请稍后操作')
+                return;
+            }
+            let localAttach = [] // 本地上传
+            let projectRelev = [] // 关联文件+之前的附件
+            this.selectedFileListEdit.forEach(v=>{
+                v.addSource===1 ? localAttach.push(v.docId) : projectRelev.push(v.docId)
+            })
+
+            this.getFileListEdit.forEach(v=>{
+                projectRelev.push(v.docId)
+            })
+             let endTime = this.msgObj.pro_time2.length == 16 ? this.msgObj.pro_time2 + ':00' : this.msgObj.pro_time2
+            let startTime = this.msgObj.pro_time1.length == 16 ? this.msgObj.pro_time1 + ':00' : this.msgObj.pro_time1
+            var data = {
+                token: this.token,
+                userId: this.userId,
+                projectId: this.projId,
+                data: {
+                    projId: this.projId,
+                    id: this.Strategyid,
+                    // projId: this.projId,
+                    name: this.msgObj.pro_name, //投票名称",
+                    isUpdate: this.isUpdate, //判断时间及投票人员是否修改】true"
+                    typeId: this.typenamid, //leixinag
+                    startTime: startTime, //"2019-04-25 16:00:00",
+                    endTime: endTime, //"2019-04-26 16:00:00",
+                    remindType: this.msgObj.remindType, //"【0：不提醒，1：截止前15分钟，2：截止前1小时，3：截止前3小时，4：截止前1天】",
+                    remindWay: this.msgObj.pro_mode.join(","), //"【0:站内信，1:邮件，2:短信】 拼接：0,1,2",
+                    voteUser: this.deployUserids.join(","), //"1,2,3",//投票人id this.deployUserids
+                    localAttach: localAttach.join(","), //"【本地上传文件id】 1,2,3",join(",")
+                    projectRelev: projectRelev.join(","), //"【关联项目文档】 1,2,3",
+                    carbonUser: this.ccUserids.join(",") //"【抄送人id】 1,2,3"}}this.ccUserids
+                }
+            };
+            var _this = this;
+            this.$post("/info/project/updaProjectVote", data)
+                .then((response) => {
+                // console.log(response);
+                if (response.code == _this.code.codeNum.SUCCESS) {
+                    (_this.msgObj.pro_mode = ""),
+                    (_this.deployObj = []),
+                    (_this.ccObj = []),
+                    (_this.msgObj.pro_state = ""),
+                     _this.closeFn();//关闭弹窗
+                    _this.$message.success(response.msg);
+                    _this.$emit('editSucess');
+                } else {
+                    _this.$message.error(response.msg);
+                }
+                })
+                .catch(function (error) {
+                console.log(error);
+                });
+        },
+        //  新增中介机构
+        optPrinFn (num) {
+            this.findFlag = true;
+            this.user_num = num;
+            console.log(num, 3333, this.deployObj, this.ccObj)
+            if (num == 1) {
+                this.findState = { state: 0 };
+                this.checkState = { state: 2 };
+                this.findUserObj = this.$utils.cloneDeepArray(this.deployObj)
+
+            } else {
+                this.findState = { state: 0 };
+                this.checkState = { state: 2 };
+                this.findUserObjM = this.$utils.cloneDeepArray(this.ccObj)
+            }
+        },
+        //renyun
+        findAllUser (data) {
+            console.log(data, '2566')
+            if(!data || !data.length){
+                this.findFlag = false;
+                this.findState = {};
+                this.checkState = {};
+                if (this.user_num == 1) {
+                    this.deployObj = []
+                }
+                if (this.user_num == 2) {
+                    this.ccObj = []
+                }
+                return
+            }
+            if (this.user_num == 1) {
+                this.deployObj = data
+                console.log(this.deployObj, 1);
+                if (this.deployObj !== "") {
+                    this.deployObj = this.$utils.uniqBy(this.deployObj, 'id')
+                    console.log(this.deployObj, 2);
+                    this.findFlag = false;
+                    this.findState = {};
+                    this.checkState = {};
+                    var chgArr = [];
+                    for (var i = 0; i < this.deployObj.length; i++) {
+                        var flag = true;
+                        for (var j = 0; j < chgArr.length; j++) {
+                        if (this.deployObj[i].userId == chgArr[j].userId) {
+                            flag = false;
+                        };
+                        };
+                        if (flag) {
+                        chgArr.push(this.deployObj[i]);
+                        };
+                    };
+                    this.deployObj = chgArr
+                    console.log(this.deployObj);
+                }
+                this.findUserObj = this.deployObj
+            } else {
+                var cco = data;
+                this.ccObj = cco
+                if (this.ccObj !== "") {
+                    this.ccObj = this.$utils.uniqBy(this.ccObj, 'id')
+                    this.findFlag = false;
+                    this.findState = {};
+                    this.checkState = {};
+                    var chgArr = [];
+                    for (var i = 0; i < this.ccObj.length; i++) {
+                        var flag = true;
+                        for (var j = 0; j < chgArr.length; j++) {
+                            if (this.ccObj[i].userId == chgArr[j].userId) {
+                                flag = false;
+                            };
+                        };
+                        if (flag) {
+                            chgArr.push(this.ccObj[i]);
+                        };
+                    };
+                    this.ccObj = chgArr
+                }
+                this.findUserObjM = this.ccObj
+            }
+        },
+        handle_Close (num, ind) {
+            this.$refs['attachmentEdit'] && this.$refs['attachmentEdit'].close()
+            if (ind == 0) {
+                this.deployObj.splice(num, 1);
+            } else {
+                this.ccObj.splice(num, 1);
+            }
+        },
+        cancel_Close (num, ind) {
+            this.closeFn();
+            this.$refs['attachmentEdit'] && this.$refs['attachmentEdit'].close()
+            if (ind == 0) {
+                this.deployObj.splice(num, 1);
+            } else {
+                this.ccObj.splice(num, 1);
+            }
+        },
+        //  查询投票分类所有
+        typeList () {
+            var dataObj = {
+                token: this.token,
+                userId: this.userId
+            };
+            var that = this;
+            this.$post("/info/project/findVoteTypeAll", dataObj)
+                .then((response) => {
+                    that.select_type = response.data;
+                })
+                .catch(function (error) {
+                    
+                });
+        },
+        // 查看附件
+        seeFile(item) {
+            if(item.delFlag == 1) {
+                this.$message({
+                    type: 'warning',
+                    message: '该附件已被删除'
+                })
+                return
+            }
+            this.$utils.handleUploadFilePreview(item, {projectId:this.projId,sourceName: this.title,projectName: this.handleVote.projName})
+        },
+        bj_butn () {
+            this.editCanSave = true; 
+            this.chack_bule = this.handleVote.voteStatus != 0;//投票状态不是未开始状态时只能修改投票时间和附件
+            this.attachmentDisabled = false;//附件是否可编辑
+            this.isDetailsHandle = false;
+            this.endTimeDisabled = this.handleVote.createBy !== this.userId ? true :false
+        },
+        closeFn(){         
+            this.$emit('sendValueToParent',false);
+        },
+        /**
+         * 设置定时器：每5秒保存一次表单数据
+         */
+        setTimer () {
+            // 启动定时器，每5000ms保存一次草稿
+            this.newProjectVoteTimer = setInterval(() => {
+                this.handleDraftData();
+            }, 5000)
+        },
+        // 数据清空
+        clear_data () {
+            this.msgObj.pro_name = ""; //投票名称",
+            // this.setr_id = ""; //leixinag
+            this.msgObj.pro_time1 = ""; //"2019-04-25 16:00:00",
+            this.msgObj.pro_time2 = ""; //"2019-04-26 16:00:00",
+            this.msgObj.remindType = 0; //"【0：不提醒，1：截止前15分钟，2：截止前1小时，3：截止前3小时，4：截止前1天】",
+            // this.msgObj.pro_mode = ""; //"【0:站内信，1:邮件，2:短信】 拼接：0,1,2",
+            this.deployUserids = [];
+            this.deployObj = [];
+            this.ccObj = [];
+            this.msgObj.pro_state = "";
+        },
+        handleDraftData () {
+            let data = {
+                pro_name: this.msgObj.pro_name//投票名称 
+            }
+            this.$utils.saveDraft('projectVote', data, false)
+        },
+        stratinfo(){
+            this.msgObj.pro_time1 = this.msgObj.pro_time1+':00'
+            // var self = this;
+            // if (self.msgObj.pro_time1) {
+            //     this.pickerOptions = {
+            //         disabledDate(time) {
+            //             console.log(new Date(self.msgObj.pro_time1).getTime())
+            //             console.log(time.getTime())
+            //             console.log(Date.now())
+            //             console.log(Date.now() - 1000*3600*24)
+            //             return new Date(self.msgObj.pro_time1).getTime() > time.getTime() || time.getTime() < Date.now() - 1000*3600*24;
+            //         }
+            //     }
+            // } else {
+            //     this.pickerOptions = {
+            //         disabledDate(time) {
+            //             return time.getTime() < Date.now() - 1000*3600*24
+            //         }
+            //     }
+            // }
+            
+        },
+        endinfo(){
+            console.log(1111)
+           // this.endTimeDisabled = true;
+            this.msgObj.pro_time2 = this.msgObj.pro_time2+':59';
+           // this.endTimeDisabled = false;//投票结束时间
+
+        }
+    },
+    watch:{
+        voteDetaVisible(val){
+            this.isShow = val
+        }, 
+        isShow(val){
+            if(!val){
+                clearInterval(this.newProjectVoteTimer);
+            }
+        },
+        'getFileListEdit': {
+            handler(newName, oldName) {
+                console.log(newName)
+                if(newName.length>0){
+                    this.autoHeight = true;
+                }
+            },
+            deep: true
+        },
+        'selectedFileListEdit':{
+            handler(newName, oldName) {
+                console.log(newName)
+                if(newName.length>0){
+                    this.autoHeight = true;
+                }
+            },
+            deep: true
+        }
+
+    },
+    computed: {
+        // 计算属性的 getter
+        remindVayss: function () {
+            var jdjdj = [];
+            for (var i = 0; i < this.select_type.length; i++) {
+                if (this.msgObj.pro_state == this.select_type[i].typeName) {
+                    jdjdj = JSON.parse(this.select_type[i].limitation);
+                }
+            }
+            return jdjdj;
+        },
+        setr_id: function () {
+            var st_id = "";
+            for (var i = 0; i < this.select_type.length; i++) {
+                if (this.msgObj.pro_state == this.select_type[i].typeName) {
+                st_id = JSON.parse(this.select_type[i].id);
+                }
+            }
+            return st_id;
+        }
+    }
+}
+</script>
+<style scoped lang="scss" type="text/css">
+.form_boxadd {
+    background: #fff;
+    padding-top: 20px;
+    padding-left: 10px;
+    // padding-bottom: 10px;
+    .el-form-item {
+        float: left;
+        margin-right: 20px;
+        margin-bottom: 15px;
+        height: 40px;
+        .el-input {
+            width: 217px;
+        }
+        .inline-input {
+            width: 217px;
+        }
+        .el-select {
+            width: 217px;
+        }
+    }
+    .el-button {
+        float: left;
+        margin-left: 20px;
+        margin-top: 2px;
+    }
+}
+.riwjn_we {
+  margin-left: 50px;
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  top: -10px;
+}
+.riwjn_we li {
+  margin-top: 6px;
+  line-height: 30px;
+}
+.button_bj {
+  float: right;
+  margin-right: 10px;
+}
+.usernanmestlt {
+  width: 14%;
+}
+.usernanmes {
+  width: 84%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  overflow-y: auto;
+  max-height: 113px;
+}
+.userbtn {
+  margin-left: 3px;
+  margin-top: 3px;
+}
+.form_box {
+    background: #fff;
+    padding-top: 20px;
+    padding-left: 10px;
+    .el-form-item {
+      float: left;
+      margin-right: 20px;
+      margin-bottom: 12px;
+      height: 40px;
+      .el-input {
+        width: 217px;
+      }
+      .inline-input {
+        width: 217px;
+      }
+      .el-select {
+        width: 217px;
+      }
+    }
+
+    .el-button {
+      float: left;
+      // margin-top: 2px;
+    }
+}
+.form_box .el-date-editor.el-input{
+    width: 196px!important;
+}
+.doc-list-box{
+    text-align: left;
+    overflow-y:auto;
+    max-height:130px;
+    li{
+        margin-right: 8px;
+    }
+}
+.attachemnt-list-doc {
+  display: flex;
+  align-items: center;
+}
+
+.attachemnt-list-doc {
+  width: 96%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.attachemnt-list-doc .doc-delete{
+  font-size: 14px;
+  font-weight: 400;
+  color: #0061a9;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.attachemnt-list-doc .doc-name{
+//   display: inline-block;
+//   flex: 1;
+  max-width: 80%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+// .doc-name {
+//     display: inline-block;
+//     flex: 1;
+//     overflow: hidden;
+//     white-space: nowrap;
+//     text-overflow: ellipsis;
+// }
+.del-file{
+    text-decoration: line-through;
+}
+</style>
+<style lang="scss" type="text/css">
+.autoHeight{
+    height:490px;
+}
+</style>
+

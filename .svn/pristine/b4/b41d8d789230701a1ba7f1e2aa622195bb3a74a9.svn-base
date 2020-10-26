@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="c781003a-2ba0-431e-96a5-8f8b2526489f" name="Default Changelist" comment="登录，退出登录，修改密码，修改个人信息接口对接">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/webpack.prod.conf.js" beforeDir="false" afterPath="$PROJECT_DIR$/build/webpack.prod.conf.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/Allurl.js" beforeDir="false" afterPath="$PROJECT_DIR$/static/Allurl.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+        <option value="Vue Single File Component" />
+      </list>
+    </option>
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/pages/front/Lotus/approval_pending.vue" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/src/components/approve/approve.vue" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/src/pages/front/Lotus/sponsor.vue" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProjectId" id="1dFBKSmYq0FBhKc6OlR9RkflRIO" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder0" value="0" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder1" value="1" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder2" value="2" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder3" value="3" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder4" value="4" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder5" value="5" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth0" value="250" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth1" value="250" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth2" value="250" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth3" value="249" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth4" value="250" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth5" value="249" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder0" value="0" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder1" value="1" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder2" value="2" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder3" value="3" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder4" value="4" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder5" value="5" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth0" value="250" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth1" value="250" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth2" value="250" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth3" value="249" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth4" value="250" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth5" value="249" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1555038652062" />
+    <property name="editor.config.ad.shown" value="true" />
+    <property name="editorconfig.notification" value="table" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="C:/Program Files/nodejs/node" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="settings.editor.selected.configurable" value="http.certificates" />
+    <property name="ts.external.directory.path" value="D:\WebStorm 2020.2.3\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
+    <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Work\Project\1.2.2.1\src\components\select_box" />
+      <recent name="C:\Users\RD\Desktop\wisdom_ib_web_1.1.1\static" />
+      <recent name="D:\Downloads\eclipse-data-web\wisdom_ib_web\static" />
+      <recent name="D:\Downloads\eclipse-data-web\wisdom_ib_web\src\components" />
+      <recent name="D:\Downloads\eclipse-data-web\wisdom_ib_web\src\pages\behind\processengine" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SvnConfiguration" cleanupOnStartRun="true">
+    <configuration>C:\Users\fujin\AppData\Roaming\Subversion</configuration>
+    <supportedVersion>125</supportedVersion>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c781003a-2ba0-431e-96a5-8f8b2526489f" name="Default Changelist" comment="" />
+      <created>1553325530074</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1553325530074</updated>
+      <workItem from="1553325532645" duration="8507000" />
+      <workItem from="1553476768969" duration="27889000" />
+      <workItem from="1553562565417" duration="27963000" />
+      <workItem from="1553648955772" duration="14460000" />
+      <workItem from="1553671255099" duration="11037000" />
+      <workItem from="1553735672771" duration="29388000" />
+      <workItem from="1553822184754" duration="25280000" />
+      <workItem from="1553909336274" duration="25003000" />
+      <workItem from="1554081071393" duration="34264000" />
+      <workItem from="1554167547696" duration="26192000" />
+      <workItem from="1554254708199" duration="22277000" />
+      <workItem from="1554340465754" duration="23053000" />
+      <workItem from="1554859240498" duration="26798000" />
+      <workItem from="1554945642845" duration="27006000" />
+      <workItem from="1555031856784" duration="6807000" />
+      <workItem from="1556414699724" duration="2632000" />
+      <workItem from="1556456280071" duration="264000" />
+      <workItem from="1557716463136" duration="5000" />
+      <workItem from="1562895217536" duration="251000" />
+      <workItem from="1565057506400" duration="12479000" />
+      <workItem from="1565141882438" duration="15771000" />
+      <workItem from="1570582787889" duration="9995000" />
+      <workItem from="1570687986253" duration="14120000" />
+      <workItem from="1570705862586" duration="623000" />
+      <workItem from="1570755487673" duration="15601000" />
+      <workItem from="1570852793330" duration="11731000" />
+      <workItem from="1571014860393" duration="2884000" />
+      <workItem from="1571389353107" duration="4682000" />
+      <workItem from="1571621346895" duration="5358000" />
+      <workItem from="1571710205741" duration="9795000" />
+      <workItem from="1571792410092" duration="22539000" />
+      <workItem from="1571878961925" duration="46513000" />
+      <workItem from="1572052251498" duration="27171000" />
+      <workItem from="1572225347174" duration="15087000" />
+      <workItem from="1572311029701" duration="12132000" />
+      <workItem from="1572402868111" duration="17170000" />
+      <workItem from="1572483428729" duration="20163000" />
+      <workItem from="1579401732635" duration="70000" />
+      <workItem from="1579402154944" duration="326000" />
+      <workItem from="1579404117049" duration="15329000" />
+      <workItem from="1580692726466" duration="5025000" />
+      <workItem from="1580779386622" duration="12356000" />
+      <workItem from="1580886287054" duration="5159000" />
+      <workItem from="1580967376887" duration="4393000" />
+      <workItem from="1581037194061" duration="28820000" />
+      <workItem from="1581150538139" duration="32450000" />
+      <workItem from="1581298244379" duration="37247000" />
+      <workItem from="1581386181510" duration="8621000" />
+      <workItem from="1581473066860" duration="26424000" />
+      <workItem from="1581556658270" duration="3952000" />
+      <workItem from="1581903218859" duration="42136000" />
+      <workItem from="1592010964190" duration="1031000" />
+      <workItem from="1592012015390" duration="13000" />
+      <workItem from="1601381060927" duration="20365000" />
+      <workItem from="1602206180471" duration="27589000" />
+      <workItem from="1602295862087" duration="1789000" />
+      <workItem from="1602297680690" duration="1590000" />
+      <workItem from="1602299495863" duration="1807000" />
+      <workItem from="1602301319032" duration="1545000" />
+      <workItem from="1602309210459" duration="1303000" />
+      <workItem from="1602312095655" duration="79000" />
+      <workItem from="1602313421888" duration="693000" />
+      <workItem from="1602314845682" duration="102524000" />
+      <workItem from="1602722509867" duration="6867000" />
+      <workItem from="1603162346945" duration="14470000" />
+    </task>
+    <task id="LOCAL-00001" summary="代码配置">
+      <created>1553517496758</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1553517496759</updated>
+    </task>
+    <task id="LOCAL-00002" summary="页面开发">
+      <created>1553658855746</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1553658855746</updated>
+    </task>
+    <task id="LOCAL-00003" summary="页面开发">
+      <created>1553688279017</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1553688279017</updated>
+    </task>
+    <task id="LOCAL-00004" summary="bug修复">
+      <created>1553743988707</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1553743988707</updated>
+    </task>
+    <task id="LOCAL-00005" summary="页面开发">
+      <created>1553823292789</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1553823292789</updated>
+    </task>
+    <task id="LOCAL-00006" summary="页面开发">
+      <created>1553857722139</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1553857722139</updated>
+    </task>
+    <task id="LOCAL-00007" summary="页面开发">
+      <created>1553941593754</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1553941593754</updated>
+    </task>
+    <task id="LOCAL-00008" summary="axios封装和加密">
+      <created>1554103860695</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1554103860707</updated>
+    </task>
+    <task id="LOCAL-00009" summary="页面开发">
+      <created>1554177384025</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1554177384025</updated>
+    </task>
+    <task id="LOCAL-00010" summary="客户管理详情页面">
+      <created>1554188209268</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1554188209268</updated>
+    </task>
+    <task id="LOCAL-00011" summary="页面弹框页开发">
+      <created>1554281472825</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1554281472826</updated>
+    </task>
+    <task id="LOCAL-00012" summary="功能优化">
+      <created>1554284418967</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1554284418967</updated>
+    </task>
+    <task id="LOCAL-00013" summary="功能优化">
+      <created>1554372165878</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1554372165878</updated>
+    </task>
+    <task id="LOCAL-00014" summary="人员配置弹框">
+      <created>1554860144364</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1554860144364</updated>
+    </task>
+    <task id="LOCAL-00015" summary="登录">
+      <created>1554866440421</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1554866440421</updated>
+    </task>
+    <task id="LOCAL-00016" summary="交互优化">
+      <created>1554899761060</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1554899761060</updated>
+    </task>
+    <task id="LOCAL-00017" summary="流程配置列表，分页，类型分类接口对接">
+      <created>1554986547665</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1554986547665</updated>
+    </task>
+    <task id="LOCAL-00018" summary="清理无用组件及代码">
+      <created>1591858129693</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1591858129694</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="SHOW_DIRTY_RECURSIVELY" value="true" />
+    <MESSAGE value="代码配置" />
+    <MESSAGE value="bug修复" />
+    <MESSAGE value="axios封装和加密" />
+    <MESSAGE value="页面开发" />
+    <MESSAGE value="客户管理详情页面" />
+    <MESSAGE value="页面弹框页开发" />
+    <MESSAGE value="功能优化" />
+    <MESSAGE value="人员配置弹框" />
+    <MESSAGE value="登录" />
+    <MESSAGE value="交互优化" />
+    <MESSAGE value="流程配置列表，分页，类型分类接口对接" />
+    <MESSAGE value="登录，退出登录，修改密码，修改个人信息接口对接" />
+    <MESSAGE value="清理无用组件及代码" />
+    <option name="LAST_COMMIT_MESSAGE" value="清理无用组件及代码" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="498" y="213" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1601446546065">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="498" y="213" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1536.824@0.0.1536.824" timestamp="1601446546065" />
+    <state x="549" y="167" key="FileChooserDialogImpl" timestamp="1602727572802">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="549" y="167" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1602727572802" />
+    <state x="468" y="144" width="600" height="536" key="find.popup" timestamp="1602666606126">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="468" y="144" width="600" height="536" key="find.popup/0.0.1536.824@0.0.1536.824" timestamp="1602666606126" />
+    <state x="425" y="187" key="run.anything.popup" timestamp="1602678560634">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="425" y="187" key="run.anything.popup/0.0.1536.824/1920.0.1920.999@0.0.1536.824" timestamp="1602678560633" />
+    <state x="431" y="145" width="672" height="678" key="search.everywhere.popup" timestamp="1603179961173">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="431" y="145" width="672" height="678" key="search.everywhere.popup/0.0.1536.824/-1920.65.1920.1040@0.0.1536.824" timestamp="1603179961173" />
+    <state x="431" y="145" width="672" height="678" key="search.everywhere.popup/0.0.1536.824@0.0.1536.824" timestamp="1602667672240" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/pages/front/projectlist/projectrole/projectrole.vue</url>
+          <line>447</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/pages/front/projecttasks/tasks/tasks.vue</url>
+          <line>38</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/components/select_box/findAllDeptUserSingle.vue</url>
+          <line>21</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/pages/front/custommanage/financcustomdetail.vue</url>
+          <line>14</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/pages/front/projectlist/projecmeeting/projecmeeting.vue</url>
+          <line>2171</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/pages/front/manuscriptmanage/manuscriptmanage.vue</url>
+          <line>50</line>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/src/components/select_box/securityMessage.vue</url>
+          <line>77</line>
+          <option name="timeStamp" value="51" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ArtifactsStructureConfigurable.UI">
+        <settings>
+          <artifact-editor />
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="FacetStructureConfigurable.UI">
+        <settings>
+          <last-edited>No facets are configured</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="GlobalLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="JdkListConfigurable.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ModuleStructureConfigurable.UI">
+        <settings>
+          <last-edited>Tbank</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>
